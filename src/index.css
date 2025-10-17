@@ -1,10 +1,8 @@
 @import "tailwindcss";
 
-/* Modern, clean design inspired by Vercel with professional color palette */
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Light theme - clean and professional */
   --background: oklch(0.98 0.002 0);
   --foreground: oklch(0.15 0.01 264);
   --card: oklch(1 0 0);
@@ -32,7 +30,6 @@
   --radius: 0.5rem;
 }
 
-/* Dark theme */
 .dark {
   --background: oklch(0.1 0.01 264);
   --foreground: oklch(0.95 0.01 0);
@@ -132,13 +129,37 @@
   }
 }
 
-@layer utilities {
-  /* Smooth transitions */
-  .transition duration-500 ease-in-out {
+@layer components {
+  .smooth-transition {
     @apply transition-all duration-200 ease-out;
   }
 
-  /* Custom scrollbar */
+  .container-balanced {
+    @apply max-w-6xl mx-auto;
+  }
+
+  .card-hover {
+    @apply hover:shadow-lg hover:border-primary/50 transition duration-500 ease-in-out;
+  }
+
+  .btn-base {
+    @apply px-4 py-2 rounded-lg font-medium transition duration-500 ease-in-out;
+  }
+
+  .btn-primary {
+    @apply btn-base bg-primary text-primary-foreground hover:bg-primary/90 active:scale-95;
+  }
+
+  .btn-secondary {
+    @apply btn-base bg-secondary text-secondary-foreground hover:bg-secondary/80 active:scale-95;
+  }
+
+  .btn-outline {
+    @apply btn-base border border-border hover:bg-muted active:scale-95;
+  }
+}
+
+@layer utilities {
   ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
@@ -154,32 +175,5 @@
 
   ::-webkit-scrollbar-thumb:hover {
     @apply bg-muted-foreground;
-  }
-
-  /* Container max-width for balanced layout */
-  .container-balanced {
-    @apply max-w-6xl mx-auto;
-  }
-
-  /* Card hover effect */
-  .card-hover {
-    @apply hover:shadow-lg hover:border-primary/50 transition duration-500 ease-in-out;
-  }
-
-  /* Button base styles */
-  .btn-base {
-    @apply px-4 py-2 rounded-lg font-medium transition duration-500 ease-in-out;
-  }
-
-  .btn-primary {
-    @apply btn-base bg-primary text-primary-foreground hover:bg-primary/90 active:scale-95;
-  }
-
-  .btn-secondary {
-    @apply btn-base bg-secondary text-secondary-foreground hover:bg-secondary/80 active:scale-95;
-  }
-
-  .btn-outline {
-    @apply btn-base border border-border hover:bg-muted active:scale-95;
   }
 }
