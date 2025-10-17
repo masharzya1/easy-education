@@ -91,7 +91,7 @@ export default function Header() {
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setSidebarOpen(true)}
-                className="p-2 hover:bg-primary/10 rounded-lg transition duration-500 ease-in-out hover:scale-105 active:scale-95"
+                className="p-2 hover:bg-primary/10 rounded-lg smooth-transition hover:scale-105 active:scale-95"
                 aria-label="Open menu"
               >
                 <Menu className="w-5 h-5 sm:w-6 sm:h-6 text-foreground" />
@@ -112,7 +112,7 @@ export default function Header() {
               <div className="relative" ref={searchRef}>
                 <button
                   onClick={() => setSearchOpen(!searchOpen)}
-                  className="p-2 hover:bg-primary/10 rounded-lg transition duration-500 ease-in-out hover:scale-105 active:scale-95"
+                  className="p-2 hover:bg-primary/10 rounded-lg smooth-transition hover:scale-105 active:scale-95"
                   aria-label="Search"
                 >
                   <Search className="w-5 h-5 text-foreground" />
@@ -135,13 +135,13 @@ export default function Header() {
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             placeholder="Search courses..."
-                            className="w-full pl-10 pr-4 py-3 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-foreground placeholder:text-muted-foreground text-sm transition duration-500 ease-in-out"
+                            className="w-full pl-10 pr-4 py-3 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-foreground placeholder:text-muted-foreground text-sm smooth-transition"
                             autoFocus
                           />
                         </div>
                         <button
                           type="submit"
-                          className="w-full mt-3 px-4 py-2 bg-gradient-pink-purple text-white rounded-lg hover:opacity-90 transition duration-500 ease-in-out font-medium"
+                          className="w-full mt-3 px-4 py-2 bg-gradient-pink-purple text-white rounded-lg hover:opacity-90 smooth-transition font-medium"
                         >
                           Search
                         </button>
@@ -154,7 +154,7 @@ export default function Header() {
               {!currentUser && (
                 <Link
                   to="/login"
-                  className="hidden sm:block px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg transition duration-500 ease-in-out text-sm font-medium hover:scale-105 active:scale-95"
+                  className="hidden sm:block px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg smooth-transition text-sm font-medium hover:scale-105 active:scale-95"
                 >
                   Login
                 </Link>
@@ -162,7 +162,7 @@ export default function Header() {
 
               <button
                 onClick={toggleTheme}
-                className="p-2 hover:bg-primary/10 rounded-lg transition duration-500 ease-in-out hover:scale-105 active:scale-95"
+                className="p-2 hover:bg-primary/10 rounded-lg smooth-transition hover:scale-105 active:scale-95"
                 aria-label="Toggle theme"
               >
                 {isDark ? <Sun className="w-5 h-5 text-foreground" /> : <Moon className="w-5 h-5 text-foreground" />}
@@ -202,7 +202,7 @@ export default function Header() {
                 </Link>
                 <button
                   onClick={() => setSidebarOpen(false)}
-                  className="p-2 hover:bg-muted rounded-lg transition duration-500 ease-in-out hover:scale-105 active:scale-95"
+                  className="p-2 hover:bg-muted rounded-lg smooth-transition hover:scale-105 active:scale-95"
                   aria-label="Close menu"
                 >
                   <X className="w-6 h-6" />
@@ -239,10 +239,10 @@ export default function Header() {
                       key={link.path}
                       to={link.path}
                       onClick={() => setSidebarOpen(false)}
-                      className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-primary/10 transition duration-500 ease-in-out group hover:scale-[1.02] active:scale-[0.98]"
+                      className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-primary/10 smooth-transition group hover:scale-[1.02] active:scale-[0.98]"
                     >
-                      <Icon className="w-5 h-5 text-muted-foreground group-hover:text-primary transition duration-500 ease-in-out" />
-                      <span className="font-medium group-hover:text-primary transition duration-500 ease-in-out">{link.name}</span>
+                      <Icon className="w-5 h-5 text-muted-foreground group-hover:text-primary smooth-transition" />
+                      <span className="font-medium group-hover:text-primary smooth-transition">{link.name}</span>
                     </Link>
                   )
                 })}
@@ -253,30 +253,30 @@ export default function Header() {
                   <Link
                     to="/my-courses"
                     onClick={() => setSidebarOpen(false)}
-                    className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-primary/10 transition duration-500 ease-in-out group hover:scale-[1.02] active:scale-[0.98]"
+                    className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-primary/10 smooth-transition group hover:scale-[1.02] active:scale-[0.98]"
                   >
-                    <BookOpen className="w-5 h-5 text-muted-foreground group-hover:text-primary transition duration-500 ease-in-out" />
-                    <span className="font-medium group-hover:text-primary transition duration-500 ease-in-out">My Courses</span>
+                    <BookOpen className="w-5 h-5 text-muted-foreground group-hover:text-primary smooth-transition" />
+                    <span className="font-medium group-hover:text-primary smooth-transition">My Courses</span>
                   </Link>
                   <Link
                     to="/profile"
                     onClick={() => setSidebarOpen(false)}
-                    className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-primary/10 transition duration-500 ease-in-out group hover:scale-[1.02] active:scale-[0.98]"
+                    className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-primary/10 smooth-transition group hover:scale-[1.02] active:scale-[0.98]"
                   >
-                    <User className="w-5 h-5 text-muted-foreground group-hover:text-primary transition duration-500 ease-in-out" />
-                    <span className="font-medium group-hover:text-primary transition duration-500 ease-in-out">Profile</span>
+                    <User className="w-5 h-5 text-muted-foreground group-hover:text-primary smooth-transition" />
+                    <span className="font-medium group-hover:text-primary smooth-transition">Profile</span>
                   </Link>
                   <Link
                     to={isAdmin ? "/admin" : "/dashboard"}
                     onClick={() => setSidebarOpen(false)}
-                    className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-primary/10 transition duration-500 ease-in-out group hover:scale-[1.02] active:scale-[0.98]"
+                    className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-primary/10 smooth-transition group hover:scale-[1.02] active:scale-[0.98]"
                   >
-                    <LayoutDashboard className="w-5 h-5 text-muted-foreground group-hover:text-primary transition duration-500 ease-in-out" />
-                    <span className="font-medium group-hover:text-primary transition duration-500 ease-in-out">Dashboard</span>
+                    <LayoutDashboard className="w-5 h-5 text-muted-foreground group-hover:text-primary smooth-transition" />
+                    <span className="font-medium group-hover:text-primary smooth-transition">Dashboard</span>
                   </Link>
                   <button
                     onClick={handleSignOut}
-                    className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-destructive/10 hover:text-destructive transition duration-500 ease-in-out group hover:scale-[1.02] active:scale-[0.98]"
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-destructive/10 hover:text-destructive smooth-transition group hover:scale-[1.02] active:scale-[0.98]"
                   >
                     <LogOut className="w-5 h-5" />
                     <span className="font-medium">Sign Out</span>
@@ -289,14 +289,14 @@ export default function Header() {
                   <Link
                     to="/login"
                     onClick={() => setSidebarOpen(false)}
-                    className="block w-full px-4 py-3 bg-primary hover:bg-primary/90 text-white rounded-lg transition duration-500 ease-in-out text-center font-medium hover:scale-[1.02] active:scale-[0.98]"
+                    className="block w-full px-4 py-3 bg-primary hover:bg-primary/90 text-white rounded-lg smooth-transition text-center font-medium hover:scale-[1.02] active:scale-[0.98]"
                   >
                     Login
                   </Link>
                   <Link
                     to="/register"
                     onClick={() => setSidebarOpen(false)}
-                    className="block w-full px-4 py-3 bg-muted hover:bg-muted/80 rounded-lg transition duration-500 ease-in-out text-center font-medium hover:scale-[1.02] active:scale-[0.98]"
+                    className="block w-full px-4 py-3 bg-muted hover:bg-muted/80 rounded-lg smooth-transition text-center font-medium hover:scale-[1.02] active:scale-[0.98]"
                   >
                     Register
                   </Link>

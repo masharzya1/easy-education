@@ -11,7 +11,7 @@ export default function FloatingCartButton() {
   return (
     <motion.button
       onClick={openCart}
-      className="fixed bottom-6 right-6 z-40 p-3 sm:p-4 bg-primary text-primary-foreground rounded-full shadow-lg hover:shadow-xl transition duration-500 ease-in-out flex items-center justify-center group"
+      className="fixed bottom-6 right-6 z-40 p-3 sm:p-4 bg-primary text-primary-foreground rounded-full shadow-lg hover:shadow-xl smooth-transition flex items-center justify-center group"
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
       aria-label="Open cart"

@@ -149,7 +149,7 @@ export default function WebsiteSettings() {
                 type="text"
                 value={settings.siteName}
                 onChange={(e) => setSettings({ ...settings, siteName: e.target.value })}
-                className="w-full px-4 py-2 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition duration-500 ease-in-out"
+                className="w-full px-4 py-2 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary smooth-transition"
               />
             </div>
 
@@ -159,7 +159,7 @@ export default function WebsiteSettings() {
                 value={settings.siteDescription}
                 onChange={(e) => setSettings({ ...settings, siteDescription: e.target.value })}
                 rows={3}
-                className="w-full px-4 py-2 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition duration-500 ease-in-out resize-none"
+                className="w-full px-4 py-2 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary smooth-transition resize-none"
               />
             </div>
           </div>
@@ -197,7 +197,7 @@ export default function WebsiteSettings() {
               onChange={(e) => setSettings({ ...settings, paymentInstructions: e.target.value })}
               rows={4}
               placeholder="Enter payment instructions for users..."
-              className="w-full px-4 py-2 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition duration-500 ease-in-out resize-none"
+              className="w-full px-4 py-2 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary smooth-transition resize-none"
             />
             <p className="text-xs text-muted-foreground mt-2">
               These instructions will be displayed on the checkout page
@@ -210,7 +210,7 @@ export default function WebsiteSettings() {
           <button
             onClick={handleSave}
             disabled={saving}
-            className="flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-colors disabled:opacity-50 font-medium transition duration-500 ease-in-out"
+            className="flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-colors disabled:opacity-50 font-medium smooth-transition"
           >
             <Save className="w-5 h-5" />
             {saving ? "Saving..." : "Save Settings"}

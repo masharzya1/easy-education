@@ -247,13 +247,13 @@ export default function Checkout() {
                       value={couponCode}
                       onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
                       placeholder="COUPON CODE"
-                      className="flex-1 px-3 py-2 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm transition duration-500 ease-in-out"
+                      className="flex-1 px-3 py-2 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm smooth-transition"
                       disabled={!!appliedCoupon}
                     />
                     <button
                       onClick={validateCoupon}
                       disabled={!!appliedCoupon}
-                      className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 text-sm font-medium transition duration-500 ease-in-out"
+                      className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 text-sm font-medium smooth-transition"
                     >
                       <Tag className="w-4 h-4" />
                     </button>
@@ -300,7 +300,7 @@ export default function Checkout() {
                         type="text"
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        className="w-full px-4 py-3 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition duration-500 ease-in-out"
+                        className="w-full px-4 py-3 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary smooth-transition"
                         required
                       />
                     </div>
@@ -312,7 +312,7 @@ export default function Checkout() {
                         type="email"
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        className="w-full px-4 py-3 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition duration-500 ease-in-out"
+                        className="w-full px-4 py-3 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary smooth-transition"
                         required
                       />
                     </div>
@@ -327,7 +327,7 @@ export default function Checkout() {
                       value={formData.senderNumber}
                       onChange={(e) => setFormData({ ...formData, senderNumber: e.target.value })}
                       placeholder="01XXXXXXXXX"
-                      className="w-full px-4 py-3 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition duration-500 ease-in-out"
+                      className="w-full px-4 py-3 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary smooth-transition"
                       required
                     />
                   </div>
@@ -341,7 +341,7 @@ export default function Checkout() {
                       value={formData.transactionId}
                       onChange={(e) => setFormData({ ...formData, transactionId: e.target.value })}
                       placeholder="Enter transaction ID"
-                      className="w-full px-4 py-3 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition duration-500 ease-in-out"
+                      className="w-full px-4 py-3 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary smooth-transition"
                       required
                     />
                   </div>
@@ -349,7 +349,7 @@ export default function Checkout() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full py-4 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed transition duration-500 ease-in-out"
+                    className="w-full py-4 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed smooth-transition"
                   >
                     {loading ? "Submitting..." : "Submit Payment"}
                   </button>
