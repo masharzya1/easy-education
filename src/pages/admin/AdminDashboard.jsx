@@ -1,0 +1,83 @@
+import { Routes, Route, Link, useLocation } from "react-router-dom"
+import { Users, BookOpen, Video, Newspaper, BarChart3, LayoutDashboard, Megaphone, Tag, CreditCard, Settings, Grid, GraduationCap } from "lucide-react"
+import AdminOverview from "./AdminOverview"
+import ManageUsers from "./ManageUsers"
+import ManageCourses from "./ManageCourses"
+import ManageClasses from "./ManageClasses"
+import ManageNews from "./ManageNews"
+import ManageAnnouncements from "./ManageAnnouncements"
+import ManageCoupons from "./ManageCoupons"
+import ManagePayments from "./ManagePayments"
+import WebsiteSettings from "./WebsiteSettings"
+import Rankings from "./Rankings"
+import ManageCategories from "./ManageCategories"
+import ManageTeachers from "./ManageTeachers"
+
+export default function AdminDashboard() {
+  const location = useLocation()
+
+  const navItems = [
+    { name: "Overview", path: "/admin", icon: LayoutDashboard },
+    { name: "Users", path: "/admin/users", icon: Users },
+    { name: "Courses", path: "/admin/courses", icon: BookOpen },
+    { name: "Classes", path: "/admin/classes", icon: Video },
+    { name: "Categories", path: "/admin/categories", icon: Grid },
+    { name: "Teachers", path: "/admin/teachers", icon: GraduationCap },
+    { name: "News", path: "/admin/news", icon: Newspaper },
+    { name: "Announcements", path: "/admin/announcements", icon: Megaphone },
+    { name: "Coupons", path: "/admin/coupons", icon: Tag },
+    { name: "Payments", path: "/admin/payments", icon: CreditCard },
+    { name: "Settings", path: "/admin/settings", icon: Settings },
+    { name: "Rankings", path: "/admin/rankings", icon: BarChart3 },
+  ]
+
+  return (
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto px-4 py-6">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* Sidebar */}
+          <div className="lg:col-span-1">
+            <div className="bg-card border border-border rounded-xl p-4 sticky top-20">
+              <h2 className="text-xl font-bold mb-4 px-2">Admin Panel</h2>
+              <nav className="space-y-1">
+                {navItems.map((item) => {
+                  const isActive = location.pathname === item.path
+                  return (
+                    <Link
+                      key={item.path}
+                      to={item.path}
+                      className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                        isActive ? "bg-primary text-primary-foreground" : "hover:bg-muted"
+                      }`}
+                    >
+                      <item.icon className="w-5 h-5" />
+                      <span>{item.name}</span>
+                    </Link>
+                  )
+                })}
+              </nav>
+            </div>
+          </div>
+
+          {/* Main Content */}
+          <div className="lg:col-span-3">
+            <Routes>
+              <Route index element={<AdminOverview />} />
+              <Route path="users" element={<ManageUsers />} />
+              <Route path="courses" element={<ManageCourses />} />
+              <Route path="classes" element={<ManageClasses />} />
+              <Route path="categories" element={<ManageCategories />} />
+              <Route path="teachers" element={<ManageTeachers />} />
+              <Route path="news" element={<ManageNews />} />
+              <Route path="announcements" element={<ManageAnnouncements />} />
+              <Route path="coupons" element={<ManageCoupons />} />
+              <Route path="payments" element={<ManagePayments />} />
+              <Route path="settings" element={<WebsiteSettings />} />
+              <Route path="rankings" element={<Rankings />} />
+            </Routes>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
