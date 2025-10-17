@@ -108,7 +108,7 @@ export default function Courses() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search by title, instructor, or description..."
-                  className="w-full pl-10 pr-4 py-2 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm smooth-transition"
+                  className="w-full pl-10 pr-4 py-2 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm transition duration-500 ease-in-out"
                 />
               </div>
             </div>
@@ -121,7 +121,7 @@ export default function Courses() {
                 <select
                   value={categoryFilter}
                   onChange={(e) => setCategoryFilter(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm appearance-none smooth-transition"
+                  className="w-full pl-10 pr-4 py-2 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm appearance-none transition duration-500 ease-in-out"
                 >
                   {categories.map((cat) => (
                     <option key={cat} value={cat}>
@@ -141,7 +141,7 @@ export default function Courses() {
                 <button
                   key={option}
                   onClick={() => setSortBy(option)}
-                  className={`px-3 py-1.5 rounded-lg text-sm font-medium smooth-transition ${
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition duration-500 ease-in-out ${
                     sortBy === option
                       ? "bg-primary text-primary-foreground"
                       : "bg-muted text-foreground hover:bg-muted/80"
@@ -186,7 +186,7 @@ export default function Courses() {
                         <img
                           src={course.thumbnailURL || "/placeholder.svg"}
                           alt={course.title}
-                          className="w-full h-full object-cover group-hover:scale-105 smooth-transition"
+                          className="w-full h-full object-cover group-hover:scale-105 transition duration-500 ease-in-out"
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
@@ -210,7 +210,7 @@ export default function Courses() {
                       </div>
                       <button
                         onClick={(e) => handleAddToCart(course, e)}
-                        className="w-full px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg smooth-transition flex items-center justify-center gap-2 text-sm font-medium active:scale-95"
+                        className="w-full px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition duration-500 ease-in-out flex items-center justify-center gap-2 text-sm font-medium active:scale-95"
                       >
                         <ShoppingCart className="w-4 h-4" />
                         Add to Cart
