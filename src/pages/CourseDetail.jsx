@@ -201,6 +201,22 @@ export default function CourseDetail() {
                   </div>
                 </div>
 
+                {course.type === "batch" && hasAccess && (
+                  <div className="border-t border-border pt-6 mb-6">
+                    <h3 className="text-xl font-semibold mb-4">Course Subjects</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {["Mathematics", "Physics", "Chemistry", "Biology", "English", "History"].map(
+                        (subject, index) => (
+                          <div key={index} className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg">
+                            <BookOpen className="w-4 h-4 text-primary" />
+                            <span className="text-sm font-medium">{subject}</span>
+                          </div>
+                        ),
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 {/* Course Features */}
                 <div className="border-t border-border pt-6">
                   <h3 className="text-xl font-semibold mb-4">What you'll learn</h3>

@@ -278,6 +278,19 @@ export default function ManageUsers() {
                           />
                         </button>
                         <button
+                          onClick={() => {
+                            // Show a dropdown or modal to select which course to remove from
+                            const courseId = prompt("Enter Course ID to remove student from:")
+                            if (courseId) {
+                              handleRemoveFromCourse(user.id, courseId)
+                            }
+                          }}
+                          className="p-1.5 sm:p-2 hover:bg-muted rounded-lg transition-colors"
+                          title="Remove from Course"
+                        >
+                          <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500" />
+                        </button>
+                        <button
                           onClick={() => handleDeleteUser(user.id)}
                           className="p-1.5 sm:p-2 hover:bg-muted rounded-lg transition-colors"
                           title="Delete User"

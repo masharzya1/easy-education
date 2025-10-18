@@ -42,6 +42,7 @@ export default function ManageClasses() {
     fetchCourses()
     fetchSubjects()
     fetchChapters()
+    fetchTeachers()
   }, [])
 
   useEffect(() => {
@@ -101,15 +102,12 @@ export default function ManageClasses() {
     }
   }
 
-  useEffect(() => {
-    fetchTeachers()
-  }, [])
-
   const fetchTeachers = async () => {
     try {
       const snapshot = await getDocs(collection(db, "teachers"))
       const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
       setTeachers(data)
+      console.log("[v0] Teachers loaded:", data)
     } catch (error) {
       console.error("Error fetching teachers:", error)
     }
