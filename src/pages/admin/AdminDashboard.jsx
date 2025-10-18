@@ -57,7 +57,8 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="lg:hidden flex items-center justify-between p-4 bg-card border-b border-border">
+      {/* Mobile Header */}
+      <div className="lg:hidden flex items-center justify-between p-4 bg-card border-b border-border sticky top-0 z-50">
         <h1 className="text-lg font-bold">Admin Panel</h1>
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -67,16 +68,16 @@ export default function AdminDashboard() {
         </button>
       </div>
 
-      <div className="container mx-auto px-4 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Sidebar */}
-          <div
-            className={`lg:col-span-1 ${
-              sidebarOpen ? "block" : "hidden"
-            } lg:block fixed lg:static inset-0 lg:inset-auto z-40 lg:z-auto bg-background lg:bg-transparent`}
-          >
-            <div className="bg-card border border-border rounded-xl p-4 sticky top-20 lg:top-auto max-h-[calc(100vh-100px)] overflow-y-auto">
-              <h2 className="text-xl font-bold mb-4 px-2">Admin Panel</h2>
+      <div className="flex">
+        {/* Sidebar */}
+        <div
+          className={`fixed lg:static inset-0 lg:inset-auto z-40 lg:z-auto bg-background lg:bg-transparent transition-all duration-300 ${
+            sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+          } w-64 lg:w-72`}
+        >
+          <div className="bg-card border-r border-border h-screen overflow-y-auto sticky top-0">
+            <div className="p-4 lg:p-6">
+              <h2 className="text-xl font-bold mb-6 px-2">Admin Panel</h2>
               <nav className="space-y-1">
                 {navItems.map((item) => {
                   const isActive = location.pathname === item.path
@@ -85,21 +86,31 @@ export default function AdminDashboard() {
                       key={item.path}
                       to={item.path}
                       onClick={() => setSidebarOpen(false)}
-                      className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                        isActive ? "bg-primary text-primary-foreground" : "hover:bg-muted"
+                      className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+                        isActive ? "bg-primary text-primary-foreground shadow-md" : "hover:bg-muted text-foreground"
                       }`}
                     >
                       <item.icon className="w-5 h-5 flex-shrink-0" />
-                      <span className="truncate">{item.name}</span>
+                      <span className="truncate text-sm font-medium">{item.name}</span>
                     </Link>
                   )
                 })}
               </nav>
             </div>
           </div>
+        </div>
 
-          {/* Main Content */}
-          <div className="lg:col-span-3">
+        {/* Overlay for mobile */}
+        {sidebarOpen && (
+          <div
+            className="fixed inset-0 bg-background/80 backdrop-blur-sm z-30 lg:hidden"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+
+        {/* Main Content */}
+        <div className="flex-1 w-full lg:w-auto">
+          <div className="p-4 sm:p-6 lg:p-8">
             <Routes>
               <Route index element={<AdminOverview />} />
               <Route path="users" element={<ManageUsers />} />

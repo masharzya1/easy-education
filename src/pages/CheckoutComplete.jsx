@@ -21,7 +21,7 @@ export default function CheckoutComplete() {
   useEffect(() => {
     const timer = setInterval(() => {
       setTimeRemaining((prev) => (prev > 0 ? prev - 1 : 0))
-    }, 3600000) // Update every hour
+    }, 3600000)
 
     return () => clearInterval(timer)
   }, [])

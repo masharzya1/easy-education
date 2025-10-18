@@ -146,6 +146,32 @@ export default function Checkout() {
     setLoading(true)
 
     try {
+      const approvedPaymentQuery = query(
+        collection(db, "payments"),
+        where("userId", "==", currentUser.uid),
+        where("status", "==", "approved"),
+      )
+      const approvedPaymentSnapshot = await getDocs(approvedPaymentQuery)
+
+      const approvedCourseIds = new Set()
+      approvedPaymentSnapshot.docs.forEach((doc) => {
+        const payment = doc.data()
+        payment.courses?.forEach((c) => {
+          approvedCourseIds.add(c.id)
+        })
+      })
+
+      const currentCourseIds = new Set(cartItems.map((c) => c.id))
+      const alreadyPurchased = [...currentCourseIds].filter((id) => approvedCourseIds.has(id))
+
+      if (alreadyPurchased.length > 0) {
+        alert(
+          `You have already purchased ${alreadyPurchased.length} course(s) in your cart. Please remove them before checkout.`,
+        )
+        setLoading(false)
+        return
+      }
+
       const existingPaymentQuery = query(
         collection(db, "payments"),
         where("userId", "==", currentUser.uid),
@@ -156,42 +182,14 @@ export default function Checkout() {
       if (!existingPaymentSnapshot.empty) {
         const existingPayment = existingPaymentSnapshot.docs[0].data()
         const existingCourseIds = new Set(existingPayment.courses?.map((c) => c.id) || [])
-        const currentCourseIds = new Set(cartItems.map((c) => c.id))
+        const currentCheckoutIds = new Set(cartItems.map((c) => c.id))
 
         if (
-          existingCourseIds.size === currentCourseIds.size &&
-          [...existingCourseIds].every((id) => currentCourseIds.has(id))
+          existingCourseIds.size === currentCheckoutIds.size &&
+          [...existingCourseIds].every((id) => currentCheckoutIds.has(id))
         ) {
           alert(
             "You already have a pending payment for these courses. Please wait for admin approval or contact support.",
-          )
-          setLoading(false)
-          return
-        }
-      }
-
-      const approvedPaymentQuery = query(
-        collection(db, "payments"),
-        where("userId", "==", currentUser.uid),
-        where("status", "==", "approved"),
-      )
-      const approvedPaymentSnapshot = await getDocs(approvedPaymentQuery)
-
-      if (!approvedPaymentSnapshot.empty) {
-        const approvedCourseIds = new Set()
-        approvedPaymentSnapshot.docs.forEach((doc) => {
-          const payment = doc.data()
-          payment.courses?.forEach((c) => {
-            approvedCourseIds.add(c.id)
-          })
-        })
-
-        const currentCourseIds = new Set(cartItems.map((c) => c.id))
-        const alreadyPurchased = [...currentCourseIds].filter((id) => approvedCourseIds.has(id))
-
-        if (alreadyPurchased.length > 0) {
-          alert(
-            `You have already purchased ${alreadyPurchased.length} course(s) in your cart. Please remove them before checkout.`,
           )
           setLoading(false)
           return
@@ -224,7 +222,7 @@ export default function Checkout() {
       await addDoc(collection(db, "payments"), paymentData)
 
       clearCart()
-      navigate("/checkout-complete")
+      navigate("/checkout-complete", { state: { courses: cartItems } })
     } catch (error) {
       console.error("Error submitting payment:", error)
       alert("Failed to submit payment. Please try again.")
