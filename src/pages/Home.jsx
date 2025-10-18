@@ -293,13 +293,12 @@ export default function Home() {
                           </span>
                         </div>
                         {purchasedCourses[course.id] ? (
-                          <button
-                            disabled
-                            className="w-full px-4 py-2 bg-green-500/20 text-green-700 dark:text-green-400 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm font-medium cursor-default"
-                          >
-                            <Check className="w-4 h-4" />
-                            Already Purchased
-                          </button>
+                          <Link to={`/course/${course.id}/chapters`} onClick={(e) => e.stopPropagation()}>
+                            <button className="w-full px-4 py-2 bg-green-500/20 text-green-700 dark:text-green-400 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm font-medium hover:bg-green-500/30">
+                              <Check className="w-4 h-4" />
+                              Continue Course
+                            </button>
+                          </Link>
                         ) : cartItems.some((item) => item.id === course.id) ? (
                           <button
                             onClick={(e) => handleRemoveFromCart(course, e)}

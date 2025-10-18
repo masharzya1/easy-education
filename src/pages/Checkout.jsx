@@ -170,6 +170,34 @@ export default function Checkout() {
         }
       }
 
+      const approvedPaymentQuery = query(
+        collection(db, "payments"),
+        where("userId", "==", currentUser.uid),
+        where("status", "==", "approved"),
+      )
+      const approvedPaymentSnapshot = await getDocs(approvedPaymentQuery)
+
+      if (!approvedPaymentSnapshot.empty) {
+        const approvedCourseIds = new Set()
+        approvedPaymentSnapshot.docs.forEach((doc) => {
+          const payment = doc.data()
+          payment.courses?.forEach((c) => {
+            approvedCourseIds.add(c.id)
+          })
+        })
+
+        const currentCourseIds = new Set(cartItems.map((c) => c.id))
+        const alreadyPurchased = [...currentCourseIds].filter((id) => approvedCourseIds.has(id))
+
+        if (alreadyPurchased.length > 0) {
+          alert(
+            `You have already purchased ${alreadyPurchased.length} course(s) in your cart. Please remove them before checkout.`,
+          )
+          setLoading(false)
+          return
+        }
+      }
+
       const discount = calculateDiscount()
       const paymentData = {
         userId: currentUser.uid,

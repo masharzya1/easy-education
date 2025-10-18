@@ -1,4 +1,7 @@
+"use client"
+
 import { Routes, Route, Link, useLocation } from "react-router-dom"
+import { useState } from "react"
 import {
   Users,
   BookOpen,
@@ -13,6 +16,8 @@ import {
   Grid,
   GraduationCap,
   BookMarked,
+  Menu,
+  X,
 } from "lucide-react"
 import AdminOverview from "./AdminOverview"
 import ManageUsers from "./ManageUsers"
@@ -31,6 +36,7 @@ import ManageChapters from "./ManageChapters"
 
 export default function AdminDashboard() {
   const location = useLocation()
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   const navItems = [
     { name: "Overview", path: "/admin", icon: LayoutDashboard },
@@ -51,11 +57,25 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-background">
+      <div className="lg:hidden flex items-center justify-between p-4 bg-card border-b border-border">
+        <h1 className="text-lg font-bold">Admin Panel</h1>
+        <button
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          className="p-2 hover:bg-muted rounded-lg transition-colors"
+        >
+          {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+        </button>
+      </div>
+
       <div className="container mx-auto px-4 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Sidebar */}
-          <div className="lg:col-span-1">
-            <div className="bg-card border border-border rounded-xl p-4 sticky top-20">
+          <div
+            className={`lg:col-span-1 ${
+              sidebarOpen ? "block" : "hidden"
+            } lg:block fixed lg:static inset-0 lg:inset-auto z-40 lg:z-auto bg-background lg:bg-transparent`}
+          >
+            <div className="bg-card border border-border rounded-xl p-4 sticky top-20 lg:top-auto max-h-[calc(100vh-100px)] overflow-y-auto">
               <h2 className="text-xl font-bold mb-4 px-2">Admin Panel</h2>
               <nav className="space-y-1">
                 {navItems.map((item) => {
@@ -64,12 +84,13 @@ export default function AdminDashboard() {
                     <Link
                       key={item.path}
                       to={item.path}
+                      onClick={() => setSidebarOpen(false)}
                       className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                         isActive ? "bg-primary text-primary-foreground" : "hover:bg-muted"
                       }`}
                     >
-                      <item.icon className="w-5 h-5" />
-                      <span>{item.name}</span>
+                      <item.icon className="w-5 h-5 flex-shrink-0" />
+                      <span className="truncate">{item.name}</span>
                     </Link>
                   )
                 })}

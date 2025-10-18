@@ -7,6 +7,7 @@ import { BookOpen, Play, Clock, CheckCircle, Lock, TrendingUp, ArrowRight } from
 import { collection, query, where, getDocs, doc, getDoc } from "firebase/firestore"
 import { db } from "../lib/firebase"
 import { useAuth } from "../contexts/AuthContext"
+import ProgressBar from "../components/ProgressBar"
 
 export default function MyCourses() {
   const { currentUser } = useAuth()
@@ -213,7 +214,6 @@ export default function MyCourses() {
                     <p className="text-xs text-muted-foreground">{course.category}</p>
                   </div>
 
-                  {/* Progress Bar */}
                   <div className="space-y-1">
                     <div className="flex justify-between items-center text-xs">
                       <span className="text-muted-foreground">Progress</span>
@@ -221,14 +221,12 @@ export default function MyCourses() {
                         {course.watchedClasses}/{course.totalClasses} classes
                       </span>
                     </div>
-                    <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
-                      <motion.div
-                        initial={{ width: 0 }}
-                        animate={{ width: `${course.progressPercent}%` }}
-                        transition={{ duration: 0.5, delay: 0.2 }}
-                        className="h-full bg-gradient-to-r from-primary to-secondary"
-                      />
-                    </div>
+                    <ProgressBar
+                      progress={course.progressPercent}
+                      showLabel={false}
+                      showPercentage={false}
+                      animated={true}
+                    />
                   </div>
 
                   {/* Course Stats */}

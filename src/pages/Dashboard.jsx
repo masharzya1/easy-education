@@ -242,30 +242,29 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen py-12 px-4">
+    <div className="min-h-screen py-8 px-4 sm:py-12 sm:px-6">
       <div className="container mx-auto max-w-6xl">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">Welcome back, {userProfile?.name || "Student"}!</h1>
-          <p className="text-muted-foreground">Here's your learning overview</p>
+          <h1 className="text-3xl sm:text-4xl font-bold mb-2">Welcome back, {userProfile?.name || "Student"}!</h1>
+          <p className="text-muted-foreground text-sm sm:text-base">Here's your learning overview</p>
         </motion.div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8">
           {statCards.map((stat, index) => (
             <motion.div
               key={stat.title}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
-              className="bg-card border border-border rounded-xl p-6"
+              className="bg-card border border-border rounded-xl p-4 sm:p-6"
             >
               <div className="flex items-center justify-between mb-4">
                 <div className={`p-3 ${stat.bgColor} rounded-lg`}>
                   <stat.icon className={`w-6 h-6 ${stat.color}`} />
                 </div>
               </div>
-              <h3 className="text-2xl font-bold mb-1">{stat.value}</h3>
-              <p className="text-sm text-muted-foreground">{stat.title}</p>
+              <h3 className="text-2xl sm:text-3xl font-bold mb-1">{stat.value}</h3>
+              <p className="text-xs sm:text-sm text-muted-foreground">{stat.title}</p>
             </motion.div>
           ))}
         </div>
@@ -276,12 +275,12 @@ export default function Dashboard() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="bg-card border border-border rounded-xl p-6"
+            className="bg-card border border-border rounded-xl p-4 sm:p-6"
           >
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
               <div className="flex items-center gap-2">
-                <CreditCard className="w-5 h-5 text-primary" />
-                <h2 className="text-xl font-bold">My Payments</h2>
+                <CreditCard className="w-5 h-5 text-primary flex-shrink-0" />
+                <h2 className="text-lg sm:text-xl font-bold">My Payments</h2>
               </div>
               <Link
                 to="/payment-history"
@@ -300,13 +299,13 @@ export default function Dashboard() {
             ) : payments.length > 0 ? (
               <div className="space-y-3">
                 {payments.slice(0, 3).map((payment) => (
-                  <div key={payment.id} className="p-4 bg-background border border-border rounded-lg">
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-start gap-3">
+                  <div key={payment.id} className="p-3 sm:p-4 bg-background border border-border rounded-lg">
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-3">
+                      <div className="flex items-start gap-3 flex-1 min-w-0">
                         {getStatusIcon(payment.status)}
-                        <div className="flex-1">
-                          <h3 className="font-semibold mb-1">{payment.courseName || "Course"}</h3>
-                          <p className="text-sm text-muted-foreground">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold mb-1 truncate">{payment.courseName || "Course"}</h3>
+                          <p className="text-xs sm:text-sm text-muted-foreground truncate">
                             Amount: ৳{payment.finalAmount || payment.amount || "0.00"} • Transaction:{" "}
                             {payment.transactionId}
                           </p>
@@ -317,12 +316,12 @@ export default function Dashboard() {
                           </p>
                         </div>
                       </div>
-                      {getStatusBadge(payment.status)}
+                      <div className="flex-shrink-0">{getStatusBadge(payment.status)}</div>
                     </div>
                     {payment.status === "approved" && (
                       <button
                         onClick={() => generateInvoice(payment)}
-                        className="w-full px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-colors flex items-center justify-center gap-2"
+                        className="w-full px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-colors flex items-center justify-center gap-2 text-sm"
                       >
                         <Download className="w-4 h-4" />
                         Download Invoice
@@ -345,11 +344,11 @@ export default function Dashboard() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
-              className="bg-card border border-border rounded-xl p-6"
+              className="bg-card border border-border rounded-xl p-4 sm:p-6"
             >
               <div className="flex items-center gap-2 mb-4">
-                <ThumbsUp className="w-5 h-5 text-primary" />
-                <h2 className="text-xl font-bold">Recent Votes</h2>
+                <ThumbsUp className="w-5 h-5 text-primary flex-shrink-0" />
+                <h2 className="text-lg sm:text-xl font-bold">Recent Votes</h2>
               </div>
 
               {loading ? (
@@ -382,44 +381,44 @@ export default function Dashboard() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
-              className="bg-card border border-border rounded-xl p-6"
+              className="bg-card border border-border rounded-xl p-4 sm:p-6"
             >
               <div className="flex items-center gap-2 mb-4">
-                <TrendingUp className="w-5 h-5 text-primary" />
-                <h2 className="text-xl font-bold">Quick Actions</h2>
+                <TrendingUp className="w-5 h-5 text-primary flex-shrink-0" />
+                <h2 className="text-lg sm:text-xl font-bold">Quick Actions</h2>
               </div>
 
               <div className="space-y-3">
                 <Link
                   to="/courses"
-                  className="block p-4 bg-primary/10 hover:bg-primary/20 border border-primary/20 rounded-lg transition-colors"
+                  className="block p-3 sm:p-4 bg-primary/10 hover:bg-primary/20 border border-primary/20 rounded-lg transition-colors"
                 >
-                  <h3 className="font-semibold text-primary mb-1">Browse Courses</h3>
-                  <p className="text-sm text-muted-foreground">Explore our course library</p>
+                  <h3 className="font-semibold text-primary mb-1 text-sm sm:text-base">Browse Courses</h3>
+                  <p className="text-xs sm:text-sm text-muted-foreground">Explore our course library</p>
                 </Link>
 
                 <Link
                   to="/my-courses"
-                  className="block p-4 bg-secondary/10 hover:bg-secondary/20 border border-secondary/20 rounded-lg transition-colors"
+                  className="block p-3 sm:p-4 bg-secondary/10 hover:bg-secondary/20 border border-secondary/20 rounded-lg transition-colors"
                 >
-                  <h3 className="font-semibold text-secondary mb-1">My Courses</h3>
-                  <p className="text-sm text-muted-foreground">View your purchased courses and progress</p>
+                  <h3 className="font-semibold text-secondary mb-1 text-sm sm:text-base">My Courses</h3>
+                  <p className="text-xs sm:text-sm text-muted-foreground">View your purchased courses and progress</p>
                 </Link>
 
                 <Link
                   to="/community"
-                  className="block p-4 bg-secondary/10 hover:bg-secondary/20 border border-secondary/20 rounded-lg transition-colors"
+                  className="block p-3 sm:p-4 bg-secondary/10 hover:bg-secondary/20 border border-secondary/20 rounded-lg transition-colors"
                 >
-                  <h3 className="font-semibold text-secondary mb-1">Join Community</h3>
-                  <p className="text-sm text-muted-foreground">Connect with other learners</p>
+                  <h3 className="font-semibold text-secondary mb-1 text-sm sm:text-base">Join Community</h3>
+                  <p className="text-xs sm:text-sm text-muted-foreground">Connect with other learners</p>
                 </Link>
 
                 <Link
                   to="/profile"
-                  className="block p-4 bg-accent/10 hover:bg-accent/20 border border-accent/20 rounded-lg transition-colors"
+                  className="block p-3 sm:p-4 bg-accent/10 hover:bg-accent/20 border border-accent/20 rounded-lg transition-colors"
                 >
-                  <h3 className="font-semibold text-accent mb-1">Edit Profile</h3>
-                  <p className="text-sm text-muted-foreground">Update your information</p>
+                  <h3 className="font-semibold text-accent mb-1 text-sm sm:text-base">Edit Profile</h3>
+                  <p className="text-xs sm:text-sm text-muted-foreground">Update your information</p>
                 </Link>
               </div>
             </motion.div>

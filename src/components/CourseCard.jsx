@@ -7,13 +7,15 @@ import { useCart } from "../contexts/CartContext"
 import { useAuth } from "../contexts/AuthContext"
 import { collection, query, where, getDocs } from "firebase/firestore"
 import { db } from "../lib/firebase"
+import ProgressBar from "./ProgressBar"
 
-export default function CourseCard({ course, onAddToCart }) {
+export default function CourseCard({ course, onAddToCart, showProgress = false }) {
   const { addToCart, removeFromCart, cartItems, openCart } = useCart()
   const { currentUser } = useAuth()
   const [isPurchased, setIsPurchased] = useState(false)
   const [isInCart, setIsInCart] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [progress, setProgress] = useState(0)
 
   // Check cart status whenever cart or course ID changes
   useEffect(() => {
@@ -25,6 +27,12 @@ export default function CourseCard({ course, onAddToCart }) {
     setLoading(true)
     checkIfPurchased()
   }, [currentUser, course.id])
+
+  useEffect(() => {
+    if (isPurchased && showProgress) {
+      calculateProgress()
+    }
+  }, [isPurchased, showProgress])
 
   const checkIfPurchased = async () => {
     if (!currentUser) {
@@ -52,6 +60,32 @@ export default function CourseCard({ course, onAddToCart }) {
       setIsPurchased(false)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const calculateProgress = async () => {
+    try {
+      const classesQuery = query(collection(db, "classes"), where("courseId", "==", course.id))
+      const classesSnapshot = await getDocs(classesQuery)
+      const totalClasses = classesSnapshot.size
+
+      if (totalClasses === 0) {
+        setProgress(0)
+        return
+      }
+
+      const watchedQuery = query(
+        collection(db, "userProgress"),
+        where("userId", "==", currentUser.uid),
+        where("courseId", "==", course.id),
+      )
+      const watchedSnapshot = await getDocs(watchedQuery)
+      const watchedClasses = watchedSnapshot.size
+
+      setProgress(Math.round((watchedClasses / totalClasses) * 100))
+    } catch (error) {
+      console.error("Error calculating progress:", error)
+      setProgress(0)
     }
   }
 
@@ -117,12 +151,17 @@ export default function CourseCard({ course, onAddToCart }) {
               Loading Status...
             </div>
           ) : isPurchased ? (
-            <Link to={`/course/${course.id}/chapters`} onClick={(e) => e.stopPropagation()}>
-              <button className="w-full px-4 py-2 bg-green-500/20 text-green-700 dark:text-green-400 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm font-medium hover:bg-green-500/30">
-                <Check className="w-4 h-4" />
-                Continue Course
-              </button>
-            </Link>
+            <>
+              <div className="mb-3">
+                <ProgressBar progress={progress} showLabel={true} showPercentage={true} animated={false} />
+              </div>
+              <Link to={`/course/${course.id}/chapters`} onClick={(e) => e.stopPropagation()}>
+                <button className="w-full px-4 py-2 bg-green-500/20 text-green-700 dark:text-green-400 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm font-medium hover:bg-green-500/30">
+                  <Check className="w-4 h-4" />
+                  Continue Course
+                </button>
+              </Link>
+            </>
           ) : isInCart ? (
             <button
               onClick={handleRemoveFromCart}
