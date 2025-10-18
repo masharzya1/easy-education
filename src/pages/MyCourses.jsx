@@ -1,4 +1,4 @@
-
+"use client"
 
 import { useState, useEffect } from "react"
 import { Link, useNavigate } from "react-router-dom"
@@ -23,7 +23,6 @@ export default function MyCourses() {
 
   const fetchPurchasedCourses = async () => {
     try {
-      // Get all approved payments for the user
       const paymentsQuery = query(
         collection(db, "payments"),
         where("userId", "==", currentUser.uid),
@@ -32,44 +31,54 @@ export default function MyCourses() {
       const paymentsSnapshot = await getDocs(paymentsQuery)
 
       const coursesData = await Promise.all(
-        paymentsSnapshot.docs.map(async (paymentDoc) => {
+        paymentsSnapshot.docs.flatMap(async (paymentDoc) => {
           const payment = paymentDoc.data()
-          const courseDoc = await getDoc(doc(db, "courses", payment.courseId))
 
-          if (courseDoc.exists()) {
-            const courseData = { id: courseDoc.id, ...courseDoc.data() }
+          return Promise.all(
+            (payment.courses || []).map(async (courseItem) => {
+              try {
+                const courseDoc = await getDoc(doc(db, "courses", courseItem.id))
 
-            // Get all classes for this course
-            const classesQuery = query(collection(db, "classes"), where("courseId", "==", payment.courseId))
-            const classesSnapshot = await getDocs(classesQuery)
-            const totalClasses = classesSnapshot.size
+                if (courseDoc.exists()) {
+                  const courseData = { id: courseDoc.id, ...courseDoc.data() }
 
-            // Get watched classes by user
-            const watchedQuery = query(
-              collection(db, "watched"),
-              where("userId", "==", currentUser.uid),
-              where("courseId", "==", payment.courseId),
-            )
-            const watchedSnapshot = await getDocs(watchedQuery)
-            const watchedClasses = watchedSnapshot.size
+                  // Get all classes for this course
+                  const classesQuery = query(collection(db, "classes"), where("courseId", "==", courseItem.id))
+                  const classesSnapshot = await getDocs(classesQuery)
+                  const totalClasses = classesSnapshot.size
 
-            const progressPercent = totalClasses > 0 ? Math.round((watchedClasses / totalClasses) * 100) : 0
+                  // Get watched classes by user
+                  const watchedQuery = query(
+                    collection(db, "watched"),
+                    where("userId", "==", currentUser.uid),
+                    where("courseId", "==", courseItem.id),
+                  )
+                  const watchedSnapshot = await getDocs(watchedQuery)
+                  const watchedClasses = watchedSnapshot.size
 
-            return {
-              ...courseData,
-              paymentId: paymentDoc.id,
-              purchaseDate: payment.createdAt,
-              totalClasses,
-              watchedClasses,
-              progressPercent,
-              isCompleted: progressPercent === 100,
-            }
-          }
-          return null
+                  const progressPercent = totalClasses > 0 ? Math.round((watchedClasses / totalClasses) * 100) : 0
+
+                  return {
+                    ...courseData,
+                    paymentId: paymentDoc.id,
+                    purchaseDate: payment.createdAt,
+                    totalClasses,
+                    watchedClasses,
+                    progressPercent,
+                    isCompleted: progressPercent === 100,
+                  }
+                }
+                return null
+              } catch (error) {
+                console.error("Error fetching course:", error)
+                return null
+              }
+            }),
+          )
         }),
       )
 
-      setPurchasedCourses(coursesData.filter(Boolean))
+      setPurchasedCourses(coursesData.flat().filter(Boolean))
     } catch (error) {
       console.error("Error fetching purchased courses:", error)
     } finally {

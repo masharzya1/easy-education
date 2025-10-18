@@ -1,16 +1,9 @@
+"use client"
+
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { CreditCard, Check, X, Clock } from "lucide-react"
-import {
-  collection,
-  getDocs,
-  updateDoc,
-  doc,
-  setDoc,
-  serverTimestamp,
-  query,
-  orderBy
-} from "firebase/firestore"
+import { collection, getDocs, updateDoc, doc, setDoc, serverTimestamp, query, orderBy } from "firebase/firestore"
 import { db } from "../../lib/firebase"
 
 export default function ManagePayments() {
@@ -26,7 +19,7 @@ export default function ManagePayments() {
     try {
       const q = query(collection(db, "payments"), orderBy("submittedAt", "desc"))
       const snapshot = await getDocs(q)
-      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+      const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
       setPayments(data)
     } catch (error) {
       console.error("Error fetching payments:", error)
@@ -39,19 +32,18 @@ export default function ManagePayments() {
     if (!confirm("Approve this payment and grant course access?")) return
 
     try {
-      // Update payment status
       await updateDoc(doc(db, "payments", payment.id), {
         status: "approved",
-        approvedAt: serverTimestamp()
+        approvedAt: serverTimestamp(),
       })
 
-      // Grant access to courses
+      // Grant access to each course by creating userCourses entries
       for (const course of payment.courses) {
         await setDoc(doc(db, "userCourses", `${payment.userId}_${course.id}`), {
           userId: payment.userId,
           courseId: course.id,
           enrolledAt: serverTimestamp(),
-          progress: 0
+          progress: 0,
         })
       }
 
@@ -70,7 +62,7 @@ export default function ManagePayments() {
       await updateDoc(doc(db, "payments", paymentId), {
         status: "rejected",
         rejectedAt: serverTimestamp(),
-        rejectionReason: reason || "Payment verification failed"
+        rejectionReason: reason || "Payment verification failed",
       })
 
       alert("Payment rejected successfully!")
@@ -81,7 +73,7 @@ export default function ManagePayments() {
     }
   }
 
-  const filteredPayments = payments.filter(payment => {
+  const filteredPayments = payments.filter((payment) => {
     if (filter === "all") return true
     return payment.status === filter
   })
@@ -90,17 +82,19 @@ export default function ManagePayments() {
     const styles = {
       pending: "bg-yellow-500/10 text-yellow-600 border-yellow-500/20",
       approved: "bg-green-500/10 text-green-600 border-green-500/20",
-      rejected: "bg-red-500/10 text-red-600 border-red-500/20"
+      rejected: "bg-red-500/10 text-red-600 border-red-500/20",
     }
     const icons = {
       pending: Clock,
       approved: Check,
-      rejected: X
+      rejected: X,
     }
     const Icon = icons[status] || Clock
 
     return (
-      <span className={`px-3 py-1 rounded-full text-sm font-medium border ${styles[status] || styles.pending} flex items-center gap-1 w-fit`}>
+      <span
+        className={`px-3 py-1 rounded-full text-sm font-medium border ${styles[status] || styles.pending} flex items-center gap-1 w-fit`}
+      >
         <Icon className="w-4 h-4" />
         {status.charAt(0).toUpperCase() + status.slice(1)}
       </span>
@@ -123,17 +117,15 @@ export default function ManagePayments() {
           Manage Payments
         </h1>
         <div className="flex gap-2">
-          {["all", "pending", "approved", "rejected"].map(status => (
+          {["all", "pending", "approved", "rejected"].map((status) => (
             <button
               key={status}
               onClick={() => setFilter(status)}
               className={`px-4 py-2 rounded-lg transition-colors capitalize ${
-                filter === status
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted hover:bg-muted/80"
+                filter === status ? "bg-primary text-primary-foreground" : "bg-muted hover:bg-muted/80"
               }`}
             >
-              {status} ({payments.filter(p => status === "all" || p.status === status).length})
+              {status} ({payments.filter((p) => status === "all" || p.status === status).length})
             </button>
           ))}
         </div>
@@ -168,9 +160,7 @@ export default function ManagePayments() {
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground mb-1">Submitted At</p>
-                    <p className="font-medium">
-                      {payment.submittedAt?.toDate?.()?.toLocaleString() || "Recently"}
-                    </p>
+                    <p className="font-medium">{payment.submittedAt?.toDate?.()?.toLocaleString() || "Recently"}</p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground mb-1">Amount</p>
@@ -230,9 +220,7 @@ export default function ManagePayments() {
       {filteredPayments.length === 0 && (
         <div className="text-center py-12">
           <CreditCard className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-          <p className="text-muted-foreground">
-            No {filter !== "all" && filter} payments found
-          </p>
+          <p className="text-muted-foreground">No {filter !== "all" && filter} payments found</p>
         </div>
       )}
     </div>

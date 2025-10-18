@@ -1,9 +1,9 @@
-
+"use client"
 
 import { useState, useEffect } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { motion } from "framer-motion"
-import { ShoppingCart, Play, BookOpen, Clock, Users, Tag, DollarSign, Check } from "lucide-react"
+import { ShoppingCart, Play, BookOpen, Clock, Users, Tag, DollarSign, Check, AlertCircle } from "lucide-react"
 import { doc, getDoc, collection, query, where, getDocs } from "firebase/firestore"
 import { db } from "../lib/firebase"
 import { useAuth } from "../contexts/AuthContext"
@@ -18,6 +18,7 @@ export default function CourseDetail() {
   const [loading, setLoading] = useState(true)
   const [hasAccess, setHasAccess] = useState(false)
   const [isInCart, setIsInCart] = useState(false)
+  const [hasPendingPayment, setHasPendingPayment] = useState(false)
 
   useEffect(() => {
     fetchCourseData()
@@ -41,11 +42,18 @@ export default function CourseDetail() {
           const paymentsQuery = query(
             collection(db, "payments"),
             where("userId", "==", currentUser.uid),
-            where("courseId", "==", courseId),
             where("status", "==", "approved"),
           )
           const paymentsSnapshot = await getDocs(paymentsQuery)
           setHasAccess(!paymentsSnapshot.empty)
+
+          const pendingPaymentQuery = query(
+            collection(db, "payments"),
+            where("userId", "==", currentUser.uid),
+            where("status", "==", "pending"),
+          )
+          const pendingPaymentSnapshot = await getDocs(pendingPaymentQuery)
+          setHasPendingPayment(!pendingPaymentSnapshot.empty)
         }
       }
     } catch (error) {
@@ -190,6 +198,24 @@ export default function CourseDetail() {
                   >
                     <Play className="w-5 h-5" />
                     Watch Course
+                  </button>
+                </div>
+              ) : hasPendingPayment ? (
+                <div className="space-y-4">
+                  <div className="bg-yellow-50 dark:bg-yellow-950/30 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <AlertCircle className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
+                      <span className="font-semibold text-yellow-600 dark:text-yellow-400">Payment Pending</span>
+                    </div>
+                    <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                      Your payment is awaiting admin approval. You'll get access once it's approved.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => navigate("/dashboard")}
+                    className="w-full py-3 bg-muted hover:bg-muted/80 text-foreground rounded-lg transition-colors font-medium"
+                  >
+                    View Payment Status
                   </button>
                 </div>
               ) : (

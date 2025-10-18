@@ -1,4 +1,4 @@
-
+"use client"
 
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
@@ -146,6 +146,19 @@ export default function Checkout() {
     setLoading(true)
 
     try {
+      const existingPaymentQuery = query(
+        collection(db, "payments"),
+        where("userId", "==", currentUser.uid),
+        where("status", "==", "pending"),
+      )
+      const existingPaymentSnapshot = await getDocs(existingPaymentQuery)
+
+      if (!existingPaymentSnapshot.empty) {
+        alert("You already have a pending payment. Please wait for admin approval or contact support.")
+        setLoading(false)
+        return
+      }
+
       const discount = calculateDiscount()
       const paymentData = {
         userId: currentUser.uid,

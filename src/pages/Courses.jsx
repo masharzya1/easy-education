@@ -1,4 +1,4 @@
-
+"use client"
 
 import { useState, useEffect } from "react"
 import { Link, useLocation } from "react-router-dom"
@@ -21,6 +21,9 @@ export default function Courses() {
   useEffect(() => {
     if (location.state?.searchQuery) {
       setSearchQuery(location.state.searchQuery)
+    }
+    if (location.state?.categoryFilter) {
+      setCategoryFilter(location.state.categoryFilter)
     }
   }, [location.state])
 

@@ -1,3 +1,5 @@
+"use client"
+
 import { useState, useEffect } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { motion } from "framer-motion"
@@ -67,6 +69,10 @@ export default function Home() {
     } else {
       alert("Course already in cart!")
     }
+  }
+
+  const handleCategoryClick = (category) => {
+    navigate("/courses", { state: { categoryFilter: category.title } })
   }
 
   return (
@@ -165,12 +171,12 @@ export default function Home() {
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: index * 0.05 }}
                 >
-                  <Link to={category.targetPage || "/courses"}>
+                  <button onClick={() => handleCategoryClick(category)} className="w-full text-left">
                     <div className="bg-card border border-border rounded-xl overflow-hidden hover:border-primary hover:shadow-lg transition-all group cursor-pointer">
                       <div className="aspect-video bg-gradient-to-br from-primary/20 to-secondary/20 relative overflow-hidden">
                         {category.imageURL ? (
                           <img
-                            src={category.imageURL}
+                            src={category.imageURL || "/placeholder.svg"}
                             alt={category.title}
                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                           />
@@ -186,7 +192,7 @@ export default function Home() {
                         </h3>
                       </div>
                     </div>
-                  </Link>
+                  </button>
                 </motion.div>
               ))}
             </div>

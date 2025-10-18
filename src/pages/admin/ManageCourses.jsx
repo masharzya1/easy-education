@@ -1,4 +1,4 @@
-
+"use client"
 
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
@@ -381,17 +381,6 @@ export default function ManageCourses() {
                     placeholder="0"
                     className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                   />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Course Type</label>
-                  <select
-                    value={formData.type}
-                    onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                    className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                  >
-                    <option value="subject">Subject</option>
-                    <option value="batch">Batch</option>
-                  </select>
                 </div>
               </div>
 
