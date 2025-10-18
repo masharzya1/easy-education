@@ -1,4 +1,4 @@
-
+"use client"
 
 import { useState, useEffect } from "react"
 import { Link, Navigate } from "react-router-dom"
@@ -172,7 +172,7 @@ export default function Dashboard() {
     <div class="footer-logo">Easy Education</div>
     <p>Thank you for choosing Easy Education!</p>
     <p>For support: <a href="mailto:support@easyeducation.com">support@easyeducation.com</a></p>
-    <p style="margin-top: 12px; font-size: 11px; color: #9CA3AF;">© 2024 Easy Education. All rights reserved.</p>
+    <p style="margin-top: 12px; font-size: 11px; color: #9CA3AF;">© 2025 Easy Education. All rights reserved.</p>
   </div>
 </body>
 </html>
@@ -278,9 +278,17 @@ export default function Dashboard() {
             transition={{ delay: 0.3 }}
             className="bg-card border border-border rounded-xl p-6"
           >
-            <div className="flex items-center gap-2 mb-4">
-              <CreditCard className="w-5 h-5 text-primary" />
-              <h2 className="text-xl font-bold">My Payments</h2>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <CreditCard className="w-5 h-5 text-primary" />
+                <h2 className="text-xl font-bold">My Payments</h2>
+              </div>
+              <Link
+                to="/payment-history"
+                className="text-sm text-primary hover:text-primary/80 font-medium transition-colors"
+              >
+                View All
+              </Link>
             </div>
 
             {loading ? (
@@ -291,7 +299,7 @@ export default function Dashboard() {
               </div>
             ) : payments.length > 0 ? (
               <div className="space-y-3">
-                {payments.map((payment) => (
+                {payments.slice(0, 3).map((payment) => (
                   <div key={payment.id} className="p-4 bg-background border border-border rounded-lg">
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-start gap-3">
@@ -299,10 +307,13 @@ export default function Dashboard() {
                         <div className="flex-1">
                           <h3 className="font-semibold mb-1">{payment.courseName || "Course"}</h3>
                           <p className="text-sm text-muted-foreground">
-                            Amount: ${payment.amount || "0.00"} • Transaction: {payment.transactionId}
+                            Amount: ৳{payment.finalAmount || payment.amount || "0.00"} • Transaction:{" "}
+                            {payment.transactionId}
                           </p>
                           <p className="text-xs text-muted-foreground mt-1">
-                            {payment.createdAt?.toDate?.()?.toLocaleDateString() || "Recently"}
+                            {payment.submittedAt?.toDate?.()?.toLocaleDateString() ||
+                              payment.createdAt?.toDate?.()?.toLocaleDateString() ||
+                              "Recently"}
                           </p>
                         </div>
                       </div>

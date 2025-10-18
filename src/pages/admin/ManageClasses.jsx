@@ -1,3 +1,5 @@
+"use client"
+
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { Plus, Edit, Trash2, X, Archive } from "lucide-react"
@@ -576,17 +578,6 @@ export default function ManageClasses() {
                   >
                     YouTube Link
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => setVideoType("hls")}
-                    className={`flex-1 py-2 px-4 rounded-lg border-2 transition-colors ${
-                      videoType === "hls"
-                        ? "border-primary bg-primary/10 text-primary font-medium"
-                        : "border-border hover:border-primary/50"
-                    }`}
-                  >
-                    Server 2
-                  </button>
                 </div>
 
                 {videoType === "youtube" ? (
@@ -603,21 +594,7 @@ export default function ManageClasses() {
                       Paste a YouTube video URL (supports youtube.com and youtu.be links)
                     </p>
                   </div>
-                ) : (
-                  <div>
-                    <input
-                      type="url"
-                      value={formData.hlsLink}
-                      onChange={(e) => setFormData({ ...formData, hlsLink: e.target.value })}
-                      placeholder="https://example.com/video.m3u8 or Google Drive link"
-                      required={videoType === "hls"}
-                      className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Paste an HLS video link (.m3u8) from Google Drive or any other source
-                    </p>
-                  </div>
-                )}
+                ) : null}
               </div>
 
               <div>

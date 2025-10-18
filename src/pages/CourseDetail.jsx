@@ -80,6 +80,41 @@ export default function CourseDetail() {
     navigate(`/course/${courseId}/chapters`)
   }
 
+  const handleEnrollFree = async () => {
+    if (!currentUser) {
+      navigate("/login")
+      return
+    }
+
+    try {
+      // Create an auto-approved payment record for free courses
+      const { addDoc, collection, serverTimestamp } = await import("firebase/firestore")
+      await addDoc(collection(db, "payments"), {
+        userId: currentUser.uid,
+        userName: currentUser.displayName || "User",
+        userEmail: currentUser.email,
+        courses: [
+          {
+            id: course.id,
+            title: course.title,
+            price: 0,
+          },
+        ],
+        subtotal: 0,
+        discount: 0,
+        finalAmount: 0,
+        status: "approved",
+        submittedAt: serverTimestamp(),
+        isFreeEnrollment: true,
+      })
+
+      navigate("/my-courses")
+    } catch (error) {
+      console.error("Error enrolling in free course:", error)
+      alert("Failed to enroll. Please try again.")
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -212,7 +247,7 @@ export default function CourseDetail() {
                     </p>
                   </div>
                   <button
-                    onClick={() => navigate("/dashboard")}
+                    onClick={() => navigate("/payment-history")}
                     className="w-full py-3 bg-muted hover:bg-muted/80 text-foreground rounded-lg transition-colors font-medium"
                   >
                     View Payment Status
@@ -242,6 +277,14 @@ export default function CourseDetail() {
                       >
                         <Check className="w-5 h-5" />
                         Go to Checkout
+                      </button>
+                    ) : course.price === 0 || course.price === undefined ? (
+                      <button
+                        onClick={handleEnrollFree}
+                        className="w-full py-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-colors font-medium flex items-center justify-center gap-2"
+                      >
+                        <Check className="w-5 h-5" />
+                        Enroll Free
                       </button>
                     ) : (
                       <>

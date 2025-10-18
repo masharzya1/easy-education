@@ -181,13 +181,15 @@ export default function Home() {
                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                           />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <Users className="w-12 h-12 text-primary/50" />
+                          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-secondary/10 p-4">
+                            <h3 className="text-center font-bold text-lg md:text-xl bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                              {category.title}
+                            </h3>
                           </div>
                         )}
                       </div>
                       <div className="p-4">
-                        <h3 className="font-semibold text-center group-hover:text-primary transition-colors">
+                        <h3 className="font-semibold text-center group-hover:text-primary transition-colors line-clamp-1">
                           {category.title}
                         </h3>
                       </div>

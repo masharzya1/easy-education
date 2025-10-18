@@ -1,6 +1,8 @@
+"use client"
+
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
-import { Plus, Edit, Trash2, Loader2, Image as ImageIcon } from "lucide-react"
+import { Plus, Edit, Trash2, Loader2, ImageIcon } from "lucide-react"
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from "firebase/firestore"
 import { db } from "../../lib/firebase"
 import { uploadImageToImgBB } from "../../lib/imgbb"
@@ -140,11 +142,17 @@ export default function ManageCategories() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">Category Image</label>
+              <label className="block text-sm font-medium mb-2">
+                Category Image <span className="text-xs text-muted-foreground">(Optional)</span>
+              </label>
               <div className="space-y-3">
                 {formData.imageURL && (
                   <div className="relative w-full aspect-video rounded-lg overflow-hidden border border-border">
-                    <img src={formData.imageURL} alt="Preview" className="w-full h-full object-cover" />
+                    <img
+                      src={formData.imageURL || "/placeholder.svg"}
+                      alt="Preview"
+                      className="w-full h-full object-cover"
+                    />
                   </div>
                 )}
                 <div className="flex items-center gap-3">
@@ -160,6 +168,15 @@ export default function ManageCategories() {
                     />
                   </label>
                   {uploading && <Loader2 className="w-5 h-5 animate-spin text-primary" />}
+                  {formData.imageURL && (
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, imageURL: "" })}
+                      className="px-3 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg transition-colors text-sm"
+                    >
+                      Remove
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -218,10 +235,18 @@ export default function ManageCategories() {
             >
               <div className="aspect-video bg-gradient-to-br from-primary/20 to-secondary/20 relative">
                 {category.imageURL ? (
-                  <img src={category.imageURL} alt={category.title} className="w-full h-full object-cover" />
+                  <img
+                    src={category.imageURL || "/placeholder.svg"}
+                    alt={category.title}
+                    className="w-full h-full object-cover"
+                  />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <ImageIcon className="w-16 h-16 text-muted-foreground" />
+                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-secondary/10">
+                    <div className="text-center px-4">
+                      <h3 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                        {category.title}
+                      </h3>
+                    </div>
                   </div>
                 )}
               </div>

@@ -1,5 +1,3 @@
-
-
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom"
 import { AuthProvider } from "./contexts/AuthContext"
 import { CartProvider } from "./contexts/CartContext"
@@ -25,6 +23,8 @@ import Profile from "./pages/Profile"
 import Dashboard from "./pages/Dashboard"
 import AdminDashboard from "./pages/admin/AdminDashboard"
 import Checkout from "./pages/Checkout"
+import CheckoutComplete from "./pages/CheckoutComplete"
+import PaymentHistory from "./pages/PaymentHistory"
 import MyCourses from "./pages/MyCourses"
 
 console.log(" App.jsx loaded")
@@ -52,6 +52,15 @@ function App() {
                 {/* End hierarchical routes */}
                 <Route path="/course/:courseId/watch" element={<CourseWatch />} />
                 <Route path="/checkout" element={<Checkout />} />
+                <Route path="/checkout-complete" element={<CheckoutComplete />} />
+                <Route
+                  path="/payment-history"
+                  element={
+                    <ProtectedRoute>
+                      <PaymentHistory />
+                    </ProtectedRoute>
+                  }
+                />
                 <Route path="/announcements" element={<Announcements />} />
                 <Route path="/announcements/:id" element={<AnnouncementDetail />} />
                 <Route path="/community" element={<Community />} />

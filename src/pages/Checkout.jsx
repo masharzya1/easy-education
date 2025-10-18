@@ -185,8 +185,7 @@ export default function Checkout() {
       await addDoc(collection(db, "payments"), paymentData)
 
       clearCart()
-      alert("Payment submitted successfully! Please wait for admin approval.")
-      navigate("/dashboard")
+      navigate("/checkout-complete")
     } catch (error) {
       console.error("Error submitting payment:", error)
       alert("Failed to submit payment. Please try again.")
