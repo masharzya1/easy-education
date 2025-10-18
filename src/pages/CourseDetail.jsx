@@ -13,7 +13,7 @@ export default function CourseDetail() {
   const { courseId } = useParams()
   const navigate = useNavigate()
   const { currentUser } = useAuth()
-  const { addToCart, cartItems } = useCart()
+  const { addToCart, cartItems, removeFromCart } = useCart()
   const [course, setCourse] = useState(null)
   const [loading, setLoading] = useState(true)
   const [hasAccess, setHasAccess] = useState(false)
@@ -37,7 +37,6 @@ export default function CourseDetail() {
         const courseData = { id: courseDoc.id, ...courseDoc.data() }
         setCourse(courseData)
 
-        // Check if user has access (purchased and approved)
         if (currentUser) {
           const paymentsQuery = query(
             collection(db, "payments"),
@@ -45,7 +44,12 @@ export default function CourseDetail() {
             where("status", "==", "approved"),
           )
           const paymentsSnapshot = await getDocs(paymentsQuery)
-          setHasAccess(!paymentsSnapshot.empty)
+
+          const hasApprovedCourse = paymentsSnapshot.docs.some((doc) => {
+            const payment = doc.data()
+            return payment.courses?.some((c) => c.id === courseId)
+          })
+          setHasAccess(hasApprovedCourse)
 
           const pendingPaymentQuery = query(
             collection(db, "payments"),
@@ -53,7 +57,12 @@ export default function CourseDetail() {
             where("status", "==", "pending"),
           )
           const pendingPaymentSnapshot = await getDocs(pendingPaymentQuery)
-          setHasPendingPayment(!pendingPaymentSnapshot.empty)
+
+          const hasPendingCourse = pendingPaymentSnapshot.docs.some((doc) => {
+            const payment = doc.data()
+            return payment.courses?.some((c) => c.id === courseId)
+          })
+          setHasPendingPayment(hasPendingCourse)
         }
       }
     } catch (error) {
@@ -66,6 +75,12 @@ export default function CourseDetail() {
   const handleAddToCart = () => {
     if (course) {
       addToCart(course)
+    }
+  }
+
+  const handleRemoveFromCart = () => {
+    if (course) {
+      removeFromCart(course.id)
     }
   }
 

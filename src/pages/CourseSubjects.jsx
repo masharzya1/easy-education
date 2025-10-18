@@ -1,4 +1,4 @@
-
+"use client"
 
 import { useState, useEffect } from "react"
 import { useParams, useNavigate } from "react-router-dom"
@@ -28,18 +28,21 @@ export default function CourseSubjects() {
         const courseData = { id: courseDoc.id, ...courseDoc.data() }
         setCourse(courseData)
 
-        // Check access
         if (isAdmin) {
           setHasAccess(true)
         } else if (currentUser) {
           const paymentsQuery = query(
             collection(db, "payments"),
             where("userId", "==", currentUser.uid),
-            where("courseId", "==", courseId),
             where("status", "==", "approved"),
           )
           const paymentsSnapshot = await getDocs(paymentsQuery)
-          setHasAccess(!paymentsSnapshot.empty)
+
+          const hasApprovedCourse = paymentsSnapshot.docs.some((doc) => {
+            const payment = doc.data()
+            return payment.courses?.some((c) => c.id === courseId)
+          })
+          setHasAccess(hasApprovedCourse)
         }
 
         // Fetch classes
@@ -113,7 +116,9 @@ export default function CourseSubjects() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
-              onClick={() => navigate(`/course/${courseId}/chapters/${subject}`)}
+              onClick={() => {
+                navigate(`/course/${courseId}/chapters/${encodeURIComponent(subject)}`)
+              }}
               className="group relative bg-card border border-border rounded-xl p-6 hover:border-primary/50 hover:shadow-lg transition-all duration-300 text-left"
             >
               <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-secondary/5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity" />

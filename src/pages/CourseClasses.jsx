@@ -1,4 +1,4 @@
-
+"use client"
 
 import { useState, useEffect } from "react"
 import { useParams, useNavigate } from "react-router-dom"
@@ -28,18 +28,21 @@ export default function CourseClasses() {
         const courseData = { id: courseDoc.id, ...courseDoc.data() }
         setCourse(courseData)
 
-        // Check access
         if (isAdmin) {
           setHasAccess(true)
         } else if (currentUser) {
           const paymentsQuery = query(
             collection(db, "payments"),
             where("userId", "==", currentUser.uid),
-            where("courseId", "==", courseId),
             where("status", "==", "approved"),
           )
           const paymentsSnapshot = await getDocs(paymentsQuery)
-          setHasAccess(!paymentsSnapshot.empty)
+
+          const hasApprovedCourse = paymentsSnapshot.docs.some((doc) => {
+            const payment = doc.data()
+            return payment.courses?.some((c) => c.id === courseId)
+          })
+          setHasAccess(hasApprovedCourse)
         }
 
         // Fetch classes

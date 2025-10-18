@@ -3,7 +3,7 @@
 import { useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { motion } from "framer-motion"
-import { CheckCircle, Clock, Home, MessageSquare } from "lucide-react"
+import { CheckCircle, Clock, Home } from "lucide-react"
 import { useAuth } from "../contexts/AuthContext"
 
 export default function CheckoutComplete() {
@@ -107,13 +107,6 @@ export default function CheckoutComplete() {
               className="w-full py-3 bg-muted hover:bg-muted/80 text-foreground rounded-lg transition-colors font-medium"
             >
               View My Courses
-            </button>
-            <button
-              onClick={() => navigate("/contact")}
-              className="w-full py-3 bg-muted hover:bg-muted/80 text-foreground rounded-lg transition-colors font-medium flex items-center justify-center gap-2"
-            >
-              <MessageSquare className="w-4 h-4" />
-              Contact Support
             </button>
           </motion.div>
 

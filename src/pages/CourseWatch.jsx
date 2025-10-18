@@ -54,18 +54,21 @@ export default function CourseWatch() {
         const courseData = { id: courseDoc.id, ...courseDoc.data() }
         setCourse(courseData)
 
-        // Check if user has access (admin or purchased + approved)
         if (isAdmin) {
           setHasAccess(true)
         } else if (currentUser) {
           const paymentsQuery = query(
             collection(db, "payments"),
             where("userId", "==", currentUser.uid),
-            where("courseId", "==", courseId),
             where("status", "==", "approved"),
           )
           const paymentsSnapshot = await getDocs(paymentsQuery)
-          setHasAccess(!paymentsSnapshot.empty)
+
+          const hasApprovedCourse = paymentsSnapshot.docs.some((doc) => {
+            const payment = doc.data()
+            return payment.courses?.some((c) => c.id === courseId)
+          })
+          setHasAccess(hasApprovedCourse)
         }
 
         const classesQuery = query(collection(db, "classes"), where("courseId", "==", courseId))
@@ -274,6 +277,10 @@ export default function CourseWatch() {
     } else {
       showToast("This is the last video", "info")
     }
+  }
+
+  const handleWatchNow = () => {
+    navigate(`/course/${courseId}/chapters`)
   }
 
   const showToast = (message, type = "info") => {

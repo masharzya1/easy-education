@@ -154,9 +154,20 @@ export default function Checkout() {
       const existingPaymentSnapshot = await getDocs(existingPaymentQuery)
 
       if (!existingPaymentSnapshot.empty) {
-        alert("You already have a pending payment. Please wait for admin approval or contact support.")
-        setLoading(false)
-        return
+        const existingPayment = existingPaymentSnapshot.docs[0].data()
+        const existingCourseIds = new Set(existingPayment.courses?.map((c) => c.id) || [])
+        const currentCourseIds = new Set(cartItems.map((c) => c.id))
+
+        if (
+          existingCourseIds.size === currentCourseIds.size &&
+          [...existingCourseIds].every((id) => currentCourseIds.has(id))
+        ) {
+          alert(
+            "You already have a pending payment for these courses. Please wait for admin approval or contact support.",
+          )
+          setLoading(false)
+          return
+        }
       }
 
       const discount = calculateDiscount()

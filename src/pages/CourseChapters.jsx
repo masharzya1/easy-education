@@ -1,4 +1,4 @@
-
+"use client"
 
 import { useState, useEffect } from "react"
 import { useParams, useNavigate } from "react-router-dom"
@@ -28,18 +28,21 @@ export default function CourseChapters() {
         const courseData = { id: courseDoc.id, ...courseDoc.data() }
         setCourse(courseData)
 
-        // Check access
         if (isAdmin) {
           setHasAccess(true)
         } else if (currentUser) {
           const paymentsQuery = query(
             collection(db, "payments"),
             where("userId", "==", currentUser.uid),
-            where("courseId", "==", courseId),
             where("status", "==", "approved"),
           )
           const paymentsSnapshot = await getDocs(paymentsQuery)
-          setHasAccess(!paymentsSnapshot.empty)
+
+          const hasApprovedCourse = paymentsSnapshot.docs.some((doc) => {
+            const payment = doc.data()
+            return payment.courses?.some((c) => c.id === courseId)
+          })
+          setHasAccess(hasApprovedCourse)
         }
 
         // Fetch classes
@@ -117,7 +120,7 @@ export default function CourseChapters() {
                 if (course.type === "batch") {
                   navigate(`/course/${courseId}/subjects`)
                 } else {
-                  navigate(`/course/${courseId}/classes/${chapter}`)
+                  navigate(`/course/${courseId}/classes/${encodeURIComponent(chapter)}`)
                 }
               }}
               className="group relative bg-card border border-border rounded-xl p-6 hover:border-primary/50 hover:shadow-lg transition-all duration-300 text-left"

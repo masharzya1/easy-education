@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { Link } from "react-router-dom"
-import { ShoppingCart, Trash2, Users } from "lucide-react"
+import { ShoppingCart, Trash2, Users, Check } from "lucide-react"
 import { useCart } from "../contexts/CartContext"
 import { useAuth } from "../contexts/AuthContext"
 import { collection, query, where, getDocs } from "firebase/firestore"
@@ -15,12 +15,12 @@ export default function CourseCard({ course, onAddToCart }) {
   const [isInCart, setIsInCart] = useState(false)
   const [loading, setLoading] = useState(true)
 
-  // কার্ট স্ট্যাটাস চেক করা: যখনই কার্ট বা কোর্স আইডি পরিবর্তন হয়
+  // Check cart status whenever cart or course ID changes
   useEffect(() => {
     checkIfInCart()
   }, [cartItems, course.id])
 
-  // কেনা স্ট্যাটাস চেক করা: যখনই ইউজার বা কোর্স আইডি পরিবর্তন হয়
+  // Check purchase status whenever user or course ID changes
   useEffect(() => {
     setLoading(true)
     checkIfPurchased()
@@ -43,7 +43,6 @@ export default function CourseCard({ course, onAddToCart }) {
 
       const purchased = paymentsSnapshot.docs.some((doc) => {
         const payment = doc.data()
-        // Firebase ডেটা স্ট্রাকচার অনুযায়ী কেনা কোর্স চেক করা হচ্ছে
         return payment.courses?.some((c) => c.id === course.id)
       })
 
@@ -114,13 +113,16 @@ export default function CourseCard({ course, onAddToCart }) {
           </div>
 
           {loading ? (
-             <div className="w-full h-10 flex items-center justify-center border border-border rounded-lg text-muted-foreground text-sm">Loading Status...</div>
+            <div className="w-full h-10 flex items-center justify-center border border-border rounded-lg text-muted-foreground text-sm">
+              Loading Status...
+            </div>
           ) : isPurchased ? (
             <button
               disabled
               className="w-full px-4 py-2 bg-green-500/20 text-green-700 dark:text-green-400 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm font-medium cursor-default"
             >
-              ✓ Already Purchased
+              <Check className="w-4 h-4" />
+              Already Purchased
             </button>
           ) : isInCart ? (
             <button
