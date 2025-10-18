@@ -1,3 +1,4 @@
+"use client"
 
 import { useState, useEffect } from "react"
 import { Link } from "react-router-dom"
@@ -14,10 +15,12 @@ export default function CourseCard({ course, onAddToCart }) {
   const [isInCart, setIsInCart] = useState(false)
   const [loading, setLoading] = useState(true)
 
+  // কার্ট স্ট্যাটাস চেক করা: যখনই কার্ট বা কোর্স আইডি পরিবর্তন হয়
   useEffect(() => {
     checkIfInCart()
   }, [cartItems, course.id])
 
+  // কেনা স্ট্যাটাস চেক করা: যখনই ইউজার বা কোর্স আইডি পরিবর্তন হয়
   useEffect(() => {
     setLoading(true)
     checkIfPurchased()
@@ -40,6 +43,7 @@ export default function CourseCard({ course, onAddToCart }) {
 
       const purchased = paymentsSnapshot.docs.some((doc) => {
         const payment = doc.data()
+        // Firebase ডেটা স্ট্রাকচার অনুযায়ী কেনা কোর্স চেক করা হচ্ছে
         return payment.courses?.some((c) => c.id === course.id)
       })
 
