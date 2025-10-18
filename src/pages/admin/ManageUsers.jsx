@@ -1,7 +1,9 @@
+"use client"
+
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { Search, Shield, ShieldOff, Trash2, Ban } from "lucide-react"
-import { collection, getDocs, doc, updateDoc, deleteDoc } from "firebase/firestore"
+import { collection, getDocs, doc, updateDoc, deleteDoc, query, where } from "firebase/firestore"
 import { db } from "../../lib/firebase"
 
 export default function ManageUsers() {
@@ -103,6 +105,37 @@ export default function ManageUsers() {
     } catch (error) {
       console.error(" Error deleting user:", error)
       alert(`Failed to delete user: ${error.message}`)
+    }
+  }
+
+  const handleRemoveFromCourse = async (userId, courseId) => {
+    if (!confirm("Are you sure you want to remove this student from the course?")) return
+
+    try {
+      console.log("[v0] Removing user from course:", userId, courseId)
+
+      // Get the user's payments and remove the course from them
+      const paymentsQuery = query(
+        collection(db, "payments"),
+        where("userId", "==", userId),
+        where("status", "==", "approved"),
+      )
+      const paymentsSnapshot = await getDocs(paymentsQuery)
+
+      for (const paymentDoc of paymentsSnapshot.docs) {
+        const payment = paymentDoc.data()
+        const updatedCourses = payment.courses?.filter((c) => c.id !== courseId) || []
+
+        await updateDoc(doc(db, "payments", paymentDoc.id), {
+          courses: updatedCourses,
+        })
+      }
+
+      showSuccess("Student removed from course successfully!")
+      fetchUsers()
+    } catch (error) {
+      console.error("[v0] Error removing student from course:", error)
+      alert(`Failed to remove student: ${error.message}`)
     }
   }
 

@@ -2,21 +2,23 @@
 
 import { useState, useEffect } from "react"
 import { Link } from "react-router-dom"
-import { ShoppingCart, Users } from "lucide-react"
+import { ShoppingCart, Trash2, Users } from "lucide-react"
 import { useCart } from "../contexts/CartContext"
 import { useAuth } from "../contexts/AuthContext"
 import { collection, query, where, getDocs } from "firebase/firestore"
 import { db } from "../lib/firebase"
 
 export default function CourseCard({ course, onAddToCart }) {
-  const { addToCart, openCart } = useCart()
+  const { addToCart, removeFromCart, cartItems, openCart } = useCart()
   const { currentUser } = useAuth()
   const [isPurchased, setIsPurchased] = useState(false)
+  const [isInCart, setIsInCart] = useState(false)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     checkIfPurchased()
-  }, [currentUser, course.id])
+    checkIfInCart()
+  }, [currentUser, course.id, cartItems])
 
   const checkIfPurchased = async () => {
     if (!currentUser) {
@@ -45,6 +47,11 @@ export default function CourseCard({ course, onAddToCart }) {
     }
   }
 
+  const checkIfInCart = () => {
+    const inCart = cartItems.some((item) => item.id === course.id)
+    setIsInCart(inCart)
+  }
+
   const handleAddToCart = (e) => {
     e.preventDefault()
     e.stopPropagation()
@@ -54,6 +61,12 @@ export default function CourseCard({ course, onAddToCart }) {
     } else {
       alert("Course already in cart!")
     }
+  }
+
+  const handleRemoveFromCart = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    removeFromCart(course.id)
   }
 
   const truncateDescription = (text, maxLength = 20) => {
@@ -97,6 +110,14 @@ export default function CourseCard({ course, onAddToCart }) {
               className="w-full px-4 py-2 bg-green-500/20 text-green-700 dark:text-green-400 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm font-medium cursor-default"
             >
               ✓ Already Purchased
+            </button>
+          ) : isInCart ? (
+            <button
+              onClick={handleRemoveFromCart}
+              className="w-full px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-700 dark:text-red-400 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm font-medium"
+            >
+              <Trash2 className="w-4 h-4" />
+              Remove from Cart
             </button>
           ) : course.price === 0 || course.price === undefined ? (
             <Link to={`/course/${course.id}`} onClick={(e) => e.stopPropagation()}>

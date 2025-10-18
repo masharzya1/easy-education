@@ -189,11 +189,6 @@ export default function Home() {
                           </div>
                         )}
                       </div>
-                      <div className="p-4">
-                        <h3 className="font-semibold text-center group-hover:text-primary transition-colors line-clamp-1">
-                          {category.title}
-                        </h3>
-                      </div>
                     </div>
                   </button>
                 </motion.div>
