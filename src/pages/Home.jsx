@@ -3,23 +3,56 @@
 import { useState, useEffect } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { motion } from "framer-motion"
-import { Search, TrendingUp, Clock, Users, ArrowRight, ShoppingCart } from "lucide-react"
-import { collection, query, orderBy, limit, getDocs } from "firebase/firestore"
+import { Search, TrendingUp, Clock, Users, ArrowRight, ShoppingCart, Trash2, Check } from "lucide-react"
+import { collection, query, orderBy, limit, getDocs, where } from "firebase/firestore"
 import { db } from "../lib/firebase"
 import { useCart } from "../contexts/CartContext"
+import { useAuth } from "../contexts/AuthContext"
 
 export default function Home() {
   const navigate = useNavigate()
-  const { addToCart, openCart } = useCart()
+  const { addToCart, openCart, cartItems, removeFromCart } = useCart()
+  const { currentUser } = useAuth()
   const [searchQuery, setSearchQuery] = useState("")
   const [trendingCourses, setTrendingCourses] = useState([])
   const [categories, setCategories] = useState([])
   const [latestNews, setLatestNews] = useState([])
   const [loading, setLoading] = useState(true)
+  const [purchasedCourses, setPurchasedCourses] = useState({})
 
   useEffect(() => {
     fetchData()
   }, [])
+
+  useEffect(() => {
+    if (currentUser) {
+      checkPurchasedCourses()
+    }
+  }, [currentUser, trendingCourses])
+
+  const checkPurchasedCourses = async () => {
+    if (!currentUser || trendingCourses.length === 0) return
+
+    try {
+      const paymentsQuery = query(
+        collection(db, "payments"),
+        where("userId", "==", currentUser.uid),
+        where("status", "==", "approved"),
+      )
+      const paymentsSnapshot = await getDocs(paymentsQuery)
+
+      const purchased = {}
+      paymentsSnapshot.docs.forEach((doc) => {
+        const payment = doc.data()
+        payment.courses?.forEach((c) => {
+          purchased[c.id] = true
+        })
+      })
+      setPurchasedCourses(purchased)
+    } catch (error) {
+      console.error("Error checking purchased courses:", error)
+    }
+  }
 
   const fetchData = async () => {
     try {
@@ -72,6 +105,12 @@ export default function Home() {
     }
   }
 
+  const handleRemoveFromCart = (course, e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    removeFromCart(course.id)
+  }
+
   const handleCategoryClick = (category) => {
     navigate("/courses", { state: { categoryFilter: category.title } })
   }
@@ -92,7 +131,7 @@ export default function Home() {
               animate={{ opacity: 1, y: 0 }}
               className="text-5xl md:text-7xl font-serif font-bold mb-6 text-balance leading-tight"
             >
-              Discover knowledge, <span className="text-primary">anytime</span>
+              Master new skills, <span className="text-primary">invest in yourself</span>
             </motion.h1>
 
             <motion.p
@@ -101,7 +140,7 @@ export default function Home() {
               transition={{ delay: 0.1 }}
               className="text-lg md:text-xl text-muted-foreground mb-12 max-w-2xl mx-auto text-pretty leading-relaxed"
             >
-              Access thousands of educational courses for free. Learn at your own pace with expert instructors.
+              Access premium educational courses from expert instructors. Learn at your own pace with lifetime access.
             </motion.p>
 
             <motion.form
@@ -141,7 +180,7 @@ export default function Home() {
             >
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 bg-primary rounded-full"></div>
-                <span>Free courses</span>
+                <span>Premium courses</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 bg-secondary rounded-full"></div>
@@ -149,7 +188,7 @@ export default function Home() {
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 bg-primary rounded-full"></div>
-                <span>Learn at your pace</span>
+                <span>Lifetime access</span>
               </div>
             </motion.div>
           </div>
@@ -253,13 +292,31 @@ export default function Home() {
                             {course.category}
                           </span>
                         </div>
-                        <button
-                          onClick={(e) => handleAddToCart(course, e)}
-                          className="w-full px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-colors flex items-center justify-center gap-2 text-sm font-medium"
-                        >
-                          <ShoppingCart className="w-4 h-4" />
-                          Add to Cart
-                        </button>
+                        {purchasedCourses[course.id] ? (
+                          <button
+                            disabled
+                            className="w-full px-4 py-2 bg-green-500/20 text-green-700 dark:text-green-400 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm font-medium cursor-default"
+                          >
+                            <Check className="w-4 h-4" />
+                            Already Purchased
+                          </button>
+                        ) : cartItems.some((item) => item.id === course.id) ? (
+                          <button
+                            onClick={(e) => handleRemoveFromCart(course, e)}
+                            className="w-full px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-700 dark:text-red-400 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm font-medium"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            Remove from Cart
+                          </button>
+                        ) : (
+                          <button
+                            onClick={(e) => handleAddToCart(course, e)}
+                            className="w-full px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-colors flex items-center justify-center gap-2 text-sm font-medium"
+                          >
+                            <ShoppingCart className="w-4 h-4" />
+                            Add to Cart
+                          </button>
+                        )}
                       </div>
                     </div>
                   </Link>
