@@ -1,3 +1,5 @@
+"use client"
+
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { Heart, MessageCircle, Send, ImageIcon, Trash2, X, Loader2 } from "lucide-react"
@@ -32,6 +34,26 @@ export default function Community() {
   const [commentInputs, setCommentInputs] = useState({})
   const [postComments, setPostComments] = useState({})
   const [loadingComments, setLoadingComments] = useState({})
+  const [communityEnabled, setCommunityEnabled] = useState(true)
+  const [settingsLoading, setSettingsLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const settingsQuery = query(collection(db, "settings"), where("type", "==", "general"))
+        const snapshot = await getDocs(settingsQuery)
+        if (!snapshot.empty) {
+          const settings = snapshot.docs[0].data()
+          setCommunityEnabled(settings.communityEnabled !== false)
+        }
+      } catch (error) {
+        console.error("Error fetching settings:", error)
+      } finally {
+        setSettingsLoading(false)
+      }
+    }
+    fetchSettings()
+  }, [])
 
   useEffect(() => {
     const postsQuery = query(collection(db, "posts"), orderBy("timestamp", "desc"))
@@ -344,6 +366,28 @@ export default function Community() {
 
       alert(errorMessage)
     }
+  }
+
+  if (settingsLoading) {
+    return (
+      <div className="min-h-screen py-12 px-4 flex items-center justify-center">
+        <div className="animate-spin w-12 h-12 border-4 border-primary border-t-transparent rounded-full"></div>
+      </div>
+    )
+  }
+
+  if (!communityEnabled) {
+    return (
+      <div className="min-h-screen py-12 px-4">
+        <div className="container mx-auto max-w-3xl">
+          <div className="text-center py-12">
+            <MessageCircle className="w-16 h-16 mx-auto mb-4 opacity-50" />
+            <h2 className="text-2xl font-bold mb-2">Community Disabled</h2>
+            <p className="text-muted-foreground mb-6">The community page is currently disabled by the administrator.</p>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   if (!currentUser) {

@@ -1,4 +1,4 @@
-
+"use client"
 
 import { useState, useEffect } from "react"
 import { useParams, useNavigate, Link } from "react-router-dom"
@@ -311,7 +311,6 @@ export default function CourseWatch() {
       if (selectedSubject && selectedChapter) {
         return classStructure[selectedSubject]?.[selectedChapter] || []
       } else if (selectedSubject) {
-        // If only subject is selected, show all classes within that subject
         return Object.values(classStructure[selectedSubject] || {}).flat()
       }
       return [] // No subject selected yet

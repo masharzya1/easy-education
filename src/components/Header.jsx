@@ -1,4 +1,4 @@
-
+"use client"
 
 import { useState, useEffect, useRef } from "react"
 import { Link, useNavigate } from "react-router-dom"
@@ -19,6 +19,8 @@ import {
 } from "lucide-react"
 import { useAuth } from "../contexts/AuthContext"
 import { useTheme } from "../contexts/ThemeContext"
+import { collection, getDocs, query, where } from "firebase/firestore"
+import { db } from "../lib/firebase"
 
 export default function Header() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -28,6 +30,23 @@ export default function Header() {
   const { theme, toggleTheme, isDark } = useTheme()
   const navigate = useNavigate()
   const searchRef = useRef(null)
+  const [communityEnabled, setCommunityEnabled] = useState(true)
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const settingsQuery = query(collection(db, "settings"), where("type", "==", "general"))
+        const snapshot = await getDocs(settingsQuery)
+        if (!snapshot.empty) {
+          const settings = snapshot.docs[0].data()
+          setCommunityEnabled(settings.communityEnabled !== false)
+        }
+      } catch (error) {
+        console.error("Error fetching settings:", error)
+      }
+    }
+    fetchSettings()
+  }, [])
 
   const handleSignOut = async () => {
     try {
@@ -80,7 +99,7 @@ export default function Header() {
     { name: "Home", path: "/", icon: Home },
     { name: "Courses", path: "/courses", icon: BookOpen },
     { name: "Announcements", path: "/announcements", icon: Newspaper },
-    { name: "Community", path: "/community", icon: Users },
+    ...(communityEnabled ? [{ name: "Community", path: "/community", icon: Users }] : []),
   ]
 
   return (

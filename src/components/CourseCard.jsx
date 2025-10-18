@@ -56,6 +56,11 @@ export default function CourseCard({ course, onAddToCart }) {
     }
   }
 
+  const truncateDescription = (text, maxLength = 20) => {
+    if (!text) return ""
+    return text.length > maxLength ? text.substring(0, maxLength) + "..." : text
+  }
+
   return (
     <Link to={`/course/${course.id}`}>
       <div className="bg-card border border-border rounded-xl overflow-hidden hover:border-primary hover:shadow-lg transition-all group relative">
@@ -76,7 +81,9 @@ export default function CourseCard({ course, onAddToCart }) {
           <h3 className="font-semibold text-lg mb-2 line-clamp-2 group-hover:text-primary transition-colors">
             {course.title}
           </h3>
-          <p className="text-sm text-muted-foreground mb-3 line-clamp-2 leading-relaxed">{course.description}</p>
+          <p className="text-sm text-muted-foreground mb-3 line-clamp-2 leading-relaxed">
+            {truncateDescription(course.description)}
+          </p>
           <div className="flex items-center justify-between mb-3">
             <span className="text-sm text-muted-foreground">{course.instructorName}</span>
             <span className="px-3 py-1 bg-primary/10 text-primary text-xs rounded-full font-medium">

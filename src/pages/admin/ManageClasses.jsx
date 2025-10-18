@@ -36,6 +36,7 @@ export default function ManageClasses() {
   const [teacherImageFile, setTeacherImageFile] = useState(null)
   const [submitting, setSubmitting] = useState(false)
   const [archiveSourceCourse, setArchiveSourceCourse] = useState("")
+  const [teachers, setTeachers] = useState([])
 
   useEffect(() => {
     fetchCourses()
@@ -97,6 +98,20 @@ export default function ManageClasses() {
       setClasses(classesData)
     } catch (error) {
       console.error("Error fetching classes:", error)
+    }
+  }
+
+  useEffect(() => {
+    fetchTeachers()
+  }, [])
+
+  const fetchTeachers = async () => {
+    try {
+      const snapshot = await getDocs(collection(db, "teachers"))
+      const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
+      setTeachers(data)
+    } catch (error) {
+      console.error("Error fetching teachers:", error)
     }
   }
 
@@ -360,7 +375,11 @@ export default function ManageClasses() {
                   className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                 >
                   <option value="">Select a teacher (optional)</option>
-                  {/* Teachers can be added from ManageTeachers page */}
+                  {teachers.map((teacher) => (
+                    <option key={teacher.id} value={teacher.name}>
+                      {teacher.name}
+                    </option>
+                  ))}
                 </select>
               </div>
 
