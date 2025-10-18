@@ -12,9 +12,14 @@ export default function ManageUsers() {
   const [searchQuery, setSearchQuery] = useState("")
   const [loading, setLoading] = useState(true)
   const [successMessage, setSuccessMessage] = useState("")
+  const [courses, setCourses] = useState([])
+  const [showRemoveModal, setShowRemoveModal] = useState(false)
+  const [selectedUser, setSelectedUser] = useState(null)
+  const [selectedCourse, setSelectedCourse] = useState("")
 
   useEffect(() => {
     fetchUsers()
+    fetchCourses()
   }, [])
 
   useEffect(() => {
@@ -33,6 +38,19 @@ export default function ManageUsers() {
       console.error("Error fetching users:", error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchCourses = async () => {
+    try {
+      const coursesSnapshot = await getDocs(collection(db, "courses"))
+      const coursesData = coursesSnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }))
+      setCourses(coursesData)
+    } catch (error) {
+      console.error("Error fetching courses:", error)
     }
   }
 
@@ -108,23 +126,27 @@ export default function ManageUsers() {
     }
   }
 
-  const handleRemoveFromCourse = async (userId, courseId) => {
+  const handleRemoveFromCourse = async () => {
+    if (!selectedUser || !selectedCourse) {
+      alert("Please select both user and course")
+      return
+    }
+
     if (!confirm("Are you sure you want to remove this student from the course?")) return
 
     try {
-      console.log("[v0] Removing user from course:", userId, courseId)
+      console.log("[v0] Removing user from course:", selectedUser.id, selectedCourse)
 
-      // Get the user's payments and remove the course from them
       const paymentsQuery = query(
         collection(db, "payments"),
-        where("userId", "==", userId),
+        where("userId", "==", selectedUser.id),
         where("status", "==", "approved"),
       )
       const paymentsSnapshot = await getDocs(paymentsQuery)
 
       for (const paymentDoc of paymentsSnapshot.docs) {
         const payment = paymentDoc.data()
-        const updatedCourses = payment.courses?.filter((c) => c.id !== courseId) || []
+        const updatedCourses = payment.courses?.filter((c) => c.id !== selectedCourse) || []
 
         await updateDoc(doc(db, "payments", paymentDoc.id), {
           courses: updatedCourses,
@@ -132,6 +154,9 @@ export default function ManageUsers() {
       }
 
       showSuccess("Student removed from course successfully!")
+      setShowRemoveModal(false)
+      setSelectedUser(null)
+      setSelectedCourse("")
       fetchUsers()
     } catch (error) {
       console.error("[v0] Error removing student from course:", error)
@@ -279,11 +304,8 @@ export default function ManageUsers() {
                         </button>
                         <button
                           onClick={() => {
-                            // Show a dropdown or modal to select which course to remove from
-                            const courseId = prompt("Enter Course ID to remove student from:")
-                            if (courseId) {
-                              handleRemoveFromCourse(user.id, courseId)
-                            }
+                            setSelectedUser(user)
+                            setShowRemoveModal(true)
                           }}
                           className="p-1.5 sm:p-2 hover:bg-muted rounded-lg transition-colors"
                           title="Remove from Course"
@@ -310,6 +332,57 @@ export default function ManageUsers() {
               <p>No users found</p>
             </div>
           )}
+        </div>
+      )}
+
+      {showRemoveModal && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-card border border-border rounded-xl p-6 max-w-md w-full"
+          >
+            <h2 className="text-2xl font-bold mb-4">Remove Student from Course</h2>
+            <p className="text-muted-foreground mb-6">
+              Select a course to remove <strong>{selectedUser?.name}</strong> from:
+            </p>
+
+            <div className="mb-6">
+              <label className="block text-sm font-medium mb-2">Select Course</label>
+              <select
+                value={selectedCourse}
+                onChange={(e) => setSelectedCourse(e.target.value)}
+                className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              >
+                <option value="">Choose a course...</option>
+                {courses.map((course) => (
+                  <option key={course.id} value={course.id}>
+                    {course.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={handleRemoveFromCourse}
+                disabled={!selectedCourse}
+                className="flex-1 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors disabled:opacity-50 font-medium"
+              >
+                Remove
+              </button>
+              <button
+                onClick={() => {
+                  setShowRemoveModal(false)
+                  setSelectedUser(null)
+                  setSelectedCourse("")
+                }}
+                className="flex-1 py-2 bg-muted hover:bg-muted/80 rounded-lg transition-colors font-medium"
+              >
+                Cancel
+              </button>
+            </div>
+          </motion.div>
         </div>
       )}
     </div>

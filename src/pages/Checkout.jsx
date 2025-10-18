@@ -210,8 +210,8 @@ export default function Checkout() {
   const total = calculateTotal()
 
   return (
-    <div className="min-h-screen py-12 px-4">
-      <div className="container-balanced">
+    <div className="min-h-screen py-8 sm:py-12 px-4">
+      <div className="max-w-7xl mx-auto">
         <button
           onClick={() => navigate("/courses")}
           className="flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6 transition-colors"
@@ -221,33 +221,33 @@ export default function Checkout() {
         </button>
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-          <h1 className="text-4xl font-bold mb-8 flex items-center gap-3">
+          <h1 className="text-3xl sm:text-4xl font-bold mb-8 flex items-center gap-3">
             <ShoppingCart className="w-8 h-8 text-primary" />
             Checkout
           </h1>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Order Summary */}
-            <div className="lg:col-span-1">
-              <div className="bg-card border border-border rounded-lg p-6 sticky top-24">
-                <h2 className="text-xl font-semibold mb-4">Order Summary</h2>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+            {/* Order Summary - appears below on mobile, right on desktop */}
+            <div className="lg:col-span-1 order-2 lg:order-1">
+              <div className="bg-card border border-border rounded-lg p-4 sm:p-6 lg:sticky lg:top-24">
+                <h2 className="text-lg sm:text-xl font-semibold mb-4">Order Summary</h2>
 
-                <div className="space-y-3 mb-6 max-h-48 overflow-y-auto">
+                <div className="space-y-2 sm:space-y-3 mb-6 max-h-48 overflow-y-auto">
                   {cartItems.map((item) => (
-                    <div key={item.id} className="flex justify-between text-sm">
+                    <div key={item.id} className="flex justify-between text-xs sm:text-sm">
                       <span className="truncate mr-2">{item.title}</span>
                       <span className="font-medium flex-shrink-0">৳{item.price || 0}</span>
                     </div>
                   ))}
                 </div>
 
-                <div className="border-t border-border pt-4 space-y-2">
-                  <div className="flex justify-between text-sm">
+                <div className="border-t border-border pt-3 sm:pt-4 space-y-2">
+                  <div className="flex justify-between text-xs sm:text-sm">
                     <span>Subtotal:</span>
                     <span>৳{subtotal.toFixed(2)}</span>
                   </div>
                   {appliedCoupon && (
-                    <div className="flex justify-between text-sm text-green-600 dark:text-green-400">
+                    <div className="flex justify-between text-xs sm:text-sm text-green-600 dark:text-green-400">
                       <span>
                         Discount
                         {appliedCoupon.discountType === "percentage" ? ` (${appliedCoupon.discountPercent}%)` : ""}:
@@ -255,7 +255,7 @@ export default function Checkout() {
                       <span>-৳{discount.toFixed(2)}</span>
                     </div>
                   )}
-                  <div className="flex justify-between font-bold text-lg pt-2 border-t">
+                  <div className="flex justify-between font-bold text-base sm:text-lg pt-2 border-t">
                     <span>Total:</span>
                     <span>৳{total.toFixed(2)}</span>
                   </div>
@@ -263,20 +263,20 @@ export default function Checkout() {
 
                 {/* Coupon Input */}
                 <div className="mt-6">
-                  <label className="block text-sm font-medium mb-2">Have a coupon?</label>
+                  <label className="block text-xs sm:text-sm font-medium mb-2">Have a coupon?</label>
                   <div className="flex gap-2 mb-2">
                     <input
                       type="text"
                       value={couponCode}
                       onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
                       placeholder="COUPON CODE"
-                      className="flex-1 px-3 py-2 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm smooth-transition"
+                      className="flex-1 px-3 py-2 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-xs sm:text-sm smooth-transition"
                       disabled={!!appliedCoupon}
                     />
                     <button
                       onClick={validateCoupon}
                       disabled={!!appliedCoupon}
-                      className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 text-sm font-medium smooth-transition"
+                      className="px-3 sm:px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 text-xs sm:text-sm font-medium smooth-transition"
                     >
                       <Tag className="w-4 h-4" />
                     </button>
@@ -300,49 +300,49 @@ export default function Checkout() {
             </div>
 
             {/* Payment Form */}
-            <div className="lg:col-span-2">
-              <div className="bg-card border border-border rounded-lg p-6">
-                <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">
-                  <CreditCard className="w-6 h-6 text-primary" />
+            <div className="lg:col-span-2 order-1 lg:order-2">
+              <div className="bg-card border border-border rounded-lg p-4 sm:p-6">
+                <h2 className="text-lg sm:text-xl font-semibold mb-6 flex items-center gap-2">
+                  <CreditCard className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
                   Payment Details
                 </h2>
 
                 {/* Payment Instructions */}
-                <div className="mb-6 p-4 bg-primary/10 border border-primary/20 rounded-lg">
-                  <h3 className="font-semibold mb-2">Payment Instructions</h3>
-                  <p className="text-sm text-muted-foreground whitespace-pre-line">{paymentInstructions}</p>
+                <div className="mb-6 p-3 sm:p-4 bg-primary/10 border border-primary/20 rounded-lg">
+                  <h3 className="font-semibold text-sm sm:text-base mb-2">Payment Instructions</h3>
+                  <p className="text-xs sm:text-sm text-muted-foreground whitespace-pre-line">{paymentInstructions}</p>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium mb-2">
+                      <label className="block text-xs sm:text-sm font-medium mb-2">
                         Name <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="text"
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        className="w-full px-4 py-3 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary smooth-transition"
+                        className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary smooth-transition text-sm"
                         required
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-2">
+                      <label className="block text-xs sm:text-sm font-medium mb-2">
                         Email <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="email"
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        className="w-full px-4 py-3 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary smooth-transition"
+                        className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary smooth-transition text-sm"
                         required
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2">
+                    <label className="block text-xs sm:text-sm font-medium mb-2">
                       Sender Number <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -350,13 +350,13 @@ export default function Checkout() {
                       value={formData.senderNumber}
                       onChange={(e) => setFormData({ ...formData, senderNumber: e.target.value })}
                       placeholder="01XXXXXXXXX"
-                      className="w-full px-4 py-3 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary smooth-transition"
+                      className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary smooth-transition text-sm"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2">
+                    <label className="block text-xs sm:text-sm font-medium mb-2">
                       Transaction ID <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -364,7 +364,7 @@ export default function Checkout() {
                       value={formData.transactionId}
                       onChange={(e) => setFormData({ ...formData, transactionId: e.target.value })}
                       placeholder="Enter transaction ID"
-                      className="w-full px-4 py-3 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary smooth-transition"
+                      className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary smooth-transition text-sm"
                       required
                     />
                   </div>
@@ -372,7 +372,7 @@ export default function Checkout() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full py-4 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed smooth-transition"
+                    className="w-full py-3 sm:py-4 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed smooth-transition text-sm sm:text-base"
                   >
                     {loading ? "Submitting..." : "Submit Payment"}
                   </button>

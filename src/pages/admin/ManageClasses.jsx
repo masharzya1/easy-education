@@ -368,17 +368,27 @@ export default function ManageClasses() {
               <div>
                 <label className="block text-sm font-medium mb-2">Teacher Name</label>
                 <select
-                  value={formData.teacherName}
-                  onChange={(e) => setFormData({ ...formData, teacherName: e.target.value })}
+                  multiple
+                  value={
+                    Array.isArray(formData.teacherName)
+                      ? formData.teacherName
+                      : formData.teacherName
+                        ? [formData.teacherName]
+                        : []
+                  }
+                  onChange={(e) => {
+                    const selected = Array.from(e.target.selectedOptions, (option) => option.value)
+                    setFormData({ ...formData, teacherName: selected.join(", ") })
+                  }}
                   className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                 >
-                  <option value="">Select a teacher (optional)</option>
                   {teachers.map((teacher) => (
                     <option key={teacher.id} value={teacher.name}>
                       {teacher.name}
                     </option>
                   ))}
                 </select>
+                <p className="text-xs text-muted-foreground mt-1">Hold Ctrl/Cmd to select multiple teachers</p>
               </div>
 
               <div>
@@ -435,34 +445,46 @@ export default function ManageClasses() {
                 <div>
                   <label className="block text-sm font-medium mb-2">Subject</label>
                   <select
-                    value={formData.subject}
-                    onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                    multiple
+                    value={
+                      Array.isArray(formData.subject) ? formData.subject : formData.subject ? [formData.subject] : []
+                    }
+                    onChange={(e) => {
+                      const selected = Array.from(e.target.selectedOptions, (option) => option.value)
+                      setFormData({ ...formData, subject: selected.join(", ") })
+                    }}
                     className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                   >
-                    <option value="">Select a subject</option>
                     {subjects.map((subject) => (
                       <option key={subject.id} value={subject.title}>
                         {subject.title}
                       </option>
                     ))}
                   </select>
+                  <p className="text-xs text-muted-foreground mt-1">Hold Ctrl/Cmd to select multiple subjects</p>
                 </div>
               )}
 
               <div>
                 <label className="block text-sm font-medium mb-2">Chapter</label>
                 <select
-                  value={formData.chapter}
-                  onChange={(e) => setFormData({ ...formData, chapter: e.target.value })}
+                  multiple
+                  value={
+                    Array.isArray(formData.chapter) ? formData.chapter : formData.chapter ? [formData.chapter] : []
+                  }
+                  onChange={(e) => {
+                    const selected = Array.from(e.target.selectedOptions, (option) => option.value)
+                    setFormData({ ...formData, chapter: selected.join(", ") })
+                  }}
                   className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                 >
-                  <option value="">Select a chapter</option>
                   {chapters.map((chapter) => (
                     <option key={chapter.id} value={chapter.title}>
                       {chapter.title}
                     </option>
                   ))}
                 </select>
+                <p className="text-xs text-muted-foreground mt-1">Hold Ctrl/Cmd to select multiple chapters</p>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
