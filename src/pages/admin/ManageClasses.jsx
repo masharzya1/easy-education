@@ -380,7 +380,7 @@ export default function ManageClasses() {
                     const selected = Array.from(e.target.selectedOptions, (option) => option.value)
                     setFormData({ ...formData, teacherName: selected.join(", ") })
                   }}
-                  className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary min-h-[120px]"
                 >
                   {teachers.map((teacher) => (
                     <option key={teacher.id} value={teacher.name}>
@@ -389,56 +389,6 @@ export default function ManageClasses() {
                   ))}
                 </select>
                 <p className="text-xs text-muted-foreground mt-1">Hold Ctrl/Cmd to select multiple teachers</p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-3">Teacher Image (Optional)</label>
-                <div className="flex gap-4 mb-4">
-                  <button
-                    type="button"
-                    onClick={() => setFormData({ ...formData, teacherImageType: "upload" })}
-                    className={`flex-1 py-2 px-4 rounded-lg border-2 transition-colors ${
-                      formData.teacherImageType === "upload"
-                        ? "border-primary bg-primary/10 text-primary font-medium"
-                        : "border-border hover:border-primary/50"
-                    }`}
-                  >
-                    Upload Image
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setFormData({ ...formData, teacherImageType: "link" })}
-                    className={`flex-1 py-2 px-4 rounded-lg border-2 transition-colors ${
-                      formData.teacherImageType === "link"
-                        ? "border-primary bg-primary/10 text-primary font-medium"
-                        : "border-border hover:border-primary/50"
-                    }`}
-                  >
-                    Image Link
-                  </button>
-                </div>
-
-                {formData.teacherImageType === "link" ? (
-                  <div>
-                    <input
-                      type="url"
-                      value={formData.teacherImageLink}
-                      onChange={(e) => setFormData({ ...formData, teacherImageLink: e.target.value })}
-                      placeholder="https://example.com/teacher.jpg"
-                      className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">Paste a teacher image URL</p>
-                  </div>
-                ) : (
-                  <div>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => setTeacherImageFile(e.target.files?.[0] || null)}
-                      className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
-                  </div>
-                )}
               </div>
 
               {selectedCourseData?.type === "batch" && (
@@ -453,7 +403,7 @@ export default function ManageClasses() {
                       const selected = Array.from(e.target.selectedOptions, (option) => option.value)
                       setFormData({ ...formData, subject: selected.join(", ") })
                     }}
-                    className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary min-h-[120px]"
                   >
                     {subjects.map((subject) => (
                       <option key={subject.id} value={subject.title}>
@@ -476,7 +426,7 @@ export default function ManageClasses() {
                     const selected = Array.from(e.target.selectedOptions, (option) => option.value)
                     setFormData({ ...formData, chapter: selected.join(", ") })
                   }}
-                  className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary min-h-[120px]"
                 >
                   {chapters.map((chapter) => (
                     <option key={chapter.id} value={chapter.title}>

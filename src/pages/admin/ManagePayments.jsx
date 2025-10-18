@@ -111,17 +111,17 @@ export default function ManagePayments() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold flex items-center gap-2">
-          <CreditCard className="w-8 h-8 text-primary" />
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+        <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2">
+          <CreditCard className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
           Manage Payments
         </h1>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2 w-full sm:w-auto">
           {["all", "pending", "approved", "rejected"].map((status) => (
             <button
               key={status}
               onClick={() => setFilter(status)}
-              className={`px-4 py-2 rounded-lg transition-colors capitalize ${
+              className={`px-3 sm:px-4 py-2 rounded-lg transition-colors capitalize text-xs sm:text-sm font-medium ${
                 filter === status ? "bg-primary text-primary-foreground" : "bg-muted hover:bg-muted/80"
               }`}
             >
@@ -137,75 +137,77 @@ export default function ManagePayments() {
             key={payment.id}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-card border border-border rounded-xl p-6"
+            className="bg-card border border-border rounded-xl p-4 sm:p-6"
           >
-            <div className="flex flex-col md:flex-row md:items-start gap-6">
-              <div className="flex-1">
-                <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <h3 className="font-semibold text-lg mb-1">{payment.userName}</h3>
-                    <p className="text-sm text-muted-foreground">{payment.userEmail}</p>
-                  </div>
-                  {getStatusBadge(payment.status)}
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-base sm:text-lg mb-1 truncate">{payment.userName}</h3>
+                  <p className="text-xs sm:text-sm text-muted-foreground truncate">{payment.userEmail}</p>
                 </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-1">Sender Number</p>
-                    <p className="font-medium">{payment.senderNumber}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-1">Transaction ID</p>
-                    <p className="font-medium font-mono">{payment.transactionId}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-1">Submitted At</p>
-                    <p className="font-medium">{payment.submittedAt?.toDate?.()?.toLocaleString() || "Recently"}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-1">Amount</p>
-                    <p className="font-bold text-primary text-lg">৳{payment.finalAmount}</p>
-                    {payment.couponCode && (
-                      <p className="text-xs text-green-600">
-                        Coupon: {payment.couponCode} (-{payment.discountPercent}%)
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                <div>
-                  <p className="text-sm text-muted-foreground mb-2">Courses ({payment.courses?.length || 0})</p>
-                  <div className="space-y-1">
-                    {payment.courses?.map((course, index) => (
-                      <div key={index} className="text-sm flex justify-between">
-                        <span>{course.title}</span>
-                        <span className="text-muted-foreground">৳{course.price}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {payment.rejectionReason && (
-                  <div className="mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
-                    <p className="text-sm text-red-600">
-                      <strong>Rejection Reason:</strong> {payment.rejectionReason}
-                    </p>
-                  </div>
-                )}
+                {getStatusBadge(payment.status)}
               </div>
 
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                <div>
+                  <p className="text-xs sm:text-sm text-muted-foreground mb-1">Sender Number</p>
+                  <p className="font-medium text-sm sm:text-base break-all">{payment.senderNumber}</p>
+                </div>
+                <div>
+                  <p className="text-xs sm:text-sm text-muted-foreground mb-1">Transaction ID</p>
+                  <p className="font-medium font-mono text-xs sm:text-sm break-all">{payment.transactionId}</p>
+                </div>
+                <div>
+                  <p className="text-xs sm:text-sm text-muted-foreground mb-1">Submitted At</p>
+                  <p className="font-medium text-xs sm:text-sm">
+                    {payment.submittedAt?.toDate?.()?.toLocaleString() || "Recently"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs sm:text-sm text-muted-foreground mb-1">Amount</p>
+                  <p className="font-bold text-primary text-base sm:text-lg">৳{payment.finalAmount}</p>
+                  {payment.couponCode && (
+                    <p className="text-xs text-green-600">
+                      Coupon: {payment.couponCode} (-{payment.discountPercent}%)
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <p className="text-xs sm:text-sm text-muted-foreground mb-2">
+                  Courses ({payment.courses?.length || 0})
+                </p>
+                <div className="space-y-1 max-h-32 overflow-y-auto">
+                  {payment.courses?.map((course, index) => (
+                    <div key={index} className="text-xs sm:text-sm flex justify-between gap-2">
+                      <span className="truncate">{course.title}</span>
+                      <span className="text-muted-foreground flex-shrink-0">৳{course.price}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {payment.rejectionReason && (
+                <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                  <p className="text-xs sm:text-sm text-red-600">
+                    <strong>Rejection Reason:</strong> {payment.rejectionReason}
+                  </p>
+                </div>
+              )}
+
               {payment.status === "pending" && (
-                <div className="flex flex-col gap-2 md:w-40">
+                <div className="flex flex-col sm:flex-row gap-2 pt-2 border-t border-border">
                   <button
                     onClick={() => handleApprove(payment)}
-                    className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors flex items-center justify-center gap-2"
+                    className="flex-1 px-3 sm:px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors flex items-center justify-center gap-2 text-xs sm:text-sm font-medium"
                   >
                     <Check className="w-4 h-4" />
                     Approve
                   </button>
                   <button
                     onClick={() => handleReject(payment.id)}
-                    className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors flex items-center justify-center gap-2"
+                    className="flex-1 px-3 sm:px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors flex items-center justify-center gap-2 text-xs sm:text-sm font-medium"
                   >
                     <X className="w-4 h-4" />
                     Reject
@@ -219,8 +221,8 @@ export default function ManagePayments() {
 
       {filteredPayments.length === 0 && (
         <div className="text-center py-12">
-          <CreditCard className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-          <p className="text-muted-foreground">No {filter !== "all" && filter} payments found</p>
+          <CreditCard className="w-12 h-12 sm:w-16 sm:h-16 text-muted-foreground mx-auto mb-4" />
+          <p className="text-sm sm:text-base text-muted-foreground">No {filter !== "all" && filter} payments found</p>
         </div>
       )}
     </div>

@@ -3,20 +3,23 @@
 import { useState, useEffect } from "react"
 import { Link, useLocation } from "react-router-dom"
 import { motion } from "framer-motion"
-import { Search, Filter, BookOpen, ShoppingCart } from "lucide-react"
-import { collection, query, orderBy, getDocs } from "firebase/firestore"
+import { Search, Filter, BookOpen, ShoppingCart, Trash2, Check } from "lucide-react"
+import { collection, query, orderBy, getDocs, where } from "firebase/firestore"
 import { db } from "../lib/firebase"
 import { useCart } from "../contexts/CartContext"
+import { useAuth } from "../contexts/AuthContext"
 
 export default function Courses() {
   const location = useLocation()
-  const { addToCart, openCart } = useCart()
+  const { addToCart, openCart, cartItems, removeFromCart } = useCart()
+  const { currentUser } = useAuth()
   const [courses, setCourses] = useState([])
   const [filteredCourses, setFilteredCourses] = useState([])
   const [searchQuery, setSearchQuery] = useState("")
   const [categoryFilter, setCategoryFilter] = useState("all")
   const [sortBy, setSortBy] = useState("newest")
   const [loading, setLoading] = useState(true)
+  const [purchasedCourses, setPurchasedCourses] = useState({})
 
   useEffect(() => {
     if (location.state?.searchQuery) {
@@ -32,8 +35,38 @@ export default function Courses() {
   }, [])
 
   useEffect(() => {
+    if (currentUser) {
+      checkPurchasedCourses()
+    }
+  }, [currentUser, courses])
+
+  useEffect(() => {
     filterAndSortCourses()
   }, [courses, searchQuery, categoryFilter, sortBy])
+
+  const checkPurchasedCourses = async () => {
+    if (!currentUser || courses.length === 0) return
+
+    try {
+      const paymentsQuery = query(
+        collection(db, "payments"),
+        where("userId", "==", currentUser.uid),
+        where("status", "==", "approved"),
+      )
+      const paymentsSnapshot = await getDocs(paymentsQuery)
+
+      const purchased = {}
+      paymentsSnapshot.docs.forEach((doc) => {
+        const payment = doc.data()
+        payment.courses?.forEach((c) => {
+          purchased[c.id] = true
+        })
+      })
+      setPurchasedCourses(purchased)
+    } catch (error) {
+      console.error("Error checking purchased courses:", error)
+    }
+  }
 
   const fetchCourses = async () => {
     try {
@@ -89,6 +122,12 @@ export default function Courses() {
     } else {
       alert("Course already in cart!")
     }
+  }
+
+  const handleRemoveFromCart = (course, e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    removeFromCart(course.id)
   }
 
   return (
@@ -211,13 +250,30 @@ export default function Courses() {
                           {course.type === "subject" ? "Subject Course" : "Batch Course"}
                         </span>
                       </div>
-                      <button
-                        onClick={(e) => handleAddToCart(course, e)}
-                        className="w-full px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg smooth-transition flex items-center justify-center gap-2 text-sm font-medium active:scale-95"
-                      >
-                        <ShoppingCart className="w-4 h-4" />
-                        Add to Cart
-                      </button>
+                      {purchasedCourses[course.id] ? (
+                        <Link to={`/course/${course.id}/chapters`} onClick={(e) => e.stopPropagation()}>
+                          <button className="w-full px-4 py-2 bg-green-500/20 text-green-700 dark:text-green-400 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm font-medium hover:bg-green-500/30">
+                            <Check className="w-4 h-4" />
+                            Continue Course
+                          </button>
+                        </Link>
+                      ) : cartItems.some((item) => item.id === course.id) ? (
+                        <button
+                          onClick={(e) => handleRemoveFromCart(course, e)}
+                          className="w-full px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-700 dark:text-red-400 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm font-medium"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                          Remove from Cart
+                        </button>
+                      ) : (
+                        <button
+                          onClick={(e) => handleAddToCart(course, e)}
+                          className="w-full px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg smooth-transition flex items-center justify-center gap-2 text-sm font-medium active:scale-95"
+                        >
+                          <ShoppingCart className="w-4 h-4" />
+                          Add to Cart
+                        </button>
+                      )}
                     </div>
                   </div>
                 </Link>
