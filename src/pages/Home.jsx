@@ -31,7 +31,7 @@ export default function Home() {
   }, [currentUser, trendingCourses])
 
   const checkPurchasedCourses = async () => {
-    if (!currentUser || trendingCourses.length === 0) return
+    if (!currentUser || trendingCourses.length === 0 || !db) return
 
     try {
       const paymentsQuery = query(
@@ -50,12 +50,18 @@ export default function Home() {
       })
       setPurchasedCourses(purchased)
     } catch (error) {
-      console.error("Error checking purchased courses:", error)
+      console.error("[v0] Error checking purchased courses:", error)
     }
   }
 
   const fetchData = async () => {
     try {
+      if (!db) {
+        console.warn("[v0] Firebase not available, skipping data fetch")
+        setLoading(false)
+        return
+      }
+
       const coursesQuery = query(collection(db, "courses"), orderBy("createdAt", "desc"), limit(6))
       const coursesSnapshot = await getDocs(coursesQuery)
       const coursesData = coursesSnapshot.docs.map((doc) => ({
@@ -80,7 +86,8 @@ export default function Home() {
       }))
       setLatestNews(newsData)
     } catch (error) {
-      console.error("Error fetching data:", error)
+      console.error("[v0] Error fetching data:", error)
+      // Continue with empty data
     } finally {
       setLoading(false)
     }

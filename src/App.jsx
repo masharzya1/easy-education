@@ -27,10 +27,10 @@ import CheckoutComplete from "./pages/CheckoutComplete"
 import PaymentHistory from "./pages/PaymentHistory"
 import MyCourses from "./pages/MyCourses"
 
-console.log(" App.jsx loaded")
+console.log("[v0] App.jsx loaded")
 
 function App() {
-  console.log(" App component rendering")
+  console.log("[v0] App component rendering")
 
   return (
     <Router>

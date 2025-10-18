@@ -189,7 +189,7 @@ export default function Checkout() {
           [...existingCourseIds].every((id) => currentCheckoutIds.has(id))
         ) {
           alert(
-            "You already have a pending payment for these courses. Please wait for admin approval or contact support.",
+            "You already have a pending payment for these exact courses. Please wait for admin approval or contact support.",
           )
           setLoading(false)
           return
@@ -222,7 +222,7 @@ export default function Checkout() {
       await addDoc(collection(db, "payments"), paymentData)
 
       clearCart()
-      navigate("/checkout-complete", { state: { courses: cartItems } })
+      navigate("/checkout-complete", { state: { courses: cartItems, paymentData } })
     } catch (error) {
       console.error("Error submitting payment:", error)
       alert("Failed to submit payment. Please try again.")

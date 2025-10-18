@@ -118,13 +118,17 @@ export default function ManageClasses() {
       setEditingClass(classItem)
       setFormData({
         title: classItem.title || "",
-        chapter: classItem.chapter || "",
-        subject: classItem.subject || "",
+        chapter: Array.isArray(classItem.chapter) ? classItem.chapter : classItem.chapter ? [classItem.chapter] : [],
+        subject: Array.isArray(classItem.subject) ? classItem.subject : classItem.subject ? [classItem.subject] : [],
         order: classItem.order || 0,
         duration: classItem.duration || "",
         youtubeLink: classItem.youtubeLink || "",
         hlsLink: classItem.hlsLink || "",
-        teacherName: classItem.teacherName || "",
+        teacherName: Array.isArray(classItem.teacherName)
+          ? classItem.teacherName
+          : classItem.teacherName
+            ? [classItem.teacherName]
+            : [],
         imageType: classItem.imageURL?.startsWith("http") ? "link" : "upload",
         imageLink: classItem.imageURL || "",
         teacherImageType: classItem.teacherImageURL?.startsWith("http") ? "link" : "upload",
@@ -135,13 +139,13 @@ export default function ManageClasses() {
       setEditingClass(null)
       setFormData({
         title: "",
-        chapter: "",
-        subject: "",
+        chapter: [],
+        subject: [],
         order: classes.length,
         duration: "",
         youtubeLink: "",
         hlsLink: "",
-        teacherName: "",
+        teacherName: [],
         imageType: "upload",
         imageLink: "",
         teacherImageType: "upload",
@@ -166,22 +170,17 @@ export default function ManageClasses() {
     setSubmitting(true)
 
     try {
-      console.log(" Starting class save...")
       let imageURL = editingClass?.imageURL || ""
       let teacherImageURL = editingClass?.teacherImageURL || ""
 
       if (imageFile) {
-        console.log(" Uploading image to imgbb...")
         imageURL = await uploadToImgbb(imageFile)
-        console.log(" Image uploaded successfully:", imageURL)
       } else if (formData.imageType === "link") {
         imageURL = formData.imageLink
       }
 
       if (teacherImageFile) {
-        console.log(" Uploading teacher image to imgbb...")
         teacherImageURL = await uploadToImgbb(teacherImageFile)
-        console.log(" Teacher image uploaded successfully:", teacherImageURL)
       } else if (formData.teacherImageType === "link") {
         teacherImageURL = formData.teacherImageLink
       }
@@ -189,34 +188,32 @@ export default function ManageClasses() {
       const classData = {
         courseId: selectedCourse,
         title: formData.title,
-        chapter: formData.chapter,
-        subject: formData.subject,
+        chapter: Array.isArray(formData.chapter) ? formData.chapter : formData.chapter ? [formData.chapter] : [],
+        subject: Array.isArray(formData.subject) ? formData.subject : formData.subject ? [formData.subject] : [],
         order: Number.parseInt(formData.order),
         duration: formData.duration,
         youtubeLink: videoType === "youtube" ? formData.youtubeLink : "",
         hlsLink: videoType === "hls" ? formData.hlsLink : "",
         imageURL,
-        teacherName: formData.teacherName,
+        teacherName: Array.isArray(formData.teacherName)
+          ? formData.teacherName
+          : formData.teacherName
+            ? [formData.teacherName]
+            : [],
         teacherImageURL,
       }
 
-      console.log(" Class data:", classData)
-
       if (editingClass) {
-        console.log(" Updating existing class:", editingClass.id)
         await updateDoc(doc(db, "classes", editingClass.id), classData)
-        console.log(" Class updated successfully")
       } else {
-        console.log(" Creating new class...")
         await addDoc(collection(db, "classes"), classData)
-        console.log(" Class created successfully")
       }
 
       await fetchClasses()
       handleCloseModal()
       alert(editingClass ? "Class updated successfully!" : "Class created successfully!")
     } catch (error) {
-      console.error(" Error saving class:", error)
+      console.error("Error saving class:", error)
       alert("Failed to save class. " + (error.message || "Please try again."))
     } finally {
       setSubmitting(false)
@@ -367,74 +364,148 @@ export default function ManageClasses() {
 
               <div>
                 <label className="block text-sm font-medium mb-2">Teacher Name</label>
-                <select
-                  multiple
-                  value={
-                    Array.isArray(formData.teacherName)
-                      ? formData.teacherName
-                      : formData.teacherName
-                        ? [formData.teacherName]
-                        : []
-                  }
-                  onChange={(e) => {
-                    const selected = Array.from(e.target.selectedOptions, (option) => option.value)
-                    setFormData({ ...formData, teacherName: selected.join(", ") })
-                  }}
-                  className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary min-h-[120px]"
-                >
-                  {teachers.map((teacher) => (
-                    <option key={teacher.id} value={teacher.name}>
-                      {teacher.name}
-                    </option>
-                  ))}
-                </select>
-                <p className="text-xs text-muted-foreground mt-1">Hold Ctrl/Cmd to select multiple teachers</p>
+                <div className="space-y-2">
+                  <div className="flex flex-wrap gap-2 p-3 bg-background border border-border rounded-lg min-h-[120px]">
+                    {Array.isArray(formData.teacherName) &&
+                      formData.teacherName.map((name, idx) => (
+                        <div
+                          key={idx}
+                          className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm flex items-center gap-2"
+                        >
+                          {name}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const updated = formData.teacherName.filter((_, i) => i !== idx)
+                              setFormData({ ...formData, teacherName: updated })
+                            }}
+                            className="text-primary hover:text-primary/70"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                  </div>
+                  <select
+                    onChange={(e) => {
+                      const value = e.target.value
+                      if (value) {
+                        const current = Array.isArray(formData.teacherName) ? formData.teacherName : []
+                        if (!current.includes(value)) {
+                          setFormData({ ...formData, teacherName: [...current, value] })
+                        }
+                        e.target.value = ""
+                      }
+                    }}
+                    className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  >
+                    <option value="">Add teacher...</option>
+                    {teachers.map((teacher) => (
+                      <option key={teacher.id} value={teacher.name}>
+                        {teacher.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">Click to add multiple teachers</p>
               </div>
 
               {selectedCourseData?.type === "batch" && (
                 <div>
                   <label className="block text-sm font-medium mb-2">Subject</label>
-                  <select
-                    multiple
-                    value={
-                      Array.isArray(formData.subject) ? formData.subject : formData.subject ? [formData.subject] : []
-                    }
-                    onChange={(e) => {
-                      const selected = Array.from(e.target.selectedOptions, (option) => option.value)
-                      setFormData({ ...formData, subject: selected.join(", ") })
-                    }}
-                    className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary min-h-[120px]"
-                  >
-                    {subjects.map((subject) => (
-                      <option key={subject.id} value={subject.title}>
-                        {subject.title}
-                      </option>
-                    ))}
-                  </select>
-                  <p className="text-xs text-muted-foreground mt-1">Hold Ctrl/Cmd to select multiple subjects</p>
+                  <div className="space-y-2">
+                    <div className="flex flex-wrap gap-2 p-3 bg-background border border-border rounded-lg min-h-[120px]">
+                      {Array.isArray(formData.subject) &&
+                        formData.subject.map((name, idx) => (
+                          <div
+                            key={idx}
+                            className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm flex items-center gap-2"
+                          >
+                            {name}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const updated = formData.subject.filter((_, i) => i !== idx)
+                                setFormData({ ...formData, subject: updated })
+                              }}
+                              className="text-primary hover:text-primary/70"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        ))}
+                    </div>
+                    <select
+                      onChange={(e) => {
+                        const value = e.target.value
+                        if (value) {
+                          const current = Array.isArray(formData.subject) ? formData.subject : []
+                          if (!current.includes(value)) {
+                            setFormData({ ...formData, subject: [...current, value] })
+                          }
+                          e.target.value = ""
+                        }
+                      }}
+                      className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                    >
+                      <option value="">Add subject...</option>
+                      {subjects.map((subject) => (
+                        <option key={subject.id} value={subject.title}>
+                          {subject.title}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">Click to add multiple subjects</p>
                 </div>
               )}
 
               <div>
                 <label className="block text-sm font-medium mb-2">Chapter</label>
-                <select
-                  multiple
-                  value={
-                    Array.isArray(formData.chapter) ? formData.chapter : formData.chapter ? [formData.chapter] : []
-                  }
-                  onChange={(e) => {
-                    const selected = Array.from(e.target.selectedOptions, (option) => option.value)
-                    setFormData({ ...formData, chapter: selected.join(", ") })
-                  }}
-                  className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary min-h-[120px]"
-                >
-                  {chapters.map((chapter) => (
-                    <option key={chapter.id} value={chapter.title}>
-                      {chapter.title}
-                    </option>
-                  ))}
-                </select>
-                <p className="text-xs text-muted-foreground mt-1">Hold Ctrl/Cmd to select multiple chapters</p>
+                <div className="space-y-2">
+                  <div className="flex flex-wrap gap-2 p-3 bg-background border border-border rounded-lg min-h-[120px]">
+                    {Array.isArray(formData.chapter) &&
+                      formData.chapter.map((name, idx) => (
+                        <div
+                          key={idx}
+                          className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm flex items-center gap-2"
+                        >
+                          {name}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const updated = formData.chapter.filter((_, i) => i !== idx)
+                              setFormData({ ...formData, chapter: updated })
+                            }}
+                            className="text-primary hover:text-primary/70"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                  </div>
+                  <select
+                    onChange={(e) => {
+                      const value = e.target.value
+                      if (value) {
+                        const current = Array.isArray(formData.chapter) ? formData.chapter : []
+                        if (!current.includes(value)) {
+                          setFormData({ ...formData, chapter: [...current, value] })
+                        }
+                        e.target.value = ""
+                      }
+                    }}
+                    className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  >
+                    <option value="">Add chapter...</option>
+                    {chapters.map((chapter) => (
+                      <option key={chapter.id} value={chapter.title}>
+                        {chapter.title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">Click to add multiple chapters</p>
               </div>
 
               <div className="grid grid-cols-2 gap-4">

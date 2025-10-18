@@ -35,6 +35,10 @@ export default function Header() {
   useEffect(() => {
     const fetchSettings = async () => {
       try {
+        if (!db) {
+          console.warn("[v0] Firebase not available, skipping settings fetch")
+          return
+        }
         const settingsQuery = query(collection(db, "settings"), where("type", "==", "general"))
         const snapshot = await getDocs(settingsQuery)
         if (!snapshot.empty) {
@@ -42,7 +46,8 @@ export default function Header() {
           setCommunityEnabled(settings.communityEnabled !== false)
         }
       } catch (error) {
-        console.error("Error fetching settings:", error)
+        console.error("[v0] Error fetching settings:", error)
+        // Continue with default settings
       }
     }
     fetchSettings()

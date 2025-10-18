@@ -58,27 +58,27 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-background">
       {/* Mobile Header */}
-      <div className="lg:hidden flex items-center justify-between p-4 bg-card border-b border-border sticky top-0 z-50">
-        <h1 className="text-lg font-bold">Admin Panel</h1>
+      <div className="lg:hidden flex items-center justify-between p-3 sm:p-4 bg-card border-b border-border sticky top-0 z-50 shadow-sm">
+        <h1 className="text-base sm:text-lg font-bold truncate">Admin Panel</h1>
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="p-2 hover:bg-muted rounded-lg transition-colors"
+          className="p-2 hover:bg-muted rounded-lg transition-colors flex-shrink-0"
         >
           {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </button>
       </div>
 
       <div className="flex">
-        {/* Sidebar */}
+        {/* Sidebar - Compact on mobile */}
         <div
           className={`fixed lg:static inset-0 lg:inset-auto z-40 lg:z-auto bg-background lg:bg-transparent transition-all duration-300 ${
             sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
-          } w-64 lg:w-72`}
+          } w-56 sm:w-64 lg:w-72`}
         >
           <div className="bg-card border-r border-border h-screen overflow-y-auto sticky top-0">
-            <div className="p-4 lg:p-6">
-              <h2 className="text-xl font-bold mb-6 px-2">Admin Panel</h2>
-              <nav className="space-y-1">
+            <div className="p-3 sm:p-4 lg:p-6">
+              <h2 className="text-lg sm:text-xl font-bold mb-4 sm:mb-6 px-2 hidden lg:block">Admin Panel</h2>
+              <nav className="space-y-0.5 sm:space-y-1">
                 {navItems.map((item) => {
                   const isActive = location.pathname === item.path
                   return (
@@ -86,12 +86,12 @@ export default function AdminDashboard() {
                       key={item.path}
                       to={item.path}
                       onClick={() => setSidebarOpen(false)}
-                      className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+                      className={`flex items-center gap-2 sm:gap-3 px-2 sm:px-4 py-2 sm:py-3 rounded-lg transition-all duration-200 text-xs sm:text-sm ${
                         isActive ? "bg-primary text-primary-foreground shadow-md" : "hover:bg-muted text-foreground"
                       }`}
                     >
-                      <item.icon className="w-5 h-5 flex-shrink-0" />
-                      <span className="truncate text-sm font-medium">{item.name}</span>
+                      <item.icon className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+                      <span className="truncate font-medium">{item.name}</span>
                     </Link>
                   )
                 })}
@@ -108,9 +108,9 @@ export default function AdminDashboard() {
           />
         )}
 
-        {/* Main Content */}
+        {/* Main Content - Responsive padding */}
         <div className="flex-1 w-full lg:w-auto">
-          <div className="p-4 sm:p-6 lg:p-8">
+          <div className="p-3 sm:p-4 md:p-6 lg:p-8">
             <Routes>
               <Route index element={<AdminOverview />} />
               <Route path="users" element={<ManageUsers />} />
