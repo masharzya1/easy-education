@@ -16,7 +16,6 @@ export default function ManageCategories() {
   const [formData, setFormData] = useState({
     title: "",
     imageURL: "",
-    targetPage: "/courses",
   })
 
   useEffect(() => {
@@ -68,7 +67,7 @@ export default function ManageCategories() {
         })
       }
 
-      setFormData({ title: "", imageURL: "", targetPage: "/courses" })
+      setFormData({ title: "", imageURL: "" })
       setShowForm(false)
       setEditingCategory(null)
       fetchCategories()
@@ -85,7 +84,6 @@ export default function ManageCategories() {
     setFormData({
       title: category.title,
       imageURL: category.imageURL,
-      targetPage: category.targetPage || "/courses",
     })
     setShowForm(true)
   }
@@ -111,7 +109,7 @@ export default function ManageCategories() {
             setShowForm(!showForm)
             if (showForm) {
               setEditingCategory(null)
-              setFormData({ title: "", imageURL: "", targetPage: "/courses" })
+              setFormData({ title: "", imageURL: "" })
             }
           }}
           className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors flex items-center gap-2"
@@ -181,20 +179,6 @@ export default function ManageCategories() {
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium mb-2">Target Page</label>
-              <select
-                value={formData.targetPage}
-                onChange={(e) => setFormData({ ...formData, targetPage: e.target.value })}
-                className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-              >
-                <option value="/courses">Courses</option>
-                <option value="/news">News</option>
-                <option value="/announcements">Announcements</option>
-                <option value="/community">Community</option>
-              </select>
-            </div>
-
             <div className="flex gap-3">
               <button
                 type="submit"
@@ -208,7 +192,7 @@ export default function ManageCategories() {
                 onClick={() => {
                   setShowForm(false)
                   setEditingCategory(null)
-                  setFormData({ title: "", imageURL: "", targetPage: "/courses" })
+                  setFormData({ title: "", imageURL: "" })
                 }}
                 className="px-6 py-2 bg-muted hover:bg-muted/80 rounded-lg transition-colors"
               >
@@ -252,7 +236,6 @@ export default function ManageCategories() {
               </div>
               <div className="p-4">
                 <h3 className="font-semibold text-lg mb-2">{category.title}</h3>
-                <p className="text-sm text-muted-foreground mb-4">Target: {category.targetPage}</p>
                 <div className="flex gap-2">
                   <button
                     onClick={() => handleEdit(category)}

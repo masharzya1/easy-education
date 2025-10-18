@@ -2,14 +2,16 @@
 
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
-import { Plus, Edit, Trash2, X, Archive } from "lucide-react"
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, where, writeBatch } from "firebase/firestore"
+import { Plus, X } from "lucide-react"
+import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, where } from "firebase/firestore"
 import { db } from "../../lib/firebase"
 import { uploadToImgbb } from "../../lib/imgbb"
 
 export default function ManageClasses() {
   const [courses, setCourses] = useState([])
   const [classes, setClasses] = useState([])
+  const [subjects, setSubjects] = useState([])
+  const [chapters, setChapters] = useState([])
   const [selectedCourse, setSelectedCourse] = useState("")
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
@@ -37,6 +39,8 @@ export default function ManageClasses() {
 
   useEffect(() => {
     fetchCourses()
+    fetchSubjects()
+    fetchChapters()
   }, [])
 
   useEffect(() => {
@@ -60,6 +64,26 @@ export default function ManageClasses() {
     }
   }
 
+  const fetchSubjects = async () => {
+    try {
+      const snapshot = await getDocs(collection(db, "subjects"))
+      const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
+      setSubjects(data)
+    } catch (error) {
+      console.error("Error fetching subjects:", error)
+    }
+  }
+
+  const fetchChapters = async () => {
+    try {
+      const snapshot = await getDocs(collection(db, "chapters"))
+      const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
+      setChapters(data)
+    } catch (error) {
+      console.error("Error fetching chapters:", error)
+    }
+  }
+
   const fetchClasses = async () => {
     try {
       const classesQuery = query(collection(db, "classes"), where("courseId", "==", selectedCourse))
@@ -76,63 +100,26 @@ export default function ManageClasses() {
     }
   }
 
-  const handleArchiveCourses = async () => {
-    if (!archiveSourceCourse || !selectedCourse) return
-
-    setSubmitting(true)
-    try {
-      const sourceClassesQuery = query(collection(db, "classes"), where("courseId", "==", archiveSourceCourse))
-      const sourceClassesSnapshot = await getDocs(sourceClassesQuery)
-
-      const batch = writeBatch(db)
-      let maxOrder = classes.length
-
-      sourceClassesSnapshot.docs.forEach((docSnap) => {
-        const classData = docSnap.data()
-        const newClassRef = doc(collection(db, "classes"))
-        batch.set(newClassRef, {
-          ...classData,
-          courseId: selectedCourse,
-          chapter: "Archive",
-          order: maxOrder++,
-        })
-      })
-
-      await batch.commit()
-      await fetchClasses()
-      setShowArchiveModal(false)
-      alert(`Successfully archived ${sourceClassesSnapshot.docs.length} classes!`)
-    } catch (error) {
-      console.error("Error archiving courses:", error)
-      alert("Failed to archive courses. Please try again.")
-    } finally {
-      setSubmitting(false)
-    }
-  }
-
   const handleOpenModal = (classItem = null) => {
     if (classItem) {
       setEditingClass(classItem)
-      const isYouTube = classItem.videoURL?.includes("youtube.com") || classItem.videoURL?.includes("youtu.be")
-      const isHLS = classItem.videoType === "hls" || classItem.videoURL?.includes(".m3u8")
-      setVideoType(isYouTube ? "youtube" : isHLS ? "hls" : "youtube")
       setFormData({
-        title: classItem.title,
+        title: classItem.title || "",
         chapter: classItem.chapter || "",
         subject: classItem.subject || "",
-        order: classItem.order,
+        order: classItem.order || 0,
         duration: classItem.duration || "",
-        youtubeLink: isYouTube ? classItem.videoURL : "",
-        hlsLink: isHLS ? classItem.videoURL : "",
+        youtubeLink: classItem.youtubeLink || "",
+        hlsLink: classItem.hlsLink || "",
         teacherName: classItem.teacherName || "",
         imageType: classItem.imageURL?.startsWith("http") ? "link" : "upload",
         imageLink: classItem.imageURL || "",
         teacherImageType: classItem.teacherImageURL?.startsWith("http") ? "link" : "upload",
         teacherImageLink: classItem.teacherImageURL || "",
       })
+      setVideoType(classItem.youtubeLink ? "youtube" : "hls")
     } else {
       setEditingClass(null)
-      setVideoType("youtube")
       setFormData({
         title: "",
         chapter: "",
@@ -147,59 +134,43 @@ export default function ManageClasses() {
         teacherImageType: "upload",
         teacherImageLink: "",
       })
+      setVideoType("youtube")
     }
     setImageFile(null)
     setTeacherImageFile(null)
     setShowModal(true)
   }
 
-  const getYouTubeEmbedUrl = (url) => {
-    if (!url) return ""
-
-    let videoId = ""
-
-    if (url.includes("youtube.com/watch?v=")) {
-      videoId = url.split("v=")[1]?.split("&")[0]
-    } else if (url.includes("youtu.be/")) {
-      videoId = url.split("youtu.be/")[1]?.split("?")[0]
-    } else if (url.includes("youtube.com/embed/")) {
-      return url // Already an embed URL
-    }
-
-    return videoId ? `https://www.youtube.com/embed/${videoId}` : url
+  const handleCloseModal = () => {
+    setShowModal(false)
+    setEditingClass(null)
+    setImageFile(null)
+    setTeacherImageFile(null)
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!selectedCourse) return
-
     setSubmitting(true)
 
     try {
-      let videoURL = editingClass?.videoURL || ""
+      console.log(" Starting class save...")
       let imageURL = editingClass?.imageURL || ""
       let teacherImageURL = editingClass?.teacherImageURL || ""
 
-      if (videoType === "youtube") {
-        videoURL = getYouTubeEmbedUrl(formData.youtubeLink)
-      } else if (videoType === "hls") {
-        videoURL = formData.hlsLink
-      }
-
-      if (formData.imageType === "link") {
-        imageURL = formData.imageLink
-      } else if (imageFile) {
-        console.log(" Uploading class image to imgbb...")
+      if (imageFile) {
+        console.log(" Uploading image to imgbb...")
         imageURL = await uploadToImgbb(imageFile)
-        console.log(" Class image uploaded successfully:", imageURL)
+        console.log(" Image uploaded successfully:", imageURL)
+      } else if (formData.imageType === "link") {
+        imageURL = formData.imageLink
       }
 
-      if (formData.teacherImageType === "link") {
-        teacherImageURL = formData.teacherImageLink
-      } else if (teacherImageFile) {
+      if (teacherImageFile) {
         console.log(" Uploading teacher image to imgbb...")
         teacherImageURL = await uploadToImgbb(teacherImageFile)
         console.log(" Teacher image uploaded successfully:", teacherImageURL)
+      } else if (formData.teacherImageType === "link") {
+        teacherImageURL = formData.teacherImageLink
       }
 
       const classData = {
@@ -209,27 +180,31 @@ export default function ManageClasses() {
         subject: formData.subject,
         order: Number.parseInt(formData.order),
         duration: formData.duration,
-        videoURL,
-        videoType,
-        teacherName: formData.teacherName,
+        youtubeLink: videoType === "youtube" ? formData.youtubeLink : "",
+        hlsLink: videoType === "hls" ? formData.hlsLink : "",
         imageURL,
+        teacherName: formData.teacherName,
         teacherImageURL,
-        votesCount: editingClass?.votesCount || 0,
       }
 
-      console.log(" Saving class with data:", classData)
+      console.log(" Class data:", classData)
 
       if (editingClass) {
+        console.log(" Updating existing class:", editingClass.id)
         await updateDoc(doc(db, "classes", editingClass.id), classData)
+        console.log(" Class updated successfully")
       } else {
+        console.log(" Creating new class...")
         await addDoc(collection(db, "classes"), classData)
+        console.log(" Class created successfully")
       }
 
       await fetchClasses()
-      setShowModal(false)
+      handleCloseModal()
+      alert(editingClass ? "Class updated successfully!" : "Class created successfully!")
     } catch (error) {
-      console.error("Error saving class:", error)
-      alert(error.message || "Failed to save class. Please check your inputs and try again.")
+      console.error(" Error saving class:", error)
+      alert("Failed to save class. " + (error.message || "Please try again."))
     } finally {
       setSubmitting(false)
     }
@@ -240,9 +215,10 @@ export default function ManageClasses() {
 
     try {
       await deleteDoc(doc(db, "classes", classId))
-      setClasses(classes.filter((c) => c.id !== classId))
+      await fetchClasses()
     } catch (error) {
       console.error("Error deleting class:", error)
+      alert("Failed to delete class")
     }
   }
 
@@ -252,17 +228,29 @@ export default function ManageClasses() {
   return (
     <div>
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Manage Classes</h1>
-        <p className="text-muted-foreground">Add and manage classes for courses</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold mb-2">Manage Classes</h1>
+            <p className="text-muted-foreground">Create and manage course classes</p>
+          </div>
+          <button
+            onClick={() => handleOpenModal()}
+            disabled={!selectedCourse}
+            className="flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-colors disabled:opacity-50"
+          >
+            <Plus className="w-5 h-5" />
+            Add Class
+          </button>
+        </div>
       </motion.div>
 
-      {/* Course Selector */}
-      <div className="bg-card border border-border rounded-xl p-6 mb-6">
+      {/* Course Selection */}
+      <div className="mb-6">
         <label className="block text-sm font-medium mb-2">Select Course</label>
         <select
           value={selectedCourse}
           onChange={(e) => setSelectedCourse(e.target.value)}
-          className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+          className="w-full px-4 py-2 bg-card border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
         >
           <option value="">Choose a course...</option>
           {courses.map((course) => (
@@ -273,160 +261,67 @@ export default function ManageClasses() {
         </select>
       </div>
 
+      {/* Classes Table */}
       {selectedCourse && (
-        <>
-          <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-            <p className="text-muted-foreground">{classes.length} classes in this course</p>
-            <div className="flex gap-3">
-              {selectedCourseData?.type === "batch" && (
-                <button
-                  onClick={() => setShowArchiveModal(true)}
-                  className="flex items-center gap-2 px-6 py-3 bg-secondary hover:bg-secondary/90 text-secondary-foreground rounded-lg transition-colors"
-                >
-                  <Archive className="w-5 h-5" />
-                  Archive Old Batch
-                </button>
-              )}
-              <button
-                onClick={() => handleOpenModal()}
-                className="flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-colors"
-              >
-                <Plus className="w-5 h-5" />
-                Add Class
-              </button>
-            </div>
+        <div className="bg-card border border-border rounded-xl overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[800px]">
+              <thead className="bg-muted">
+                <tr>
+                  <th className="text-left p-4 font-medium">Title</th>
+                  {selectedCourseData?.type === "batch" && <th className="text-left p-4 font-medium">Subject</th>}
+                  <th className="text-left p-4 font-medium">Chapter</th>
+                  <th className="text-left p-4 font-medium">Teacher</th>
+                  <th className="text-left p-4 font-medium">Order</th>
+                  <th className="text-right p-4 font-medium">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {classes.map((classItem) => (
+                  <tr key={classItem.id} className="hover:bg-muted/50">
+                    <td className="p-4 text-sm">{classItem.title}</td>
+                    {selectedCourseData?.type === "batch" && (
+                      <td className="p-4 text-sm text-muted-foreground">{classItem.subject || "N/A"}</td>
+                    )}
+                    <td className="p-4 text-sm text-muted-foreground">{classItem.chapter || "N/A"}</td>
+                    <td className="p-4 text-sm">
+                      {classItem.teacherImageURL && (
+                        <img
+                          src={classItem.teacherImageURL || "/placeholder.svg"}
+                          alt={classItem.teacherName}
+                          className="w-8 h-8 rounded-full object-cover inline-block mr-2"
+                        />
+                      )}
+                      <span className="text-sm">{classItem.teacherName || "N/A"}</span>
+                    </td>
+                    <td className="p-4 text-sm">{classItem.order}</td>
+                    <td className="p-4 text-right">
+                      <div className="flex gap-2 justify-end">
+                        <button
+                          onClick={() => handleOpenModal(classItem)}
+                          className="px-3 py-1 bg-primary/10 hover:bg-primary/20 text-primary rounded transition-colors text-sm"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete(classItem.id)}
+                          className="px-3 py-1 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded transition-colors text-sm"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
 
-          <div className="bg-card border border-border rounded-xl overflow-hidden">
-            {classes.length > 0 ? (
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[800px]">
-                  <thead className="bg-muted/50 border-b border-border">
-                    <tr>
-                      <th className="text-left p-4 font-medium">Title</th>
-                      <th className="text-left p-4 font-medium">Teacher</th>
-                      {selectedCourseData?.type === "batch" && <th className="text-left p-4 font-medium">Subject</th>}
-                      <th className="text-left p-4 font-medium">Chapter</th>
-                      <th className="text-left p-4 font-medium">Order</th>
-                      <th className="text-left p-4 font-medium">Duration</th>
-                      <th className="text-left p-4 font-medium">Votes</th>
-                      <th className="text-right p-4 font-medium">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border">
-                    {classes.map((classItem) => (
-                      <tr key={classItem.id} className="hover:bg-muted/30 transition-colors">
-                        <td className="p-4">
-                          <div className="font-medium">{classItem.title}</div>
-                        </td>
-                        <td className="p-4">
-                          <div className="flex items-center gap-2">
-                            {classItem.teacherImageURL && (
-                              <img
-                                src={classItem.teacherImageURL || "/placeholder.svg"}
-                                alt={classItem.teacherName}
-                                className="w-8 h-8 rounded-full object-cover"
-                              />
-                            )}
-                            <span className="text-sm">{classItem.teacherName || "N/A"}</span>
-                          </div>
-                        </td>
-                        {selectedCourseData?.type === "batch" && (
-                          <td className="p-4 text-sm text-muted-foreground">{classItem.subject || "N/A"}</td>
-                        )}
-                        <td className="p-4 text-sm text-muted-foreground">{classItem.chapter || "N/A"}</td>
-                        <td className="p-4 text-sm">{classItem.order}</td>
-                        <td className="p-4 text-sm text-muted-foreground">{classItem.duration || "N/A"}</td>
-                        <td className="p-4 text-sm">{classItem.votesCount || 0}</td>
-                        <td className="p-4">
-                          <div className="flex justify-end gap-2">
-                            <button
-                              onClick={() => handleOpenModal(classItem)}
-                              className="p-2 hover:bg-muted rounded-lg transition-colors"
-                            >
-                              <Edit className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={() => handleDelete(classItem.id)}
-                              className="p-2 hover:bg-muted rounded-lg transition-colors"
-                            >
-                              <Trash2 className="w-4 h-4 text-red-500" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <div className="text-center py-12 text-muted-foreground">
-                <p>No classes yet. Add your first class!</p>
-              </div>
-            )}
-          </div>
-        </>
-      )}
-
-      {/* Archive Modal */}
-      {showArchiveModal && (
-        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-card border border-border rounded-xl p-6 max-w-md w-full"
-          >
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold">Archive Old Batch</h2>
-              <button
-                onClick={() => setShowArchiveModal(false)}
-                className="p-2 hover:bg-muted rounded-lg transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
+          {classes.length === 0 && (
+            <div className="text-center py-12 text-muted-foreground">
+              <p>No classes yet. Add your first class!</p>
             </div>
-
-            <p className="text-muted-foreground mb-4">
-              Select a batch course to archive. All classes from the selected course will be copied to the current
-              course under an "Archive" chapter.
-            </p>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">Source Batch Course</label>
-                <select
-                  value={archiveSourceCourse}
-                  onChange={(e) => setArchiveSourceCourse(e.target.value)}
-                  className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                >
-                  <option value="">Choose a batch course...</option>
-                  {batchCourses
-                    .filter((c) => c.id !== selectedCourse)
-                    .map((course) => (
-                      <option key={course.id} value={course.id}>
-                        {course.title}
-                      </option>
-                    ))}
-                </select>
-              </div>
-
-              <div className="flex gap-3 pt-4">
-                <button
-                  onClick={handleArchiveCourses}
-                  disabled={!archiveSourceCourse || submitting}
-                  className="flex-1 py-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-colors disabled:opacity-50"
-                >
-                  {submitting ? "Archiving..." : "Archive Classes"}
-                </button>
-                <button
-                  onClick={() => setShowArchiveModal(false)}
-                  className="px-6 py-3 bg-muted hover:bg-muted/80 rounded-lg transition-colors"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </motion.div>
+          )}
         </div>
       )}
 
@@ -459,13 +354,14 @@ export default function ManageClasses() {
 
               <div>
                 <label className="block text-sm font-medium mb-2">Teacher Name</label>
-                <input
-                  type="text"
+                <select
                   value={formData.teacherName}
                   onChange={(e) => setFormData({ ...formData, teacherName: e.target.value })}
-                  placeholder="Enter teacher name"
                   className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                />
+                >
+                  <option value="">Select a teacher (optional)</option>
+                  {/* Teachers can be added from ManageTeachers page */}
+                </select>
               </div>
 
               <div>
@@ -521,23 +417,35 @@ export default function ManageClasses() {
               {selectedCourseData?.type === "batch" && (
                 <div>
                   <label className="block text-sm font-medium mb-2">Subject</label>
-                  <input
-                    type="text"
+                  <select
                     value={formData.subject}
                     onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
                     className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
+                  >
+                    <option value="">Select a subject</option>
+                    {subjects.map((subject) => (
+                      <option key={subject.id} value={subject.title}>
+                        {subject.title}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               )}
 
               <div>
                 <label className="block text-sm font-medium mb-2">Chapter</label>
-                <input
-                  type="text"
+                <select
                   value={formData.chapter}
                   onChange={(e) => setFormData({ ...formData, chapter: e.target.value })}
                   className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                />
+                >
+                  <option value="">Select a chapter</option>
+                  {chapters.map((chapter) => (
+                    <option key={chapter.id} value={chapter.title}>
+                      {chapter.title}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -597,56 +505,6 @@ export default function ManageClasses() {
                 ) : null}
               </div>
 
-              <div>
-                <label className="block text-sm font-medium mb-3">Class Image (Optional)</label>
-                <div className="flex gap-4 mb-4">
-                  <button
-                    type="button"
-                    onClick={() => setFormData({ ...formData, imageType: "upload" })}
-                    className={`flex-1 py-2 px-4 rounded-lg border-2 transition-colors ${
-                      formData.imageType === "upload"
-                        ? "border-primary bg-primary/10 text-primary font-medium"
-                        : "border-border hover:border-primary/50"
-                    }`}
-                  >
-                    Upload Image
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setFormData({ ...formData, imageType: "link" })}
-                    className={`flex-1 py-2 px-4 rounded-lg border-2 transition-colors ${
-                      formData.imageType === "link"
-                        ? "border-primary bg-primary/10 text-primary font-medium"
-                        : "border-border hover:border-primary/50"
-                    }`}
-                  >
-                    Image Link
-                  </button>
-                </div>
-
-                {formData.imageType === "link" ? (
-                  <div>
-                    <input
-                      type="url"
-                      value={formData.imageLink}
-                      onChange={(e) => setFormData({ ...formData, imageLink: e.target.value })}
-                      placeholder="https://example.com/image.jpg"
-                      className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">Paste an image URL</p>
-                  </div>
-                ) : (
-                  <div>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => setImageFile(e.target.files?.[0] || null)}
-                      className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
-                  </div>
-                )}
-              </div>
-
               <div className="flex gap-3 pt-4">
                 <button
                   type="submit"
@@ -657,7 +515,7 @@ export default function ManageClasses() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setShowModal(false)}
+                  onClick={handleCloseModal}
                   className="px-6 py-3 bg-muted hover:bg-muted/80 rounded-lg transition-colors"
                 >
                   Cancel

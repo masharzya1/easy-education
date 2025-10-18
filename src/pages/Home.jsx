@@ -57,6 +57,7 @@ export default function Home() {
     e.preventDefault()
     if (searchQuery.trim()) {
       navigate("/courses", { state: { searchQuery: searchQuery.trim() } })
+      setSearchQuery("")
     }
   }
 

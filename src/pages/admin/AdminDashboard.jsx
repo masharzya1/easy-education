@@ -1,5 +1,19 @@
 import { Routes, Route, Link, useLocation } from "react-router-dom"
-import { Users, BookOpen, Video, Newspaper, BarChart3, LayoutDashboard, Megaphone, Tag, CreditCard, Settings, Grid, GraduationCap } from "lucide-react"
+import {
+  Users,
+  BookOpen,
+  Video,
+  Newspaper,
+  BarChart3,
+  LayoutDashboard,
+  Megaphone,
+  Tag,
+  CreditCard,
+  Settings,
+  Grid,
+  GraduationCap,
+  BookMarked,
+} from "lucide-react"
 import AdminOverview from "./AdminOverview"
 import ManageUsers from "./ManageUsers"
 import ManageCourses from "./ManageCourses"
@@ -12,6 +26,8 @@ import WebsiteSettings from "./WebsiteSettings"
 import Rankings from "./Rankings"
 import ManageCategories from "./ManageCategories"
 import ManageTeachers from "./ManageTeachers"
+import ManageSubjects from "./ManageSubjects"
+import ManageChapters from "./ManageChapters"
 
 export default function AdminDashboard() {
   const location = useLocation()
@@ -21,6 +37,8 @@ export default function AdminDashboard() {
     { name: "Users", path: "/admin/users", icon: Users },
     { name: "Courses", path: "/admin/courses", icon: BookOpen },
     { name: "Classes", path: "/admin/classes", icon: Video },
+    { name: "Subjects", path: "/admin/subjects", icon: BookMarked },
+    { name: "Chapters", path: "/admin/chapters", icon: BookMarked },
     { name: "Categories", path: "/admin/categories", icon: Grid },
     { name: "Teachers", path: "/admin/teachers", icon: GraduationCap },
     { name: "News", path: "/admin/news", icon: Newspaper },
@@ -66,6 +84,8 @@ export default function AdminDashboard() {
               <Route path="users" element={<ManageUsers />} />
               <Route path="courses" element={<ManageCourses />} />
               <Route path="classes" element={<ManageClasses />} />
+              <Route path="subjects" element={<ManageSubjects />} />
+              <Route path="chapters" element={<ManageChapters />} />
               <Route path="categories" element={<ManageCategories />} />
               <Route path="teachers" element={<ManageTeachers />} />
               <Route path="news" element={<ManageNews />} />

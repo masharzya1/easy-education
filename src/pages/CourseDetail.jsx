@@ -87,8 +87,8 @@ export default function CourseDetail() {
     }
 
     try {
-      // Create an auto-approved payment record for free courses
-      const { addDoc, collection, serverTimestamp } = await import("firebase/firestore")
+      const { addDoc, serverTimestamp } = await import("firebase/firestore")
+
       await addDoc(collection(db, "payments"), {
         userId: currentUser.uid,
         userName: currentUser.displayName || "User",
@@ -108,7 +108,7 @@ export default function CourseDetail() {
         isFreeEnrollment: true,
       })
 
-      navigate("/my-courses")
+      await fetchCourseData()
     } catch (error) {
       console.error("Error enrolling in free course:", error)
       alert("Failed to enroll. Please try again.")

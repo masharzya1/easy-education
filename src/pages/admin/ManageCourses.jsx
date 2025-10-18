@@ -10,6 +10,7 @@ import { uploadToImgbb } from "../../lib/imgbb"
 export default function ManageCourses() {
   const [courses, setCourses] = useState([])
   const [teachers, setTeachers] = useState([])
+  const [categories, setCategories] = useState([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [editingCourse, setEditingCourse] = useState(null)
@@ -18,9 +19,8 @@ export default function ManageCourses() {
     category: "",
     type: "subject",
     description: "",
-    tags: "",
-    teacherId: "",
-    instructorName: "",
+    teachers: [],
+    teacherInput: "",
     price: 0,
   })
   const [thumbnailFile, setThumbnailFile] = useState(null)
@@ -29,7 +29,21 @@ export default function ManageCourses() {
   useEffect(() => {
     fetchCourses()
     fetchTeachers()
+    fetchCategories()
   }, [])
+
+  const fetchCategories = async () => {
+    try {
+      const categoriesSnapshot = await getDocs(collection(db, "categories"))
+      const categoriesData = categoriesSnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }))
+      setCategories(categoriesData)
+    } catch (error) {
+      console.error("Error fetching categories:", error)
+    }
+  }
 
   const fetchTeachers = async () => {
     try {
@@ -67,9 +81,8 @@ export default function ManageCourses() {
         category: course.category,
         type: course.type,
         description: course.description,
-        tags: course.tags?.join(", ") || "",
-        teacherId: course.teacherId || "",
-        instructorName: course.instructorName || "",
+        teachers: course.teachers || [],
+        teacherInput: "",
         price: course.price || 0,
       })
     } else {
@@ -79,9 +92,8 @@ export default function ManageCourses() {
         category: "",
         type: "subject",
         description: "",
-        tags: "",
-        teacherId: "",
-        instructorName: "",
+        teachers: [],
+        teacherInput: "",
         price: 0,
       })
     }
@@ -93,6 +105,18 @@ export default function ManageCourses() {
     setShowModal(false)
     setEditingCourse(null)
     setThumbnailFile(null)
+  }
+
+  const handleAddTeacher = () => {
+    if (formData.teacherInput.trim()) {
+      const newTeachers = [...formData.teachers, formData.teacherInput.trim()]
+      setFormData({ ...formData, teachers: newTeachers, teacherInput: "" })
+    }
+  }
+
+  const handleRemoveTeacher = (index) => {
+    const newTeachers = formData.teachers.filter((_, i) => i !== index)
+    setFormData({ ...formData, teachers: newTeachers })
   }
 
   const handleSubmit = async (e) => {
@@ -114,20 +138,13 @@ export default function ManageCourses() {
         }
       }
 
-      const selectedTeacher = teachers.find((t) => t.id === formData.teacherId)
-
       const courseData = {
         title: formData.title,
         category: formData.category,
         type: formData.type,
         description: formData.description,
-        tags: formData.tags
-          .split(",")
-          .map((t) => t.trim())
-          .filter((t) => t),
+        teachers: formData.teachers,
         thumbnailURL,
-        teacherId: formData.teacherId || "",
-        instructorName: selectedTeacher?.name || formData.instructorName || "",
         price: Number.parseFloat(formData.price) || 0,
       }
 
@@ -151,22 +168,7 @@ export default function ManageCourses() {
       alert(editingCourse ? "Course updated successfully!" : "Course created successfully!")
     } catch (error) {
       console.error(" Error saving course:", error)
-      console.error(" Error code:", error.code)
-      console.error(" Error message:", error.message)
-
-      let errorMessage = "Failed to save course. "
-      if (error.code === "permission-denied") {
-        errorMessage +=
-          "You don't have permission to create/edit courses. Please check your admin role and Firestore security rules."
-      } else if (error.code === "unavailable") {
-        errorMessage += "Cannot connect to the database. Please check your internet connection."
-      } else if (error.message) {
-        errorMessage += error.message
-      } else {
-        errorMessage += "Please try again."
-      }
-
-      alert(errorMessage)
+      alert("Failed to save course. " + (error.message || "Please try again."))
     } finally {
       setSubmitting(false)
     }
@@ -282,13 +284,19 @@ export default function ManageCourses() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-2">Category</label>
-                  <input
-                    type="text"
+                  <select
                     value={formData.category}
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                     required
                     className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
+                  >
+                    <option value="">Select a category</option>
+                    {categories.map((cat) => (
+                      <option key={cat.id} value={cat.title}>
+                        {cat.title}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 <div>
@@ -316,47 +324,50 @@ export default function ManageCourses() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">Tags (comma separated)</label>
-                <input
-                  type="text"
-                  value={formData.tags}
-                  onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
-                  placeholder="programming, web development, react"
-                  className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">Assign Teacher</label>
-                <select
-                  value={formData.teacherId}
-                  onChange={(e) => {
-                    const teacherId = e.target.value
-                    const teacher = teachers.find((t) => t.id === teacherId)
-                    setFormData({
-                      ...formData,
-                      teacherId,
-                      instructorName: teacher?.name || "",
-                    })
-                  }}
-                  className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                >
-                  <option value="">Select a teacher (optional)</option>
-                  {teachers.map((teacher) => (
-                    <option key={teacher.id} value={teacher.id}>
-                      {teacher.name} {teacher.expertise ? `- ${teacher.expertise}` : ""}
-                    </option>
-                  ))}
-                </select>
-                {!formData.teacherId && (
-                  <input
-                    type="text"
-                    value={formData.instructorName}
-                    onChange={(e) => setFormData({ ...formData, instructorName: e.target.value })}
-                    placeholder="Or enter instructor name manually"
-                    className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary mt-2"
-                  />
-                )}
+                <label className="block text-sm font-medium mb-2">Teachers (comma separated)</label>
+                <div className="space-y-2">
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={formData.teacherInput}
+                      onChange={(e) => setFormData({ ...formData, teacherInput: e.target.value })}
+                      onKeyPress={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault()
+                          handleAddTeacher()
+                        }
+                      }}
+                      placeholder="Enter teacher name and press Enter"
+                      className="flex-1 px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddTeacher}
+                      className="px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-colors"
+                    >
+                      Add
+                    </button>
+                  </div>
+                  {formData.teachers.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {formData.teachers.map((teacher, index) => (
+                        <div
+                          key={index}
+                          className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm flex items-center gap-2"
+                        >
+                          {teacher}
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveTeacher(index)}
+                            className="text-primary hover:text-primary/70"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div>
