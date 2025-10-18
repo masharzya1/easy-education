@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback, useMemo } from "react"
 import { useNavigate } from "react-router-dom"
 import { motion } from "framer-motion"
 import { ShoppingCart, Tag, CreditCard, ArrowLeft, AlertCircle } from "lucide-react"
@@ -18,6 +18,7 @@ export default function Checkout() {
   const [appliedCoupon, setAppliedCoupon] = useState(null)
   const [couponError, setCouponError] = useState("")
   const [paymentInstructions, setPaymentInstructions] = useState("")
+  const [purchasedCourses, setPurchasedCourses] = useState(new Set())
 
   const [formData, setFormData] = useState({
     senderNumber: "",
@@ -35,7 +36,41 @@ export default function Checkout() {
       navigate("/courses")
       return
     }
-    fetchPaymentInstructions()
+
+    const fetchInitialData = async () => {
+      try {
+        // Fetch payment instructions
+        const settingsRef = collection(db, "settings")
+        const settingsQuery = query(settingsRef, where("type", "==", "payment"))
+        const settingsSnapshot = await getDocs(settingsQuery)
+
+        if (!settingsSnapshot.empty) {
+          const settings = settingsSnapshot.docs[0].data()
+          setPaymentInstructions(settings.instructions || "Please pay to 018XXXXXXXX via bKash")
+        }
+
+        // Fetch purchased courses
+        const approvedPaymentQuery = query(
+          collection(db, "payments"),
+          where("userId", "==", currentUser.uid),
+          where("status", "==", "approved"),
+        )
+        const approvedSnapshot = await getDocs(approvedPaymentQuery)
+
+        const purchased = new Set()
+        approvedSnapshot.docs.forEach((doc) => {
+          const payment = doc.data()
+          payment.courses?.forEach((c) => {
+            purchased.add(c.id)
+          })
+        })
+        setPurchasedCourses(purchased)
+      } catch (error) {
+        console.error("Error fetching initial data:", error)
+      }
+    }
+
+    fetchInitialData()
   }, [currentUser, cartItems, navigate])
 
   useEffect(() => {
@@ -48,25 +83,7 @@ export default function Checkout() {
     }
   }, [userProfile])
 
-  const fetchPaymentInstructions = async () => {
-    try {
-      const settingsRef = collection(db, "settings")
-      const settingsQuery = query(settingsRef, where("type", "==", "payment"))
-      const snapshot = await getDocs(settingsQuery)
-
-      if (!snapshot.empty) {
-        const settings = snapshot.docs[0].data()
-        setPaymentInstructions(settings.instructions || "Please pay to 018XXXXXXXX via bKash")
-      } else {
-        setPaymentInstructions("Please pay to 018XXXXXXXX via bKash")
-      }
-    } catch (error) {
-      console.error("Error fetching payment instructions:", error)
-      setPaymentInstructions("Please pay to 018XXXXXXXX via bKash")
-    }
-  }
-
-  const validateCoupon = async () => {
+  const validateCoupon = useCallback(async () => {
     if (!couponCode.trim()) {
       setCouponError("Please enter a coupon code")
       return
@@ -116,24 +133,22 @@ export default function Checkout() {
       console.error("Error validating coupon:", error)
       setCouponError("Failed to validate coupon")
     }
-  }
+  }, [couponCode, cartItems, getTotal])
 
-  const calculateDiscount = () => {
+  const calculateDiscount = useMemo(() => {
     if (!appliedCoupon) return 0
-
     const subtotal = getTotal()
     if (appliedCoupon.discountType === "percentage") {
       return (subtotal * appliedCoupon.discountPercent) / 100
     } else {
       return appliedCoupon.discountAmount
     }
-  }
+  }, [appliedCoupon, getTotal])
 
-  const calculateTotal = () => {
+  const calculateTotal = useMemo(() => {
     const subtotal = getTotal()
-    const discount = calculateDiscount()
-    return Math.max(0, subtotal - discount)
-  }
+    return Math.max(0, subtotal - calculateDiscount)
+  }, [getTotal, calculateDiscount])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -143,35 +158,17 @@ export default function Checkout() {
       return
     }
 
+    const alreadyPurchased = cartItems.filter((item) => purchasedCourses.has(item.id))
+    if (alreadyPurchased.length > 0) {
+      alert(
+        `You have already purchased ${alreadyPurchased.length} course(s) in your cart. Please remove them before checkout.`,
+      )
+      return
+    }
+
     setLoading(true)
 
     try {
-      const approvedPaymentQuery = query(
-        collection(db, "payments"),
-        where("userId", "==", currentUser.uid),
-        where("status", "==", "approved"),
-      )
-      const approvedPaymentSnapshot = await getDocs(approvedPaymentQuery)
-
-      const approvedCourseIds = new Set()
-      approvedPaymentSnapshot.docs.forEach((doc) => {
-        const payment = doc.data()
-        payment.courses?.forEach((c) => {
-          approvedCourseIds.add(c.id)
-        })
-      })
-
-      const currentCourseIds = new Set(cartItems.map((c) => c.id))
-      const alreadyPurchased = [...currentCourseIds].filter((id) => approvedCourseIds.has(id))
-
-      if (alreadyPurchased.length > 0) {
-        alert(
-          `You have already purchased ${alreadyPurchased.length} course(s) in your cart. Please remove them before checkout.`,
-        )
-        setLoading(false)
-        return
-      }
-
       const existingPaymentQuery = query(
         collection(db, "payments"),
         where("userId", "==", currentUser.uid),
@@ -196,7 +193,6 @@ export default function Checkout() {
         }
       }
 
-      const discount = calculateDiscount()
       const paymentData = {
         userId: currentUser.uid,
         userName: formData.name,
@@ -212,9 +208,9 @@ export default function Checkout() {
         discountType: appliedCoupon?.discountType || "none",
         discountPercent: appliedCoupon?.discountPercent || 0,
         discountAmount: appliedCoupon?.discountAmount || 0,
-        discount: discount,
+        discount: calculateDiscount,
         couponCode: appliedCoupon?.code || "",
-        finalAmount: calculateTotal(),
+        finalAmount: calculateTotal,
         status: "pending",
         submittedAt: serverTimestamp(),
       }
@@ -232,33 +228,33 @@ export default function Checkout() {
   }
 
   const subtotal = getTotal()
-  const discount = calculateDiscount()
-  const total = calculateTotal()
+  const discount = calculateDiscount
+  const total = calculateTotal
 
   return (
-    <div className="min-h-screen py-8 sm:py-12 px-4">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen py-6 sm:py-8 lg:py-12 px-3 sm:px-4 lg:px-6">
+      <div className="max-w-6xl mx-auto">
         <button
           onClick={() => navigate("/courses")}
-          className="flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6 transition-colors"
+          className="flex items-center gap-2 text-sm sm:text-base text-muted-foreground hover:text-foreground mb-4 sm:mb-6 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Courses
         </button>
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-          <h1 className="text-3xl sm:text-4xl font-bold mb-8 flex items-center gap-3">
-            <ShoppingCart className="w-8 h-8 text-primary" />
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-6 sm:mb-8 flex items-center gap-2 sm:gap-3">
+            <ShoppingCart className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
             Checkout
           </h1>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
-            {/* Order Summary - appears below on mobile, right on desktop */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
+            {/* Order Summary */}
             <div className="lg:col-span-1 order-2 lg:order-1">
-              <div className="bg-card border border-border rounded-lg p-4 sm:p-6 lg:sticky lg:top-24">
-                <h2 className="text-lg sm:text-xl font-semibold mb-4">Order Summary</h2>
+              <div className="bg-card border border-border rounded-lg p-3 sm:p-4 lg:p-6 lg:sticky lg:top-24">
+                <h2 className="text-base sm:text-lg lg:text-xl font-semibold mb-3 sm:mb-4">Order Summary</h2>
 
-                <div className="space-y-2 sm:space-y-3 mb-6 max-h-48 overflow-y-auto">
+                <div className="space-y-1.5 sm:space-y-2 mb-4 sm:mb-6 max-h-40 sm:max-h-48 overflow-y-auto">
                   {cartItems.map((item) => (
                     <div key={item.id} className="flex justify-between text-xs sm:text-sm">
                       <span className="truncate mr-2">{item.title}</span>
@@ -267,7 +263,7 @@ export default function Checkout() {
                   ))}
                 </div>
 
-                <div className="border-t border-border pt-3 sm:pt-4 space-y-2">
+                <div className="border-t border-border pt-2 sm:pt-3 space-y-1.5 sm:space-y-2">
                   <div className="flex justify-between text-xs sm:text-sm">
                     <span>Subtotal:</span>
                     <span>৳{subtotal.toFixed(2)}</span>
@@ -281,14 +277,14 @@ export default function Checkout() {
                       <span>-৳{discount.toFixed(2)}</span>
                     </div>
                   )}
-                  <div className="flex justify-between font-bold text-base sm:text-lg pt-2 border-t">
+                  <div className="flex justify-between font-bold text-sm sm:text-base pt-1.5 sm:pt-2 border-t">
                     <span>Total:</span>
                     <span>৳{total.toFixed(2)}</span>
                   </div>
                 </div>
 
                 {/* Coupon Input */}
-                <div className="mt-6">
+                <div className="mt-4 sm:mt-6">
                   <label className="block text-xs sm:text-sm font-medium mb-2">Have a coupon?</label>
                   <div className="flex gap-2 mb-2">
                     <input
@@ -296,29 +292,27 @@ export default function Checkout() {
                       value={couponCode}
                       onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
                       placeholder="COUPON CODE"
-                      className="flex-1 px-3 py-2 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-xs sm:text-sm smooth-transition"
+                      className="flex-1 px-2 sm:px-3 py-1.5 sm:py-2 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-xs sm:text-sm"
                       disabled={!!appliedCoupon}
                     />
                     <button
                       onClick={validateCoupon}
                       disabled={!!appliedCoupon}
-                      className="px-3 sm:px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 text-xs sm:text-sm font-medium smooth-transition"
+                      className="px-2 sm:px-3 py-1.5 sm:py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 text-xs sm:text-sm font-medium"
                     >
                       <Tag className="w-4 h-4" />
                     </button>
                   </div>
                   {couponError && (
                     <div className="flex items-start gap-2 p-2 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg">
-                      <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+                      <AlertCircle className="w-3 h-3 sm:w-4 sm:h-4 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
                       <p className="text-xs text-red-600 dark:text-red-400">{couponError}</p>
                     </div>
                   )}
                   {appliedCoupon && (
                     <div className="flex items-start gap-2 p-2 bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg">
-                      <Tag className="w-4 h-4 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
-                      <p className="text-xs text-green-600 dark:text-green-400">
-                        Coupon {appliedCoupon.code} applied successfully!
-                      </p>
+                      <Tag className="w-3 h-3 sm:w-4 sm:h-4 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
+                      <p className="text-xs text-green-600 dark:text-green-400">Coupon {appliedCoupon.code} applied!</p>
                     </div>
                   )}
                 </div>
@@ -327,48 +321,48 @@ export default function Checkout() {
 
             {/* Payment Form */}
             <div className="lg:col-span-2 order-1 lg:order-2">
-              <div className="bg-card border border-border rounded-lg p-4 sm:p-6">
-                <h2 className="text-lg sm:text-xl font-semibold mb-6 flex items-center gap-2">
-                  <CreditCard className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
+              <div className="bg-card border border-border rounded-lg p-3 sm:p-4 lg:p-6">
+                <h2 className="text-base sm:text-lg lg:text-xl font-semibold mb-4 sm:mb-6 flex items-center gap-2">
+                  <CreditCard className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-primary" />
                   Payment Details
                 </h2>
 
                 {/* Payment Instructions */}
-                <div className="mb-6 p-3 sm:p-4 bg-primary/10 border border-primary/20 rounded-lg">
-                  <h3 className="font-semibold text-sm sm:text-base mb-2">Payment Instructions</h3>
+                <div className="mb-4 sm:mb-6 p-2 sm:p-3 lg:p-4 bg-primary/10 border border-primary/20 rounded-lg">
+                  <h3 className="font-semibold text-xs sm:text-sm lg:text-base mb-1 sm:mb-2">Payment Instructions</h3>
                   <p className="text-xs sm:text-sm text-muted-foreground whitespace-pre-line">{paymentInstructions}</p>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4 lg:space-y-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                     <div>
-                      <label className="block text-xs sm:text-sm font-medium mb-2">
+                      <label className="block text-xs sm:text-sm font-medium mb-1.5 sm:mb-2">
                         Name <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="text"
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary smooth-transition text-sm"
+                        className="w-full px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 lg:py-3 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-xs sm:text-sm"
                         required
                       />
                     </div>
                     <div>
-                      <label className="block text-xs sm:text-sm font-medium mb-2">
+                      <label className="block text-xs sm:text-sm font-medium mb-1.5 sm:mb-2">
                         Email <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="email"
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary smooth-transition text-sm"
+                        className="w-full px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 lg:py-3 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-xs sm:text-sm"
                         required
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-xs sm:text-sm font-medium mb-2">
+                    <label className="block text-xs sm:text-sm font-medium mb-1.5 sm:mb-2">
                       Sender Number <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -376,13 +370,13 @@ export default function Checkout() {
                       value={formData.senderNumber}
                       onChange={(e) => setFormData({ ...formData, senderNumber: e.target.value })}
                       placeholder="01XXXXXXXXX"
-                      className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary smooth-transition text-sm"
+                      className="w-full px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 lg:py-3 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-xs sm:text-sm"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs sm:text-sm font-medium mb-2">
+                    <label className="block text-xs sm:text-sm font-medium mb-1.5 sm:mb-2">
                       Transaction ID <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -390,7 +384,7 @@ export default function Checkout() {
                       value={formData.transactionId}
                       onChange={(e) => setFormData({ ...formData, transactionId: e.target.value })}
                       placeholder="Enter transaction ID"
-                      className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary smooth-transition text-sm"
+                      className="w-full px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 lg:py-3 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-xs sm:text-sm"
                       required
                     />
                   </div>
@@ -398,7 +392,7 @@ export default function Checkout() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full py-3 sm:py-4 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed smooth-transition text-sm sm:text-base"
+                    className="w-full py-2 sm:py-3 lg:py-4 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm lg:text-base"
                   >
                     {loading ? "Submitting..." : "Submit Payment"}
                   </button>
