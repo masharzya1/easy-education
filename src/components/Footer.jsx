@@ -26,9 +26,6 @@ export default function Footer() {
               <Link to="/courses" className="text-muted-foreground hover:text-primary transition-colors text-sm">
                 Courses
               </Link>
-              <Link to="/news" className="text-muted-foreground hover:text-primary transition-colors text-sm">
-                News
-              </Link>
               <Link to="/community" className="text-muted-foreground hover:text-primary transition-colors text-sm">
                 Community
               </Link>

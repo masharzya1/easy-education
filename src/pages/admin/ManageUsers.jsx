@@ -5,6 +5,7 @@ import { motion } from "framer-motion"
 import { Search, Shield, ShieldOff, Trash2, Ban } from "lucide-react"
 import { collection, getDocs, doc, updateDoc, deleteDoc, query, where } from "firebase/firestore"
 import { db } from "../../lib/firebase"
+import { toast } from "../../hooks/use-toast"
 
 export default function ManageUsers() {
   const [users, setUsers] = useState([])
@@ -81,7 +82,11 @@ export default function ManageUsers() {
       console.log(" User promoted successfully")
     } catch (error) {
       console.error(" Error promoting user:", error)
-      alert(`Failed to promote user: ${error.message}`)
+      toast({
+        variant: "error",
+        title: "Promotion Failed",
+        description: error.message || "Failed to promote user",
+      })
     }
   }
 
@@ -94,7 +99,11 @@ export default function ManageUsers() {
       console.log(" User demoted successfully")
     } catch (error) {
       console.error(" Error demoting user:", error)
-      alert(`Failed to demote user: ${error.message}`)
+      toast({
+        variant: "error",
+        title: "Demotion Failed",
+        description: error.message || "Failed to demote user",
+      })
     }
   }
 
@@ -107,7 +116,11 @@ export default function ManageUsers() {
       console.log(" Ban status updated successfully")
     } catch (error) {
       console.error(" Error banning user:", error)
-      alert(`Failed to ban/unban user: ${error.message}`)
+      toast({
+        variant: "error",
+        title: "Ban Status Update Failed",
+        description: error.message || "Failed to update ban status",
+      })
     }
   }
 
@@ -122,13 +135,21 @@ export default function ManageUsers() {
       console.log(" User deleted successfully")
     } catch (error) {
       console.error(" Error deleting user:", error)
-      alert(`Failed to delete user: ${error.message}`)
+      toast({
+        variant: "error",
+        title: "Deletion Failed",
+        description: error.message || "Failed to delete user",
+      })
     }
   }
 
   const handleRemoveFromCourse = async () => {
     if (!selectedUser || !selectedCourse) {
-      alert("Please select both user and course")
+      toast({
+        variant: "warning",
+        title: "Selection Required",
+        description: "Please select both user and course",
+      })
       return
     }
 
@@ -160,7 +181,11 @@ export default function ManageUsers() {
       fetchUsers()
     } catch (error) {
       console.error("[v0] Error removing student from course:", error)
-      alert(`Failed to remove student: ${error.message}`)
+      toast({
+        variant: "error",
+        title: "Removal Failed",
+        description: error.message || "Failed to remove student from course",
+      })
     }
   }
 

@@ -6,6 +6,7 @@ import { Plus, Edit, Trash2, Loader2, ImageIcon } from "lucide-react"
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from "firebase/firestore"
 import { db } from "../../lib/firebase"
 import { uploadImageToImgBB } from "../../lib/imgbb"
+import { toast } from "../../hooks/use-toast"
 
 export default function ManageCategories() {
   const [categories, setCategories] = useState([])
@@ -42,9 +43,18 @@ export default function ManageCategories() {
     try {
       const imageUrl = await uploadImageToImgBB(file)
       setFormData({ ...formData, imageURL: imageUrl })
+      toast({
+        variant: "success",
+        title: "Image Uploaded",
+        description: "Image uploaded successfully!",
+      })
     } catch (error) {
       console.error("Error uploading image:", error)
-      alert("Failed to upload image")
+      toast({
+        variant: "error",
+        title: "Upload Failed",
+        description: "Failed to upload image",
+      })
     } finally {
       setUploading(false)
     }
@@ -71,9 +81,18 @@ export default function ManageCategories() {
       setShowForm(false)
       setEditingCategory(null)
       fetchCategories()
+      toast({
+        variant: "success",
+        title: editingCategory ? "Category Updated" : "Category Created",
+        description: editingCategory ? "Category updated successfully!" : "Category created successfully!",
+      })
     } catch (error) {
       console.error("Error saving category:", error)
-      alert("Failed to save category")
+      toast({
+        variant: "error",
+        title: "Save Failed",
+        description: "Failed to save category",
+      })
     } finally {
       setLoading(false)
     }
@@ -94,9 +113,18 @@ export default function ManageCategories() {
     try {
       await deleteDoc(doc(db, "categories", id))
       fetchCategories()
+      toast({
+        variant: "success",
+        title: "Category Deleted",
+        description: "Category deleted successfully!",
+      })
     } catch (error) {
       console.error("Error deleting category:", error)
-      alert("Failed to delete category")
+      toast({
+        variant: "error",
+        title: "Deletion Failed",
+        description: "Failed to delete category",
+      })
     }
   }
 

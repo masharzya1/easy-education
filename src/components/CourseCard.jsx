@@ -8,6 +8,7 @@ import { useAuth } from "../contexts/AuthContext"
 import { collection, query, where, getDocs } from "firebase/firestore"
 import { db } from "../lib/firebase"
 import ProgressBar from "./ProgressBar"
+import { toast } from "../hooks/use-toast"
 
 export default function CourseCard({ course, onAddToCart, showProgress = false }) {
   const { addToCart, removeFromCart, cartItems, openCart } = useCart()
@@ -129,7 +130,11 @@ export default function CourseCard({ course, onAddToCart, showProgress = false }
     if (success) {
       openCart()
     } else {
-      alert("Course already in cart!")
+      toast({
+        variant: "warning",
+        title: "Already in Cart",
+        description: "This course is already in your cart!",
+      })
     }
   }
 
@@ -206,7 +211,7 @@ export default function CourseCard({ course, onAddToCart, showProgress = false }
               <Trash2 className="w-4 h-4" />
               Remove from Cart
             </button>
-          ) : course.price === 0 || course.price === undefined ? (
+          ) : !course.price || course.price === 0 || course.price === "0" || course.price === null ? (
             <Link to={`/course/${course.id}`} onClick={(e) => e.stopPropagation()}>
               <button className="w-full px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-colors flex items-center justify-center gap-2 text-sm font-medium">
                 Enroll Free

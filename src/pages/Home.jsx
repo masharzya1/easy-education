@@ -16,7 +16,6 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState("")
   const [trendingCourses, setTrendingCourses] = useState([])
   const [categories, setCategories] = useState([])
-  const [latestNews, setLatestNews] = useState([])
   const [loading, setLoading] = useState(true)
   const [purchasedCourses, setPurchasedCourses] = useState({})
   const [pendingCourses, setPendingCourses] = useState({})
@@ -103,14 +102,6 @@ export default function Home() {
         ...doc.data(),
       }))
       setCategories(categoriesData)
-
-      const newsQuery = query(collection(db, "news"), orderBy("date", "desc"), limit(3))
-      const newsSnapshot = await getDocs(newsQuery)
-      const newsData = newsSnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }))
-      setLatestNews(newsData)
     } catch (error) {
       console.error("[v0] Error fetching data:", error)
       // Continue with empty data
@@ -372,80 +363,6 @@ export default function Home() {
               className="inline-flex items-center gap-2 px-8 py-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl transition-all font-medium group"
             >
               View All Courses
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* Latest News */}
-      <section className="py-16 px-4">
-        <div className="container mx-auto">
-          <div className="flex items-center gap-3 mb-8">
-            <Clock className="w-6 h-6 text-primary" />
-            <h2 className="text-3xl md:text-4xl font-serif font-bold">Latest News</h2>
-          </div>
-
-          {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {[...Array(3)].map((_, i) => (
-                <div key={i} className="bg-card border border-border rounded-xl p-4 animate-pulse">
-                  <div className="aspect-video bg-muted rounded-lg mb-4"></div>
-                  <div className="h-6 bg-muted rounded mb-2"></div>
-                  <div className="h-4 bg-muted rounded"></div>
-                </div>
-              ))}
-            </div>
-          ) : latestNews.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {latestNews.map((news, index) => (
-                <motion.div
-                  key={news.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                >
-                  <Link to={`/news/${news.id}`}>
-                    <div className="bg-card border border-border rounded-xl overflow-hidden hover:border-primary hover:shadow-lg transition-all group">
-                      <div className="aspect-video bg-gradient-to-br from-primary/20 to-secondary/20 relative overflow-hidden">
-                        {news.imageURL ? (
-                          <img
-                            src={news.imageURL || "/placeholder.svg"}
-                            alt={news.title}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <Clock className="w-16 h-16 text-primary/50" />
-                          </div>
-                        )}
-                      </div>
-                      <div className="p-5">
-                        <h3 className="font-semibold text-lg mb-2 line-clamp-2 group-hover:text-primary transition-colors">
-                          {news.title}
-                        </h3>
-                        <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">{news.description}</p>
-                        <p className="text-xs text-muted-foreground mt-3">
-                          {news.date?.toDate?.()?.toLocaleDateString() || "Recently"}
-                        </p>
-                      </div>
-                    </div>
-                  </Link>
-                </motion.div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-12 text-muted-foreground">
-              <p>No news available yet. Check back soon!</p>
-            </div>
-          )}
-
-          <div className="text-center mt-10">
-            <Link
-              to="/news"
-              className="inline-flex items-center gap-2 px-8 py-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl transition-all font-medium group"
-            >
-              View All News
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>

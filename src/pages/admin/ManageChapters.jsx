@@ -5,6 +5,7 @@ import { motion } from "framer-motion"
 import { Plus, Edit, Trash2, X } from "lucide-react"
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from "firebase/firestore"
 import { db } from "../../lib/firebase"
+import { toast } from "../../hooks/use-toast"
 
 export default function ManageChapters() {
   const [chapters, setChapters] = useState([])
@@ -72,10 +73,18 @@ export default function ManageChapters() {
 
       await fetchChapters()
       handleCloseModal()
-      alert(editingChapter ? "Chapter updated successfully!" : "Chapter created successfully!")
+      toast({
+        variant: "success",
+        title: editingChapter ? "Chapter Updated" : "Chapter Created",
+        description: editingChapter ? "Chapter updated successfully!" : "Chapter created successfully!",
+      })
     } catch (error) {
       console.error("Error saving chapter:", error)
-      alert("Failed to save chapter")
+      toast({
+        variant: "error",
+        title: "Save Failed",
+        description: "Failed to save chapter",
+      })
     }
   }
 
@@ -85,9 +94,18 @@ export default function ManageChapters() {
     try {
       await deleteDoc(doc(db, "chapters", id))
       await fetchChapters()
+      toast({
+        variant: "success",
+        title: "Chapter Deleted",
+        description: "Chapter deleted successfully!",
+      })
     } catch (error) {
       console.error("Error deleting chapter:", error)
-      alert("Failed to delete chapter")
+      toast({
+        variant: "error",
+        title: "Deletion Failed",
+        description: "Failed to delete chapter",
+      })
     }
   }
 

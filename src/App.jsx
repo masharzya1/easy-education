@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom"
 import { AuthProvider } from "./contexts/AuthContext"
 import { CartProvider } from "./contexts/CartContext"
+import { Toaster } from "./components/ui/toaster"
 import Header from "./components/Header"
 import Footer from "./components/Footer"
 import CartDrawer from "./components/CartDrawer"
@@ -103,6 +104,7 @@ function App() {
             <CartDrawer />
             <FloatingCartButton />
             <PWAInstallPrompt />
+            <Toaster />
             <Footer />
           </div>
         </CartProvider>

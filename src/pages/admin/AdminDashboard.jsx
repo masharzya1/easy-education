@@ -24,7 +24,6 @@ import AdminOverview from "./AdminOverview"
 import ManageUsers from "./ManageUsers"
 import ManageCourses from "./ManageCourses"
 import ManageClasses from "./ManageClasses"
-import ManageNews from "./ManageNews"
 import ManageAnnouncements from "./ManageAnnouncements"
 import ManageCoupons from "./ManageCoupons"
 import ManagePayments from "./ManagePayments"
@@ -49,7 +48,6 @@ export default function AdminDashboard() {
     { name: "Chapters", path: "/admin/chapters", icon: BookMarked },
     { name: "Categories", path: "/admin/categories", icon: Grid },
     { name: "Teachers", path: "/admin/teachers", icon: GraduationCap },
-    { name: "News", path: "/admin/news", icon: Newspaper },
     { name: "Announcements", path: "/admin/announcements", icon: Megaphone },
     { name: "Coupons", path: "/admin/coupons", icon: Tag },
     { name: "Payments", path: "/admin/payments", icon: CreditCard },
@@ -125,7 +123,6 @@ export default function AdminDashboard() {
               <Route path="chapters" element={<ManageChapters />} />
               <Route path="categories" element={<ManageCategories />} />
               <Route path="teachers" element={<ManageTeachers />} />
-              <Route path="news" element={<ManageNews />} />
               <Route path="announcements" element={<ManageAnnouncements />} />
               <Route path="coupons" element={<ManageCoupons />} />
               <Route path="payments" element={<ManagePayments />} />

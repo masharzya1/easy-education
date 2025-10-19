@@ -10,6 +10,7 @@ import { collection, addDoc, getDocs, query, where, serverTimestamp } from "fire
 import { db } from "../lib/firebase"
 import { sendLocalNotification, requestNotificationPermission } from "../lib/pwa"
 import { notifyAdminsOfCheckout } from "../lib/notifications"
+import { toast } from "../hooks/use-toast"
 
 export default function Checkout() {
   const navigate = useNavigate()
@@ -156,15 +157,21 @@ export default function Checkout() {
     e.preventDefault()
 
     if (!formData.senderNumber || !formData.transactionId) {
-      alert("Please fill in all required fields")
+      toast({
+        variant: "error",
+        title: "Missing Information",
+        description: "Please fill in all required fields",
+      })
       return
     }
 
     const alreadyPurchased = cartItems.filter((item) => purchasedCourses.has(item.id))
     if (alreadyPurchased.length > 0) {
-      alert(
-        `You have already purchased ${alreadyPurchased.length} course(s) in your cart. Please remove them before checkout.`,
-      )
+      toast({
+        variant: "warning",
+        title: "Already Purchased",
+        description: `You have already purchased ${alreadyPurchased.length} course(s) in your cart. Please remove them before checkout.`,
+      })
       return
     }
 
@@ -183,26 +190,36 @@ export default function Checkout() {
         const existingCourseIds = new Set(existingPayment.courses?.map((c) => c.id) || [])
         const currentCheckoutIds = new Set(cartItems.map((c) => c.id))
 
-        // Check if exact same courses are being checked out
         if (
           existingCourseIds.size === currentCheckoutIds.size &&
           [...existingCourseIds].every((id) => currentCheckoutIds.has(id))
         ) {
-          alert(
-            "You already have a pending payment for these exact courses. Please wait for admin approval or contact support.",
-          )
+          toast({
+            variant: "warning",
+            title: "Pending Payment Exists",
+            description: "You already have a pending payment for these exact courses. Please wait for admin approval or contact support.",
+          })
           setLoading(false)
           return
         }
 
-        // Also check if ANY of the courses overlap (prevent partial duplicates)
         const hasOverlap = [...currentCheckoutIds].some((id) => existingCourseIds.has(id))
         if (hasOverlap) {
-          alert("Some courses in your cart are already in a pending payment. Please wait for approval or remove them.")
+          toast({
+            variant: "warning",
+            title: "Duplicate Courses",
+            description: "Some courses in your cart are already in a pending payment. Please wait for approval or remove them.",
+          })
           setLoading(false)
           return
         }
       }
+
+      console.log("Submitting payment with data:", {
+        userId: currentUser.uid,
+        courses: cartItems.length,
+        total: calculateTotal
+      })
 
       const paymentData = {
         userId: currentUser.uid,
@@ -227,6 +244,7 @@ export default function Checkout() {
       }
 
       const paymentDocRef = await addDoc(collection(db, "payments"), paymentData)
+      console.log("Payment document created with ID:", paymentDocRef.id)
 
       try {
         await addDoc(collection(db, "adminNotifications"), {
@@ -240,6 +258,7 @@ export default function Checkout() {
           read: false,
           createdAt: serverTimestamp()
         })
+        console.log("Admin notification created successfully")
       } catch (error) {
         console.error('Failed to create admin notification:', error)
       }
@@ -258,11 +277,28 @@ export default function Checkout() {
         courseCount: cartItems.length,
       }).catch(err => console.error('Failed to notify admins:', err))
 
+      const coursesForState = [...cartItems]
       clearCart()
-      navigate("/checkout-complete", { state: { courses: cartItems, paymentData } })
+      
+      console.log("Navigating to checkout-complete page")
+      navigate("/checkout-complete", { 
+        state: { 
+          courses: coursesForState, 
+          paymentData: {
+            ...paymentData,
+            id: paymentDocRef.id
+          }
+        },
+        replace: true
+      })
     } catch (error) {
       console.error("Error submitting payment:", error)
-      alert("Failed to submit payment. Please try again.")
+      console.error("Error details:", error.message, error.code)
+      toast({
+        variant: "error",
+        title: "Payment Submission Failed",
+        description: error.message || "Failed to submit payment. Please try again or contact support.",
+      })
     } finally {
       setLoading(false)
     }
