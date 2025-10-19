@@ -16,6 +16,7 @@ import {
   BookOpen,
   Newspaper,
   Users,
+  Download,
 } from "lucide-react"
 import { useAuth } from "../contexts/AuthContext"
 import { useTheme } from "../contexts/ThemeContext"
@@ -31,6 +32,8 @@ export default function Header() {
   const navigate = useNavigate()
   const searchRef = useRef(null)
   const [communityEnabled, setCommunityEnabled] = useState(true)
+  const [deferredPrompt, setDeferredPrompt] = useState(null)
+  const [showInstallButton, setShowInstallButton] = useState(false)
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -53,6 +56,28 @@ export default function Header() {
     fetchSettings()
   }, [])
 
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e) => {
+      e.preventDefault()
+      setDeferredPrompt(e)
+      setShowInstallButton(true)
+    }
+
+    const checkIfInstalled = () => {
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+      const isIOSStandalone = window.navigator.standalone === true
+      return isStandalone || isIOSStandalone
+    }
+
+    if (!checkIfInstalled()) {
+      window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+    }
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+    }
+  }, [])
+
   const handleSignOut = async () => {
     try {
       await signOut()
@@ -61,6 +86,23 @@ export default function Header() {
     } catch (error) {
       console.error("Sign out error:", error)
     }
+  }
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) {
+      return
+    }
+
+    deferredPrompt.prompt()
+    const { outcome } = await deferredPrompt.userChoice
+    console.log(`User response to install prompt: ${outcome}`)
+    
+    if (outcome === 'accepted') {
+      console.log('User accepted the install prompt')
+      setShowInstallButton(false)
+    }
+    
+    setDeferredPrompt(null)
   }
 
   const handleSearch = (e) => {
@@ -159,6 +201,17 @@ export default function Header() {
             </div>
 
             <div className="flex items-center gap-2">
+              {showInstallButton && (
+                <button
+                  onClick={handleInstallClick}
+                  className="p-2 hover:bg-primary/10 rounded-lg smooth-transition hover:scale-105 active:scale-95"
+                  aria-label="Install App"
+                  title="Install App"
+                >
+                  <Download className="w-5 h-5 text-primary animate-bounce" />
+                </button>
+              )}
+              
               <div className="relative" ref={searchRef}>
                 <button
                   onClick={() => setSearchOpen(!searchOpen)}

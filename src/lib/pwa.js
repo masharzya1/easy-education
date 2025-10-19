@@ -2,12 +2,21 @@ export function registerServiceWorker() {
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker
-        .register('/firebase-messaging-sw.js')
+        .register('/service-worker.js')
         .then((registration) => {
           console.log('Service Worker registered successfully:', registration.scope);
         })
         .catch((error) => {
           console.log('Service Worker registration failed:', error);
+        });
+      
+      navigator.serviceWorker
+        .register('/firebase-messaging-sw.js')
+        .then((registration) => {
+          console.log('Firebase Messaging Service Worker registered successfully:', registration.scope);
+        })
+        .catch((error) => {
+          console.log('Firebase Messaging Service Worker registration failed:', error);
         });
     });
   }
@@ -121,28 +130,31 @@ export async function subscribeUserToPush() {
   }
 }
 
-export function sendLocalNotification(title, options = {}) {
+export async function sendLocalNotification(title, options = {}) {
   if (!('Notification' in window)) {
     console.log('This browser does not support notifications');
     return;
   }
 
-  if (Notification.permission === 'granted') {
-    new Notification(title, {
-      icon: '/placeholder-logo.png',
-      badge: '/placeholder-logo.png',
-      ...options
-    });
-  } else if (Notification.permission !== 'denied') {
-    Notification.requestPermission().then((permission) => {
-      if (permission === 'granted') {
-        new Notification(title, {
-          icon: '/placeholder-logo.png',
-          badge: '/placeholder-logo.png',
-          ...options
-        });
-      }
-    });
+  if (!('serviceWorker' in navigator)) {
+    console.log('Service Worker not supported');
+    return;
+  }
+
+  try {
+    const permission = await requestNotificationPermission();
+    
+    if (permission) {
+      const registration = await navigator.serviceWorker.ready;
+      await registration.showNotification(title, {
+        icon: '/placeholder-logo.png',
+        badge: '/placeholder-logo.png',
+        vibrate: [200, 100, 200],
+        ...options
+      });
+    }
+  } catch (error) {
+    console.error('Error showing notification:', error);
   }
 }
 
