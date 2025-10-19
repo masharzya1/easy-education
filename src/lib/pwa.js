@@ -29,7 +29,7 @@ export async function getFCMToken() {
     }
 
     const token = await getToken(messaging, {
-      vapidKey: 'BAAn-vFfNpOOgYl8HK9_w3_Eo_doOjyD9Dg_Yokhr_tHAYq1fpO4ijs8eA0NqVNw7pww7eFcp4qheywA66OZyvM'
+      vapidKey: 'BEl62iUYgUiv'
     })
 
     console.log('FCM Token received:', token)
