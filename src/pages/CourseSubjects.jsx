@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { motion } from "framer-motion"
-import { BookOpen, ArrowLeft, Lock } from "lucide-react"
+import { BookOpen, ArrowLeft, Lock, Archive } from "lucide-react"
 import { doc, getDoc, collection, query, where, getDocs } from "firebase/firestore"
 import { db } from "../lib/firebase"
 import { useAuth } from "../contexts/AuthContext"
@@ -14,6 +14,7 @@ export default function CourseSubjects() {
   const { currentUser, isAdmin } = useAuth()
   const [course, setCourse] = useState(null)
   const [subjects, setSubjects] = useState([])
+  const [hasArchive, setHasArchive] = useState(false)
   const [loading, setLoading] = useState(true)
   const [hasAccess, setHasAccess] = useState(false)
 
@@ -45,7 +46,6 @@ export default function CourseSubjects() {
           setHasAccess(hasApprovedCourse)
         }
 
-        // Fetch classes
         const classesQuery = query(collection(db, "classes"), where("courseId", "==", courseId))
         const classesSnapshot = await getDocs(classesQuery)
         const classesData = classesSnapshot.docs.map((doc) => ({
@@ -53,9 +53,28 @@ export default function CourseSubjects() {
           ...doc.data(),
         }))
 
-        // Get unique subjects
-        const uniqueSubjects = [...new Set(classesData.map((cls) => cls.subject || "General"))].sort()
+        const regularSubjects = []
+        classesData
+          .filter((cls) => cls.subject)
+          .forEach((cls) => {
+            if (Array.isArray(cls.subject)) {
+              cls.subject.forEach(s => {
+                if (s && s !== "archive") regularSubjects.push(s)
+              })
+            } else if (cls.subject !== "archive") {
+              regularSubjects.push(cls.subject)
+            }
+          })
+        const uniqueSubjects = [...new Set(regularSubjects)].sort()
         setSubjects(uniqueSubjects)
+
+        const archiveClasses = classesData.filter((cls) => {
+          if (Array.isArray(cls.subject)) {
+            return cls.subject.includes("archive")
+          }
+          return cls.subject === "archive"
+        })
+        setHasArchive(archiveClasses.length > 0)
       }
     } catch (error) {
       console.error("Error fetching course data:", error)
@@ -95,7 +114,6 @@ export default function CourseSubjects() {
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-6">
-        {/* Header */}
         <div className="mb-8">
           <button
             onClick={() => navigate(`/course/${courseId}`)}
@@ -108,7 +126,6 @@ export default function CourseSubjects() {
           <p className="text-muted-foreground">Select a subject to view chapters</p>
         </div>
 
-        {/* Subjects Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {subjects.map((subject, index) => (
             <motion.button
@@ -131,7 +148,34 @@ export default function CourseSubjects() {
               </div>
             </motion.button>
           ))}
+
+          {hasArchive && (
+            <motion.button
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: subjects.length * 0.1 }}
+              onClick={() => {
+                navigate(`/course/${courseId}/subjects/archive/chapters`)
+              }}
+              className="group relative bg-gradient-to-br from-orange-500/10 to-amber-500/10 border border-orange-500/30 rounded-xl p-6 hover:border-orange-500/50 hover:shadow-lg transition-all duration-300 text-left"
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-amber-500/5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="relative">
+                <div className="w-12 h-12 bg-orange-500/10 rounded-lg flex items-center justify-center mb-4 group-hover:bg-orange-500/20 transition-colors">
+                  <Archive className="w-6 h-6 text-orange-500" />
+                </div>
+                <h3 className="text-xl font-bold mb-2 text-orange-600 group-hover:text-orange-500 transition-colors">Archive</h3>
+                <p className="text-sm text-muted-foreground">Archived classes from previous batches</p>
+              </div>
+            </motion.button>
+          )}
         </div>
+
+        {subjects.length === 0 && !hasArchive && (
+          <div className="text-center py-12 text-muted-foreground">
+            <p>No subjects or archived classes available for this course yet.</p>
+          </div>
+        )}
       </div>
     </div>
   )

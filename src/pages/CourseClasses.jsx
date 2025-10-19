@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { motion } from "framer-motion"
-import { Play, ArrowLeft, Lock, Clock, User } from "lucide-react"
+import { Play, ArrowLeft, Lock, Clock, User, Archive } from "lucide-react"
 import { doc, getDoc, collection, query, where, getDocs } from "firebase/firestore"
 import { db } from "../lib/firebase"
 import { useAuth } from "../contexts/AuthContext"
@@ -16,6 +16,8 @@ export default function CourseClasses() {
   const [classes, setClasses] = useState([])
   const [loading, setLoading] = useState(true)
   const [hasAccess, setHasAccess] = useState(false)
+
+  const isArchive = subject && decodeURIComponent(subject) === "archive"
 
   useEffect(() => {
     fetchCourseData()
@@ -45,7 +47,6 @@ export default function CourseClasses() {
           setHasAccess(hasApprovedCourse)
         }
 
-        // Fetch classes
         const classesQuery = query(collection(db, "classes"), where("courseId", "==", courseId))
         const classesSnapshot = await getDocs(classesQuery)
         let classesData = classesSnapshot.docs.map((doc) => ({
@@ -53,12 +54,23 @@ export default function CourseClasses() {
           ...doc.data(),
         }))
 
-        // Filter by subject and chapter if provided
         if (subject) {
-          classesData = classesData.filter((cls) => cls.subject === decodeURIComponent(subject))
+          const decodedSubject = decodeURIComponent(subject)
+          classesData = classesData.filter((cls) => {
+            if (Array.isArray(cls.subject)) {
+              return cls.subject.includes(decodedSubject)
+            }
+            return cls.subject === decodedSubject
+          })
         }
         if (chapter) {
-          classesData = classesData.filter((cls) => cls.chapter === decodeURIComponent(chapter))
+          const decodedChapter = decodeURIComponent(chapter)
+          classesData = classesData.filter((cls) => {
+            if (Array.isArray(cls.chapter)) {
+              return cls.chapter.includes(decodedChapter)
+            }
+            return cls.chapter === decodedChapter
+          })
         }
 
         classesData.sort((a, b) => a.order - b.order)
@@ -102,29 +114,39 @@ export default function CourseClasses() {
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-6">
-        {/* Header */}
         <div className="mb-8">
           <button
             onClick={() => {
               if (subject && course?.type === "batch") {
                 navigate(`/course/${courseId}/subjects/${subject}/chapters`)
-              } else {
+              } else if (subject && !course?.type) {
+                navigate(`/course/${courseId}/subjects/${subject}/chapters`)
+              } else if (!subject) {
                 navigate(`/course/${courseId}/chapters`)
+              } else {
+                navigate(`/course/${courseId}/subjects`)
               }
             }}
             className="flex items-center gap-2 text-primary hover:text-primary/80 mb-4 transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
-            {subject ? "Back to Chapters" : "Back to Chapters"}
+            Back to Chapters
           </button>
           <h1 className="text-3xl font-bold mb-2">{course?.title}</h1>
-          <p className="text-muted-foreground">
-            {chapter && `Chapter: ${decodeURIComponent(chapter)}`}
-            {subject && ` • Subject: ${decodeURIComponent(subject)}`}
-          </p>
+          <div className="text-muted-foreground">
+            {isArchive && (
+              <div className="flex items-center gap-2 mb-1">
+                <Archive className="w-4 h-4 text-orange-500" />
+                <span className="text-orange-600 font-medium">Archive</span>
+              </div>
+            )}
+            <div>
+              {chapter && `Chapter: ${decodeURIComponent(chapter)}`}
+              {subject && !isArchive && ` • Subject: ${decodeURIComponent(subject)}`}
+            </div>
+          </div>
         </div>
 
-        {/* Classes List */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {classes.map((cls, index) => (
             <motion.button
@@ -133,14 +155,30 @@ export default function CourseClasses() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
               onClick={() => navigate(`/course/${courseId}/watch/${cls.id}`)}
-              className="group relative bg-card border border-border rounded-xl overflow-hidden hover:border-primary/50 hover:shadow-lg transition-all duration-300 text-left"
+              className={`group relative bg-card border rounded-xl overflow-hidden hover:shadow-lg transition-all duration-300 text-left ${
+                isArchive 
+                  ? "border-orange-500/20 hover:border-orange-500/40" 
+                  : "border-border hover:border-primary/50"
+              }`}
             >
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-secondary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className={`absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-100 transition-opacity ${
+                isArchive 
+                  ? "from-orange-500/5 to-amber-500/5" 
+                  : "from-primary/5 to-secondary/5"
+              }`} />
               <div className="relative p-6">
-                <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
-                  <Play className="w-6 h-6 text-primary fill-current" />
+                <div className={`w-12 h-12 rounded-lg flex items-center justify-center mb-4 transition-colors ${
+                  isArchive 
+                    ? "bg-orange-500/10 group-hover:bg-orange-500/20" 
+                    : "bg-primary/10 group-hover:bg-primary/20"
+                }`}>
+                  <Play className={`w-6 h-6 fill-current ${isArchive ? "text-orange-500" : "text-primary"}`} />
                 </div>
-                <h3 className="text-lg font-bold mb-3 group-hover:text-primary transition-colors line-clamp-2">
+                <h3 className={`text-lg font-bold mb-3 line-clamp-2 transition-colors ${
+                  isArchive 
+                    ? "text-orange-600 group-hover:text-orange-500" 
+                    : "group-hover:text-primary"
+                }`}>
                   {cls.title}
                 </h3>
 
@@ -164,7 +202,9 @@ export default function CourseClasses() {
 
         {classes.length === 0 && (
           <div className="text-center py-12">
-            <p className="text-muted-foreground text-lg">No classes found for this selection.</p>
+            <p className="text-muted-foreground text-lg">
+              No classes found {isArchive ? "in this archived chapter" : "for this selection"}.
+            </p>
           </div>
         )}
       </div>

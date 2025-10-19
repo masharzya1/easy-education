@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { motion } from "framer-motion"
-import { BookOpen, ArrowLeft, Lock } from "lucide-react"
+import { BookOpen, ArrowLeft, Lock, Archive } from "lucide-react"
 import { doc, getDoc, collection, query, where, getDocs } from "firebase/firestore"
 import { db } from "../lib/firebase"
 import { useAuth } from "../contexts/AuthContext"
@@ -16,6 +16,8 @@ export default function CourseChapters() {
   const [chapters, setChapters] = useState([])
   const [loading, setLoading] = useState(true)
   const [hasAccess, setHasAccess] = useState(false)
+
+  const isArchive = subject && decodeURIComponent(subject) === "archive"
 
   useEffect(() => {
     fetchCourseData()
@@ -45,7 +47,6 @@ export default function CourseChapters() {
           setHasAccess(hasApprovedCourse)
         }
 
-        // Fetch classes
         const classesQuery = query(collection(db, "classes"), where("courseId", "==", courseId))
         const classesSnapshot = await getDocs(classesQuery)
         let classesData = classesSnapshot.docs.map((doc) => ({
@@ -53,13 +54,25 @@ export default function CourseChapters() {
           ...doc.data(),
         }))
 
-        // Filter by subject if provided (for batch courses)
         if (subject) {
-          classesData = classesData.filter((cls) => cls.subject === decodeURIComponent(subject))
+          const decodedSubject = decodeURIComponent(subject)
+          classesData = classesData.filter((cls) => {
+            if (Array.isArray(cls.subject)) {
+              return cls.subject.includes(decodedSubject)
+            }
+            return cls.subject === decodedSubject
+          })
         }
 
-        // Get unique chapters
-        const uniqueChapters = [...new Set(classesData.map((cls) => cls.chapter || "General"))].sort()
+        const allChapters = []
+        classesData.forEach((cls) => {
+          if (Array.isArray(cls.chapter)) {
+            allChapters.push(...cls.chapter)
+          } else {
+            allChapters.push(cls.chapter || "General")
+          }
+        })
+        const uniqueChapters = [...new Set(allChapters)].sort()
         setChapters(uniqueChapters)
       }
     } catch (error) {
@@ -100,7 +113,6 @@ export default function CourseChapters() {
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-6">
-        {/* Header */}
         <div className="mb-8">
           <button
             onClick={() => {
@@ -117,11 +129,19 @@ export default function CourseChapters() {
           </button>
           <h1 className="text-3xl font-bold mb-2">{course?.title}</h1>
           <p className="text-muted-foreground">
-            {subject ? `Subject: ${decodeURIComponent(subject)} - Select a chapter` : course?.description}
+            {isArchive ? (
+              <span className="flex items-center gap-2">
+                <Archive className="w-4 h-4 text-orange-500" />
+                Archive - Select a chapter to view archived classes
+              </span>
+            ) : subject ? (
+              `Subject: ${decodeURIComponent(subject)} - Select a chapter`
+            ) : (
+              "Select a chapter to view classes"
+            )}
           </p>
         </div>
 
-        {/* Chapters Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {chapters.map((chapter, index) => (
             <motion.button
@@ -136,19 +156,43 @@ export default function CourseChapters() {
                   navigate(`/course/${courseId}/classes/${encodeURIComponent(chapter)}`)
                 }
               }}
-              className="group relative bg-card border border-border rounded-xl p-6 hover:border-primary/50 hover:shadow-lg transition-all duration-300 text-left"
+              className={`group relative bg-card border rounded-xl p-6 hover:shadow-lg transition-all duration-300 text-left ${
+                isArchive 
+                  ? "border-orange-500/30 hover:border-orange-500/50" 
+                  : "border-border hover:border-primary/50"
+              }`}
             >
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-secondary/5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className={`absolute inset-0 bg-gradient-to-br rounded-xl opacity-0 group-hover:opacity-100 transition-opacity ${
+                isArchive 
+                  ? "from-orange-500/5 to-amber-500/5" 
+                  : "from-primary/5 to-secondary/5"
+              }`} />
               <div className="relative">
-                <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
-                  <BookOpen className="w-6 h-6 text-primary" />
+                <div className={`w-12 h-12 rounded-lg flex items-center justify-center mb-4 transition-colors ${
+                  isArchive 
+                    ? "bg-orange-500/10 group-hover:bg-orange-500/20" 
+                    : "bg-primary/10 group-hover:bg-primary/20"
+                }`}>
+                  <BookOpen className={`w-6 h-6 ${isArchive ? "text-orange-500" : "text-primary"}`} />
                 </div>
-                <h3 className="text-xl font-bold mb-2 group-hover:text-primary transition-colors">{chapter}</h3>
+                <h3 className={`text-xl font-bold mb-2 transition-colors ${
+                  isArchive 
+                    ? "text-orange-600 group-hover:text-orange-500" 
+                    : "group-hover:text-primary"
+                }`}>
+                  {chapter}
+                </h3>
                 <p className="text-sm text-muted-foreground">Click to view classes</p>
               </div>
             </motion.button>
           ))}
         </div>
+
+        {chapters.length === 0 && (
+          <div className="text-center py-12 text-muted-foreground">
+            <p>No chapters available {isArchive ? "in archive" : "for this subject"} yet.</p>
+          </div>
+        )}
       </div>
     </div>
   )
