@@ -77,6 +77,7 @@ Accessible via `/admin` route for authorized users:
 - Manage courses, chapters, classes
 - Manage subjects and categories
 - Manage teachers and students
+- **Remove students from courses** - Select user and course to remove enrollment
 - Payment management
 - Announcements and news
 - Website settings
@@ -110,9 +111,9 @@ Accessible via `/admin` route for authorized users:
   - **IMPROVED**: Reduced container max-width from 6xl to 5xl for better visual balance (Announcements, Courses, My Courses)
   - **IMPROVED**: Made all admin dashboard pages responsive with compact button sizing
   - **IMPROVED**: Removed gradient backgrounds from student dashboard header - now uses clean theme-aware borders
+  - **IMPROVED**: Removed gradient backgrounds from admin panel header - cleaner design, better menu visibility
   - Centered header navigation menus in desktop mode for better UX
   - Admin panel sidebar now always visible on left in desktop mode
-  - Updated admin panel header with gradient background styling
 
 ### Notification System (2025-10-19)
   - Admins receive push notifications when students check out
@@ -125,6 +126,9 @@ Accessible via `/admin` route for authorized users:
 ### Bug Fixes (2025-10-19)
   - Fixed batch course chapters not displaying after subject selection in CourseSubjects.jsx
   - Payment history now displays correctly with proper timestamp sorting
+  - Fixed checkout completion page navigation with improved debugging logs
+  - Fixed Notification constructor error - now uses ServiceWorkerRegistration.showNotification()
+  - Fixed service worker registration conflicts - both PWA and FCM service workers register properly
 
 ## Known Issues & Limitations
 
