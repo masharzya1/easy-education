@@ -448,23 +448,14 @@ export default function CourseWatch() {
             )}
 
             <div className="bg-card border border-border rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-lg">
-              <h1 className="text-xl sm:text-2xl font-bold mb-2">{currentClass?.title || course.title}</h1>
-              <p className="text-sm sm:text-base text-muted-foreground mb-4">{course.description}</p>
+              <h1 className="text-xl sm:text-2xl font-bold mb-3">{currentClass?.title || "Select a class to watch"}</h1>
 
-              <div className="flex flex-wrap gap-3 sm:gap-4 mb-4">
-                <div className="flex-shrink-0">
-                  <span className="text-xs sm:text-sm text-muted-foreground">Category:</span>
-                  <span className="ml-2 px-2 sm:px-3 py-1 bg-primary/10 text-primary text-xs sm:text-sm rounded-full">
-                    {course.category}
-                  </span>
+              {currentClass && currentClass.duration && (
+                <div className="flex items-center gap-2 mb-4">
+                  <Clock className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">Duration: {currentClass.duration}</span>
                 </div>
-                {currentClass && (
-                  <div className="flex-shrink-0">
-                    <span className="text-xs sm:text-sm text-muted-foreground">Duration:</span>
-                    <span className="ml-2 font-medium text-sm sm:text-base">{currentClass.duration || "N/A"}</span>
-                  </div>
-                )}
-              </div>
+              )}
 
               {currentUser && currentClass && (
                 <div className="flex items-center gap-2 sm:gap-3">

@@ -37,6 +37,11 @@ export default function ManageClasses() {
   const [teacherImageFile, setTeacherImageFile] = useState(null)
   const [submitting, setSubmitting] = useState(false)
   const [archiveSourceCourse, setArchiveSourceCourse] = useState("")
+  const [archiveClasses, setArchiveClasses] = useState([])
+  const [selectedArchiveClasses, setSelectedArchiveClasses] = useState([])
+  const [archiveSubject, setArchiveSubject] = useState("")
+  const [archiveChapter, setArchiveChapter] = useState("")
+  const [archiveSubmitting, setArchiveSubmitting] = useState(false)
   const [teachers, setTeachers] = useState([])
 
   useEffect(() => {
@@ -51,6 +56,12 @@ export default function ManageClasses() {
       fetchClasses()
     }
   }, [selectedCourse])
+
+  useEffect(() => {
+    if (archiveSourceCourse) {
+      fetchArchiveClasses(archiveSourceCourse)
+    }
+  }, [archiveSourceCourse])
 
   const fetchCourses = async () => {
     try {
@@ -195,6 +206,7 @@ export default function ManageClasses() {
         duration: formData.duration,
         youtubeLink: videoType === "youtube" ? formData.youtubeLink : "",
         hlsLink: videoType === "hls" ? formData.hlsLink : "",
+        videoURL: videoType === "youtube" ? formData.youtubeLink : formData.hlsLink,
         imageURL,
         teacherName: Array.isArray(formData.teacherName)
           ? formData.teacherName
@@ -233,8 +245,103 @@ export default function ManageClasses() {
     }
   }
 
+  const fetchArchiveClasses = async (courseId) => {
+    if (!courseId) return
+    try {
+      const classesQuery = query(collection(db, "classes"), where("courseId", "==", courseId))
+      const classesSnapshot = await getDocs(classesQuery)
+      const classesData = classesSnapshot.docs
+        .map((doc) => ({ id: doc.id, ...doc.data() }))
+        .sort((a, b) => a.order - b.order)
+      setArchiveClasses(classesData)
+    } catch (error) {
+      console.error("Error fetching archive classes:", error)
+    }
+  }
+
+  const handleOpenArchiveModal = () => {
+    setShowArchiveModal(true)
+    setArchiveSourceCourse("")
+    setArchiveClasses([])
+    setSelectedArchiveClasses([])
+    setArchiveSubject("")
+    setArchiveChapter("")
+  }
+
+  const handleArchiveSubmit = async () => {
+    if (selectedArchiveClasses.length === 0) {
+      alert("Please select at least one class to transfer")
+      return
+    }
+
+    setArchiveSubmitting(true)
+    try {
+      const currentMaxOrder = classes.length > 0 ? Math.max(...classes.map(c => c.order)) : -1
+      
+      for (let i = 0; i < selectedArchiveClasses.length; i++) {
+        const sourceClass = archiveClasses.find(c => c.id === selectedArchiveClasses[i])
+        if (!sourceClass) continue
+
+        const newClass = {
+          ...sourceClass,
+          courseId: selectedCourse,
+          order: currentMaxOrder + i + 1,
+        }
+        delete newClass.id
+        await addDoc(collection(db, "classes"), newClass)
+      }
+
+      await fetchClasses()
+      setShowArchiveModal(false)
+      setSelectedArchiveClasses([])
+      alert(`Successfully transferred ${selectedArchiveClasses.length} class(es) to this course!`)
+    } catch (error) {
+      console.error("Error transferring classes:", error)
+      alert("Failed to transfer classes. Please try again.")
+    } finally {
+      setArchiveSubmitting(false)
+    }
+  }
+
+  const getFilteredArchiveClasses = () => {
+    let filtered = archiveClasses
+    if (archiveSubject) {
+      filtered = filtered.filter(c => 
+        Array.isArray(c.subject) ? c.subject.includes(archiveSubject) : c.subject === archiveSubject
+      )
+    }
+    if (archiveChapter) {
+      filtered = filtered.filter(c => 
+        Array.isArray(c.chapter) ? c.chapter.includes(archiveChapter) : c.chapter === archiveChapter
+      )
+    }
+    return filtered
+  }
+
+  const toggleArchiveClass = (classId) => {
+    setSelectedArchiveClasses(prev => 
+      prev.includes(classId) ? prev.filter(id => id !== classId) : [...prev, classId]
+    )
+  }
+
+  const toggleAllArchiveClasses = () => {
+    const filtered = getFilteredArchiveClasses()
+    if (selectedArchiveClasses.length === filtered.length && filtered.length > 0) {
+      setSelectedArchiveClasses([])
+    } else {
+      setSelectedArchiveClasses(filtered.map(c => c.id))
+    }
+  }
+
   const selectedCourseData = courses.find((c) => c.id === selectedCourse)
   const batchCourses = courses.filter((c) => c.type === "batch")
+  const archiveSourceCourseData = courses.find((c) => c.id === archiveSourceCourse)
+  const uniqueArchiveSubjects = [...new Set(archiveClasses.map(c => 
+    Array.isArray(c.subject) ? c.subject : [c.subject]
+  ).flat().filter(Boolean))].sort()
+  const uniqueArchiveChapters = [...new Set(archiveClasses.map(c => 
+    Array.isArray(c.chapter) ? c.chapter : [c.chapter]
+  ).flat().filter(Boolean))].sort()
 
   return (
     <div>
@@ -244,24 +351,34 @@ export default function ManageClasses() {
             <h1 className="text-3xl font-bold mb-2">Manage Classes</h1>
             <p className="text-muted-foreground">Create and manage course classes</p>
           </div>
-          <button
-            onClick={() => handleOpenModal()}
-            disabled={!selectedCourse}
-            className="flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-colors disabled:opacity-50"
-          >
-            <Plus className="w-5 h-5" />
-            Add Class
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={handleOpenArchiveModal}
+              disabled={!selectedCourse}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-secondary hover:bg-secondary/90 text-secondary-foreground rounded text-sm transition-colors disabled:opacity-50"
+            >
+              <Plus className="w-4 h-4" />
+              Transfer Classes
+            </button>
+            <button
+              onClick={() => handleOpenModal()}
+              disabled={!selectedCourse}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-primary hover:bg-primary/90 text-primary-foreground rounded text-sm transition-colors disabled:opacity-50"
+            >
+              <Plus className="w-4 h-4" />
+              Add Class
+            </button>
+          </div>
         </div>
       </motion.div>
 
       {/* Course Selection */}
       <div className="mb-6">
-        <label className="block text-sm font-medium mb-2">Select Course</label>
+        <label className="block text-xs font-medium mb-1.5">Select Course</label>
         <select
           value={selectedCourse}
           onChange={(e) => setSelectedCourse(e.target.value)}
-          className="w-full px-4 py-2 bg-card border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+          className="w-full px-3 py-1.5 text-sm bg-card border border-border rounded focus:outline-none focus:ring-2 focus:ring-primary"
         >
           <option value="">Choose a course...</option>
           {courses.map((course) => (
@@ -279,44 +396,44 @@ export default function ManageClasses() {
             <table className="w-full min-w-[800px]">
               <thead className="bg-muted">
                 <tr>
-                  <th className="text-left p-4 font-medium">Title</th>
-                  {selectedCourseData?.type === "batch" && <th className="text-left p-4 font-medium">Subject</th>}
-                  <th className="text-left p-4 font-medium">Chapter</th>
-                  <th className="text-left p-4 font-medium">Teacher</th>
-                  <th className="text-left p-4 font-medium">Order</th>
-                  <th className="text-right p-4 font-medium">Actions</th>
+                  <th className="text-left p-2 font-medium text-xs">Title</th>
+                  {selectedCourseData?.type === "batch" && <th className="text-left p-2 font-medium text-xs">Subject</th>}
+                  <th className="text-left p-2 font-medium text-xs">Chapter</th>
+                  <th className="text-left p-2 font-medium text-xs">Teacher</th>
+                  <th className="text-left p-2 font-medium text-xs">Order</th>
+                  <th className="text-right p-2 font-medium text-xs">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
                 {classes.map((classItem) => (
                   <tr key={classItem.id} className="hover:bg-muted/50">
-                    <td className="p-4 text-sm">{classItem.title}</td>
+                    <td className="p-2 text-xs">{classItem.title}</td>
                     {selectedCourseData?.type === "batch" && (
-                      <td className="p-4 text-sm text-muted-foreground">{classItem.subject || "N/A"}</td>
+                      <td className="p-2 text-xs text-muted-foreground">{classItem.subject || "N/A"}</td>
                     )}
-                    <td className="p-4 text-sm text-muted-foreground">{classItem.chapter || "N/A"}</td>
-                    <td className="p-4 text-sm">
+                    <td className="p-2 text-xs text-muted-foreground">{classItem.chapter || "N/A"}</td>
+                    <td className="p-2 text-xs">
                       {classItem.teacherImageURL && (
                         <img
                           src={classItem.teacherImageURL || "/placeholder.svg"}
                           alt={classItem.teacherName}
-                          className="w-8 h-8 rounded-full object-cover inline-block mr-2"
+                          className="w-6 h-6 rounded-full object-cover inline-block mr-1"
                         />
                       )}
-                      <span className="text-sm">{classItem.teacherName || "N/A"}</span>
+                      <span className="text-xs">{classItem.teacherName || "N/A"}</span>
                     </td>
-                    <td className="p-4 text-sm">{classItem.order}</td>
-                    <td className="p-4 text-right">
-                      <div className="flex gap-2 justify-end">
+                    <td className="p-2 text-xs">{classItem.order}</td>
+                    <td className="p-2 text-right">
+                      <div className="flex gap-1 justify-end">
                         <button
                           onClick={() => handleOpenModal(classItem)}
-                          className="px-3 py-1 bg-primary/10 hover:bg-primary/20 text-primary rounded transition-colors text-sm"
+                          className="px-2 py-0.5 bg-primary/10 hover:bg-primary/20 text-primary rounded transition-colors text-xs"
                         >
                           Edit
                         </button>
                         <button
                           onClick={() => handleDelete(classItem.id)}
-                          className="px-3 py-1 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded transition-colors text-sm"
+                          className="px-2 py-0.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded transition-colors text-xs"
                         >
                           Delete
                         </button>
@@ -342,31 +459,31 @@ export default function ManageClasses() {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-card border border-border rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            className="bg-card border border-border rounded-xl p-4 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
           >
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold">{editingClass ? "Edit Class" : "Add New Class"}</h2>
-              <button onClick={() => setShowModal(false)} className="p-2 hover:bg-muted rounded-lg transition-colors">
-                <X className="w-5 h-5" />
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold">{editingClass ? "Edit Class" : "Add New Class"}</h2>
+              <button onClick={() => setShowModal(false)} className="p-1 hover:bg-muted rounded transition-colors">
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-3">
               <div>
-                <label className="block text-sm font-medium mb-2">Title</label>
+                <label className="block text-xs font-medium mb-1">Title</label>
                 <input
                   type="text"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   required
-                  className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="w-full px-3 py-1.5 text-sm bg-background border border-border rounded focus:outline-none focus:ring-2 focus:ring-primary"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">Teacher Name</label>
-                <div className="space-y-2">
-                  <div className="flex flex-wrap gap-2 p-3 bg-background border border-border rounded-lg min-h-[120px]">
+                <label className="block text-xs font-medium mb-1">Teacher Name</label>
+                <div className="space-y-1.5">
+                  <div className="flex flex-wrap gap-1.5 p-2 bg-background border border-border rounded min-h-[60px]">
                     {Array.isArray(formData.teacherName) &&
                       formData.teacherName.map((name, idx) => (
                         <div
@@ -398,7 +515,7 @@ export default function ManageClasses() {
                         e.target.value = ""
                       }
                     }}
-                    className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full px-3 py-1.5 text-sm bg-background border border-border rounded focus:outline-none focus:ring-2 focus:ring-primary"
                   >
                     <option value="">Add teacher...</option>
                     {teachers.map((teacher) => (
@@ -413,14 +530,14 @@ export default function ManageClasses() {
 
               {selectedCourseData?.type === "batch" && (
                 <div>
-                  <label className="block text-sm font-medium mb-2">Subject</label>
-                  <div className="space-y-2">
-                    <div className="flex flex-wrap gap-2 p-3 bg-background border border-border rounded-lg min-h-[120px]">
+                  <label className="block text-xs font-medium mb-1">Subject</label>
+                  <div className="space-y-1.5">
+                    <div className="flex flex-wrap gap-1.5 p-2 bg-background border border-border rounded min-h-[60px]">
                       {Array.isArray(formData.subject) &&
                         formData.subject.map((name, idx) => (
                           <div
                             key={idx}
-                            className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm flex items-center gap-2"
+                            className="px-2 py-0.5 bg-primary/10 text-primary rounded-full text-xs flex items-center gap-1"
                           >
                             {name}
                             <button
@@ -462,9 +579,9 @@ export default function ManageClasses() {
               )}
 
               <div>
-                <label className="block text-sm font-medium mb-2">Chapter</label>
-                <div className="space-y-2">
-                  <div className="flex flex-wrap gap-2 p-3 bg-background border border-border rounded-lg min-h-[120px]">
+                <label className="block text-xs font-medium mb-1">Chapter</label>
+                <div className="space-y-1.5">
+                  <div className="flex flex-wrap gap-1.5 p-2 bg-background border border-border rounded min-h-[60px]">
                     {Array.isArray(formData.chapter) &&
                       formData.chapter.map((name, idx) => (
                         <div
@@ -509,37 +626,37 @@ export default function ManageClasses() {
                 <p className="text-xs text-muted-foreground mt-1">Click to add multiple chapters</p>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium mb-2">Order</label>
+                  <label className="block text-xs font-medium mb-1">Order</label>
                   <input
                     type="number"
                     value={formData.order}
                     onChange={(e) => setFormData({ ...formData, order: e.target.value })}
                     required
-                    className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full px-3 py-1.5 text-sm bg-background border border-border rounded focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-2">Duration</label>
+                  <label className="block text-xs font-medium mb-1">Duration</label>
                   <input
                     type="text"
                     value={formData.duration}
                     onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
                     placeholder="e.g., 45 min"
-                    className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full px-3 py-1.5 text-sm bg-background border border-border rounded focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-3">Video Source</label>
-                <div className="flex gap-4 mb-4">
+                <label className="block text-xs font-medium mb-1.5">Video Source</label>
+                <div className="flex gap-2 mb-2">
                   <button
                     type="button"
                     onClick={() => setVideoType("youtube")}
-                    className={`flex-1 py-2 px-4 rounded-lg border-2 transition-colors ${
+                    className={`flex-1 py-1 px-3 text-sm rounded border-2 transition-colors ${
                       videoType === "youtube"
                         ? "border-primary bg-primary/10 text-primary font-medium"
                         : "border-border hover:border-primary/50"
@@ -557,7 +674,7 @@ export default function ManageClasses() {
                       onChange={(e) => setFormData({ ...formData, youtubeLink: e.target.value })}
                       placeholder="https://www.youtube.com/watch?v=..."
                       required={videoType === "youtube"}
-                      className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="w-full px-3 py-1.5 text-sm bg-background border border-border rounded focus:outline-none focus:ring-2 focus:ring-primary"
                     />
                     <p className="text-xs text-muted-foreground mt-1">
                       Paste a YouTube video URL (supports youtube.com and youtu.be links)
@@ -566,23 +683,172 @@ export default function ManageClasses() {
                 ) : null}
               </div>
 
-              <div className="flex gap-3 pt-4">
+              <div className="flex gap-2 pt-3">
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="flex-1 py-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-colors disabled:opacity-50"
+                  className="flex-1 py-2 text-sm bg-primary hover:bg-primary/90 text-primary-foreground rounded transition-colors disabled:opacity-50"
                 >
                   {submitting ? "Saving..." : editingClass ? "Update Class" : "Create Class"}
                 </button>
                 <button
                   type="button"
                   onClick={handleCloseModal}
-                  className="px-6 py-3 bg-muted hover:bg-muted/80 rounded-lg transition-colors"
+                  className="px-4 py-2 text-sm bg-muted hover:bg-muted/80 rounded transition-colors"
                 >
                   Cancel
                 </button>
               </div>
             </form>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Archive/Transfer Modal */}
+      {showArchiveModal && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-card border border-border rounded-xl p-4 max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold">Transfer Classes from Archive</h2>
+              <button onClick={() => setShowArchiveModal(false)} className="p-1 hover:bg-muted rounded transition-colors">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-medium mb-1.5">Source Course (Archive)</label>
+                <select
+                  value={archiveSourceCourse}
+                  onChange={(e) => {
+                    setArchiveSourceCourse(e.target.value)
+                    setSelectedArchiveClasses([])
+                    setArchiveSubject("")
+                    setArchiveChapter("")
+                  }}
+                  className="w-full px-3 py-1.5 text-sm bg-background border border-border rounded focus:outline-none focus:ring-2 focus:ring-primary"
+                >
+                  <option value="">Select source course...</option>
+                  {courses
+                    .filter(c => c.id !== selectedCourse)
+                    .map((course) => (
+                      <option key={course.id} value={course.id}>
+                        {course.title} ({course.type})
+                      </option>
+                    ))}
+                </select>
+              </div>
+
+              {archiveSourceCourse && archiveClasses.length > 0 && (
+                <>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-medium mb-1.5">Filter by Subject</label>
+                      <select
+                        value={archiveSubject}
+                        onChange={(e) => setArchiveSubject(e.target.value)}
+                        className="w-full px-3 py-1.5 text-sm bg-background border border-border rounded focus:outline-none focus:ring-2 focus:ring-primary"
+                      >
+                        <option value="">All Subjects</option>
+                        {uniqueArchiveSubjects.map((subject) => (
+                          <option key={subject} value={subject}>
+                            {subject}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-medium mb-1.5">Filter by Chapter</label>
+                      <select
+                        value={archiveChapter}
+                        onChange={(e) => setArchiveChapter(e.target.value)}
+                        className="w-full px-3 py-1.5 text-sm bg-background border border-border rounded focus:outline-none focus:ring-2 focus:ring-primary"
+                      >
+                        <option value="">All Chapters</option>
+                        {uniqueArchiveChapters.map((chapter) => (
+                          <option key={chapter} value={chapter}>
+                            {chapter}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="border border-border rounded p-2">
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="text-xs font-medium">
+                        Select Classes to Transfer ({selectedArchiveClasses.length} selected)
+                      </label>
+                      <button
+                        type="button"
+                        onClick={toggleAllArchiveClasses}
+                        className="px-2 py-1 text-xs bg-muted hover:bg-muted/80 rounded transition-colors"
+                      >
+                        {selectedArchiveClasses.length === getFilteredArchiveClasses().length && getFilteredArchiveClasses().length > 0
+                          ? "Deselect All"
+                          : "Select All"}
+                      </button>
+                    </div>
+
+                    <div className="max-h-64 overflow-y-auto space-y-1">
+                      {getFilteredArchiveClasses().map((classItem) => (
+                        <label
+                          key={classItem.id}
+                          className="flex items-center gap-2 p-2 hover:bg-muted/50 rounded cursor-pointer"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedArchiveClasses.includes(classItem.id)}
+                            onChange={() => toggleArchiveClass(classItem.id)}
+                            className="w-4 h-4 rounded border-border text-primary focus:ring-2 focus:ring-primary"
+                          />
+                          <div className="flex-1 text-xs">
+                            <div className="font-medium">{classItem.title}</div>
+                            <div className="text-muted-foreground">
+                              {archiveSourceCourseData?.type === "batch" && classItem.subject && (
+                                <span className="mr-2">Subject: {Array.isArray(classItem.subject) ? classItem.subject.join(", ") : classItem.subject}</span>
+                              )}
+                              {classItem.chapter && (
+                                <span>Chapter: {Array.isArray(classItem.chapter) ? classItem.chapter.join(", ") : classItem.chapter}</span>
+                              )}
+                            </div>
+                          </div>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2 pt-2">
+                    <button
+                      type="button"
+                      onClick={handleArchiveSubmit}
+                      disabled={archiveSubmitting || selectedArchiveClasses.length === 0}
+                      className="flex-1 py-2 text-sm bg-primary hover:bg-primary/90 text-primary-foreground rounded transition-colors disabled:opacity-50"
+                    >
+                      {archiveSubmitting ? "Transferring..." : `Transfer ${selectedArchiveClasses.length} Class(es)`}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowArchiveModal(false)}
+                      className="px-4 py-2 text-sm bg-muted hover:bg-muted/80 rounded transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </>
+              )}
+
+              {archiveSourceCourse && archiveClasses.length === 0 && (
+                <div className="text-center py-8 text-muted-foreground text-sm">
+                  No classes found in the selected course.
+                </div>
+              )}
+            </div>
           </motion.div>
         </div>
       )}
