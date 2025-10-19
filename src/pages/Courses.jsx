@@ -303,8 +303,7 @@ export default function Courses() {
                       )}
                     </div>
                     <div className="p-4 flex flex-col flex-1">
-                      <h3 className="font-semibold text-base mb-2 line-clamp-2 text-foreground">{course.title}</h3>
-                      <p className="text-sm text-muted-foreground mb-3 line-clamp-2 flex-1">{course.description}</p>
+                      <h3 className="font-semibold text-base mb-3 line-clamp-2 text-foreground">{course.title}</h3>
                       <div className="flex items-center justify-between mb-3 pb-3 border-b border-border">
                         <span className="text-xs text-muted-foreground">{course.instructorName}</span>
                         <span className="px-2 py-1 bg-primary/10 text-primary text-xs rounded-full font-medium">
@@ -317,7 +316,10 @@ export default function Courses() {
                         </span>
                       </div>
                       {purchasedCourses[course.id] ? (
-                        <Link to={`/course/${course.id}/chapters`} onClick={(e) => e.stopPropagation()}>
+                        <Link 
+                          to={course.type === "batch" ? `/course/${course.id}/subjects` : `/course/${course.id}/chapters`} 
+                          onClick={(e) => e.stopPropagation()}
+                        >
                           <button className="w-full px-4 py-2 bg-green-500/20 text-green-700 dark:text-green-400 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm font-medium hover:bg-green-500/30">
                             <Check className="w-4 h-4" />
                             Continue Course

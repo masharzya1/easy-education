@@ -270,7 +270,12 @@ export default function ManageClasses() {
 
   const handleArchiveSubmit = async () => {
     if (selectedArchiveClasses.length === 0) {
-      alert("Please select at least one class to transfer")
+      alert("Please select at least one class to archive")
+      return
+    }
+
+    if (selectedCourseData?.type !== "batch") {
+      alert("Archive feature is only available for batch type courses!")
       return
     }
 
@@ -285,6 +290,7 @@ export default function ManageClasses() {
         const newClass = {
           ...sourceClass,
           courseId: selectedCourse,
+          subject: "archive",
           order: currentMaxOrder + i + 1,
         }
         delete newClass.id
@@ -294,10 +300,10 @@ export default function ManageClasses() {
       await fetchClasses()
       setShowArchiveModal(false)
       setSelectedArchiveClasses([])
-      alert(`Successfully transferred ${selectedArchiveClasses.length} class(es) to this course!`)
+      alert(`Successfully archived ${selectedArchiveClasses.length} class(es) to "archive" subject!`)
     } catch (error) {
-      console.error("Error transferring classes:", error)
-      alert("Failed to transfer classes. Please try again.")
+      console.error("Error archiving classes:", error)
+      alert("Failed to archive classes. Please try again.")
     } finally {
       setArchiveSubmitting(false)
     }
@@ -333,6 +339,39 @@ export default function ManageClasses() {
     }
   }
 
+  const fixAllVideoURLs = async () => {
+    if (!selectedCourse) {
+      alert("Please select a course first!")
+      return
+    }
+
+    const confirmFix = confirm(
+      "This will add videoURL field to all classes in this course that are missing it. Continue?"
+    )
+    if (!confirmFix) return
+
+    try {
+      setSubmitting(true)
+      let updatedCount = 0
+
+      for (const classItem of classes) {
+        if (!classItem.videoURL && (classItem.youtubeLink || classItem.hlsLink)) {
+          const videoURL = classItem.youtubeLink || classItem.hlsLink
+          await updateDoc(doc(db, "classes", classItem.id), { videoURL })
+          updatedCount++
+        }
+      }
+
+      await fetchClasses()
+      alert(`Successfully updated ${updatedCount} class(es) with videoURL field!`)
+    } catch (error) {
+      console.error("Error fixing video URLs:", error)
+      alert("Failed to fix video URLs. Please try again.")
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
   const selectedCourseData = courses.find((c) => c.id === selectedCourse)
   const batchCourses = courses.filter((c) => c.type === "batch")
   const archiveSourceCourseData = courses.find((c) => c.id === archiveSourceCourse)
@@ -353,12 +392,19 @@ export default function ManageClasses() {
           </div>
           <div className="flex gap-2">
             <button
+              onClick={fixAllVideoURLs}
+              disabled={!selectedCourse || submitting}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded text-sm transition-colors disabled:opacity-50"
+            >
+              Fix Videos
+            </button>
+            <button
               onClick={handleOpenArchiveModal}
               disabled={!selectedCourse}
               className="flex items-center gap-1.5 px-3 py-1.5 bg-secondary hover:bg-secondary/90 text-secondary-foreground rounded text-sm transition-colors disabled:opacity-50"
             >
               <Plus className="w-4 h-4" />
-              Transfer Classes
+              Archive Classes
             </button>
             <button
               onClick={() => handleOpenModal()}
@@ -713,7 +759,7 @@ export default function ManageClasses() {
             className="bg-card border border-border rounded-xl p-4 max-w-4xl w-full max-h-[90vh] overflow-y-auto"
           >
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold">Transfer Classes from Archive</h2>
+              <h2 className="text-lg font-bold">Archive Classes to Current Course</h2>
               <button onClick={() => setShowArchiveModal(false)} className="p-1 hover:bg-muted rounded transition-colors">
                 <X className="w-4 h-4" />
               </button>

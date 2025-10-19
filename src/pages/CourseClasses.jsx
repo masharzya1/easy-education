@@ -107,7 +107,7 @@ export default function CourseClasses() {
           <button
             onClick={() => {
               if (subject && course?.type === "batch") {
-                navigate(`/course/${courseId}/chapters/${subject}`)
+                navigate(`/course/${courseId}/subjects/${subject}/chapters`)
               } else {
                 navigate(`/course/${courseId}/chapters`)
               }
@@ -115,7 +115,7 @@ export default function CourseClasses() {
             className="flex items-center gap-2 text-primary hover:text-primary/80 mb-4 transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
-            Back
+            {subject ? "Back to Chapters" : "Back to Chapters"}
           </button>
           <h1 className="text-3xl font-bold mb-2">{course?.title}</h1>
           <p className="text-muted-foreground">

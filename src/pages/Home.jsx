@@ -343,12 +343,9 @@ export default function Home() {
                         )}
                       </div>
                       <div className="p-5">
-                        <h3 className="font-semibold text-lg mb-2 line-clamp-2 group-hover:text-primary transition-colors">
+                        <h3 className="font-semibold text-lg mb-3 line-clamp-2 group-hover:text-primary transition-colors">
                           {course.title}
                         </h3>
-                        <p className="text-sm text-muted-foreground mb-3 line-clamp-2 leading-relaxed">
-                          {course.description}
-                        </p>
                         <div className="flex items-center justify-between mb-3">
                           <span className="text-sm text-muted-foreground">{course.instructorName}</span>
                           <span className="px-3 py-1 bg-primary/10 text-primary text-xs rounded-full font-medium">
@@ -356,7 +353,10 @@ export default function Home() {
                           </span>
                         </div>
                         {purchasedCourses[course.id] ? (
-                          <Link to={`/course/${course.id}/chapters`} onClick={(e) => e.stopPropagation()}>
+                          <Link 
+                            to={course.type === "batch" ? `/course/${course.id}/subjects` : `/course/${course.id}/chapters`} 
+                            onClick={(e) => e.stopPropagation()}
+                          >
                             <button className="w-full px-4 py-2 bg-green-500/20 text-green-700 dark:text-green-400 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm font-medium hover:bg-green-500/30">
                               <Check className="w-4 h-4" />
                               Continue Course
