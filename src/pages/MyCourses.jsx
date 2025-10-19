@@ -117,7 +117,7 @@ export default function MyCourses() {
 
   return (
     <div className="min-h-screen py-12 px-4 bg-background">
-      <div className="container mx-auto max-w-6xl">
+      <div className="container mx-auto max-w-5xl">
         {/* Header */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <h1 className="text-4xl font-bold mb-2">My Courses</h1>

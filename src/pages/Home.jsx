@@ -19,6 +19,7 @@ export default function Home() {
   const [latestNews, setLatestNews] = useState([])
   const [loading, setLoading] = useState(true)
   const [purchasedCourses, setPurchasedCourses] = useState({})
+  const [pendingCourses, setPendingCourses] = useState({})
 
   useEffect(() => {
     fetchData()
@@ -27,6 +28,7 @@ export default function Home() {
   useEffect(() => {
     if (currentUser) {
       checkPurchasedCourses()
+      checkPendingCourses()
     }
   }, [currentUser, trendingCourses])
 
@@ -51,6 +53,30 @@ export default function Home() {
       setPurchasedCourses(purchased)
     } catch (error) {
       console.error("[v0] Error checking purchased courses:", error)
+    }
+  }
+
+  const checkPendingCourses = async () => {
+    if (!currentUser || trendingCourses.length === 0 || !db) return
+
+    try {
+      const pendingQuery = query(
+        collection(db, "payments"),
+        where("userId", "==", currentUser.uid),
+        where("status", "==", "pending"),
+      )
+      const pendingSnapshot = await getDocs(pendingQuery)
+
+      const pending = {}
+      pendingSnapshot.docs.forEach((doc) => {
+        const payment = doc.data()
+        payment.courses?.forEach((c) => {
+          pending[c.id] = true
+        })
+      })
+      setPendingCourses(pending)
+    } catch (error) {
+      console.error("[v0] Error checking pending courses:", error)
     }
   }
 
@@ -306,6 +332,11 @@ export default function Home() {
                               Continue Course
                             </button>
                           </Link>
+                        ) : pendingCourses[course.id] ? (
+                          <div className="w-full px-4 py-2 bg-yellow-500/20 text-yellow-700 dark:text-yellow-400 rounded-lg flex items-center justify-center gap-2 text-sm font-medium">
+                            <Clock className="w-4 h-4" />
+                            Payment Pending
+                          </div>
                         ) : cartItems.some((item) => item.id === course.id) ? (
                           <button
                             onClick={(e) => handleRemoveFromCart(course, e)}

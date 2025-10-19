@@ -31,7 +31,7 @@ export default function Announcements() {
 
   return (
     <div className="min-h-screen py-12 px-4">
-      <div className="container mx-auto max-w-6xl">
+      <div className="container mx-auto max-w-5xl">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

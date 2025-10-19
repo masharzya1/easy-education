@@ -93,17 +93,17 @@ export default function ManageChapters() {
 
   return (
     <div>
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-        <div className="flex items-center justify-between">
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div>
-            <h1 className="text-3xl font-bold mb-2">Manage Chapters</h1>
-            <p className="text-muted-foreground">Create and manage chapters for courses</p>
+            <h1 className="text-xl sm:text-2xl font-bold mb-1">Manage Chapters</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground">Create and manage chapters for courses</p>
           </div>
           <button
             onClick={() => handleOpenModal()}
-            className="flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-colors"
+            className="w-full sm:w-auto flex items-center justify-center gap-2 px-3 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-colors text-sm"
           >
-            <Plus className="w-5 h-5" />
+            <Plus className="w-4 h-4" />
             Add Chapter
           </button>
         </div>
@@ -111,38 +111,38 @@ export default function ManageChapters() {
 
       {/* Chapters Grid */}
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
           {[...Array(6)].map((_, i) => (
-            <div key={i} className="bg-card border border-border rounded-xl p-4 animate-pulse">
-              <div className="h-6 bg-muted rounded mb-2"></div>
+            <div key={i} className="bg-card border border-border rounded-lg p-3 sm:p-4 animate-pulse">
+              <div className="h-5 bg-muted rounded mb-2"></div>
               <div className="h-4 bg-muted rounded"></div>
             </div>
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
           {chapters.map((chapter) => (
             <motion.div
               key={chapter.id}
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="bg-card border border-border rounded-xl p-6"
+              className="bg-card border border-border rounded-lg p-3 sm:p-4"
             >
-              <h3 className="font-semibold text-lg mb-2">{chapter.title}</h3>
-              <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{chapter.description}</p>
+              <h3 className="font-semibold text-sm sm:text-base mb-1">{chapter.title}</h3>
+              <p className="text-xs sm:text-sm text-muted-foreground mb-3 line-clamp-2">{chapter.description}</p>
               <div className="flex gap-2">
                 <button
                   onClick={() => handleOpenModal(chapter)}
-                  className="flex-1 px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-colors flex items-center justify-center gap-2"
+                  className="flex-1 px-2 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary rounded hover:bg-primary/20 transition-colors flex items-center justify-center gap-1.5 text-xs"
                 >
-                  <Edit className="w-4 h-4" />
+                  <Edit className="w-3 h-3" />
                   Edit
                 </button>
                 <button
                   onClick={() => handleDelete(chapter.id)}
-                  className="flex-1 px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg transition-colors flex items-center justify-center gap-2"
+                  className="flex-1 px-2 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-600 rounded hover:bg-red-500/20 transition-colors flex items-center justify-center gap-1.5 text-xs"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="w-3 h-3" />
                   Delete
                 </button>
               </div>
@@ -153,54 +153,56 @@ export default function ManageChapters() {
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-card border border-border rounded-xl p-6 max-w-md w-full"
+            className="bg-card border border-border rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto"
           >
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold">{editingChapter ? "Edit Chapter" : "Add New Chapter"}</h2>
-              <button onClick={handleCloseModal} className="p-2 hover:bg-muted rounded-lg transition-colors">
+            <div className="sticky top-0 bg-card border-b border-border p-4 flex items-center justify-between">
+              <h2 className="text-lg font-bold">{editingChapter ? "Edit Chapter" : "Add New Chapter"}</h2>
+              <button onClick={handleCloseModal} className="p-1.5 hover:bg-muted rounded-lg transition-colors">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="p-4 space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-2">Title</label>
+                <label className="block text-sm font-medium mb-1.5">Title *</label>
                 <input
                   type="text"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   required
-                  className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="w-full px-3 py-2 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                  placeholder="Enter chapter title"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">Description</label>
+                <label className="block text-sm font-medium mb-1.5">Description</label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   rows={3}
-                  className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                  className="w-full px-3 py-2 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary resize-none text-sm"
+                  placeholder="Enter chapter description (optional)"
                 />
               </div>
 
-              <div className="flex gap-3 pt-4">
-                <button
-                  type="submit"
-                  className="flex-1 py-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-colors"
-                >
-                  {editingChapter ? "Update Chapter" : "Create Chapter"}
-                </button>
+              <div className="flex gap-3 pt-4 border-t border-border">
                 <button
                   type="button"
                   onClick={handleCloseModal}
-                  className="px-6 py-3 bg-muted hover:bg-muted/80 rounded-lg transition-colors"
+                  className="flex-1 px-4 py-2 bg-muted hover:bg-muted/80 rounded-lg transition-colors text-sm font-medium"
                 >
                   Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-colors text-sm font-medium"
+                >
+                  {editingChapter ? "Update" : "Create"}
                 </button>
               </div>
             </form>

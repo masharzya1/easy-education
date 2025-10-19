@@ -34,11 +34,11 @@ export default function DashboardLayout({ children }) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900">
       {/* Mobile Header */}
-      <div className="lg:hidden sticky top-0 z-40 bg-gradient-to-r from-purple-600 via-indigo-600 to-orange-500 text-white p-4 flex items-center justify-between shadow-lg">
+      <div className="lg:hidden sticky top-0 z-40 bg-card border-b border-border p-4 flex items-center justify-between shadow-sm">
         <h1 className="text-lg font-bold">Dashboard</h1>
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+          className="p-2 hover:bg-muted rounded-lg transition-colors"
         >
           {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </button>
@@ -46,10 +46,10 @@ export default function DashboardLayout({ children }) {
 
       <div className="flex">
         {/* Desktop Sidebar */}
-        <div className="hidden lg:flex lg:w-64 flex-col bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 sticky top-0 h-screen overflow-y-auto">
-          <div className="bg-gradient-to-r from-purple-600 via-indigo-600 to-orange-500 text-white p-6">
+        <div className="hidden lg:flex lg:w-64 flex-col bg-card border-r border-border sticky top-0 h-screen overflow-y-auto">
+          <div className="border-b border-border p-6">
             <h2 className="text-2xl font-bold">Dashboard</h2>
-            <p className="text-purple-100 text-sm mt-1">Student Portal</p>
+            <p className="text-muted-foreground text-sm mt-1">Student Portal</p>
           </div>
 
           <nav className="flex-1 p-6 space-y-2">
@@ -62,8 +62,8 @@ export default function DashboardLayout({ children }) {
                   to={item.path}
                   className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
                     active
-                      ? "bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-lg"
-                      : "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"
+                      ? "bg-primary text-primary-foreground shadow-md"
+                      : "hover:bg-muted"
                   }`}
                 >
                   <Icon className="w-5 h-5 flex-shrink-0" />
@@ -73,7 +73,7 @@ export default function DashboardLayout({ children }) {
             })}
           </nav>
 
-          <div className="p-6 border-t border-slate-200 dark:border-slate-700">
+          <div className="p-6 border-t border-border">
             <button
               onClick={handleSignOut}
               className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors font-medium"
@@ -100,11 +100,11 @@ export default function DashboardLayout({ children }) {
                 animate={{ x: 0 }}
                 exit={{ x: "-100%" }}
                 transition={{ type: "spring", damping: 30, stiffness: 300 }}
-                className="fixed left-0 top-0 bottom-0 w-64 bg-white dark:bg-slate-800 z-40 overflow-y-auto lg:hidden"
+                className="fixed left-0 top-0 bottom-0 w-64 bg-card border-r border-border z-40 overflow-y-auto lg:hidden"
               >
-                <div className="bg-gradient-to-r from-purple-600 via-indigo-600 to-orange-500 text-white p-6">
+                <div className="border-b border-border p-6">
                   <h2 className="text-2xl font-bold">Dashboard</h2>
-                  <p className="text-purple-100 text-sm mt-1">Student Portal</p>
+                  <p className="text-muted-foreground text-sm mt-1">Student Portal</p>
                 </div>
 
                 <nav className="p-6 space-y-2">
@@ -118,8 +118,8 @@ export default function DashboardLayout({ children }) {
                         onClick={() => setSidebarOpen(false)}
                         className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
                           active
-                            ? "bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-lg"
-                            : "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"
+                            ? "bg-primary text-primary-foreground shadow-md"
+                            : "hover:bg-muted"
                         }`}
                       >
                         <Icon className="w-5 h-5 flex-shrink-0" />
@@ -129,7 +129,7 @@ export default function DashboardLayout({ children }) {
                   })}
                 </nav>
 
-                <div className="p-6 border-t border-slate-200 dark:border-slate-700">
+                <div className="p-6 border-t border-border">
                   <button
                     onClick={handleSignOut}
                     className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors font-medium"
@@ -162,8 +162,8 @@ export default function DashboardLayout({ children }) {
                 onClick={() => setSidebarOpen(false)}
                 className={`flex-1 flex flex-col items-center justify-center py-3 transition-colors ${
                   active
-                    ? "text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/30"
-                    : "text-slate-600 dark:text-slate-400 hover:text-purple-600 dark:hover:text-purple-400"
+                    ? "text-primary bg-primary/10"
+                    : "text-muted-foreground hover:text-primary"
                 }`}
               >
                 <Icon className="w-5 h-5 mb-1" />
