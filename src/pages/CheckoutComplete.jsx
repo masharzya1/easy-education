@@ -14,9 +14,17 @@ export default function CheckoutComplete() {
 
   useEffect(() => {
     if (!currentUser) {
-      navigate("/login")
+      console.log("[CheckoutComplete] No user found, redirecting to login")
+      navigate("/login", { replace: true })
+      return
     }
-  }, [currentUser, navigate])
+    
+    if (!location.state?.courses) {
+      console.log("[CheckoutComplete] No courses in state")
+    }
+    
+    console.log("[CheckoutComplete] Loaded with state:", location.state)
+  }, [currentUser, navigate, location.state])
 
   useEffect(() => {
     const timer = setInterval(() => {

@@ -60,11 +60,11 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Desktop Header - Compact */}
-      <div className="hidden lg:block border-b border-border bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 sticky top-0 z-40 shadow-md backdrop-blur-sm">
+      <div className="hidden lg:block border-b border-border bg-card sticky top-0 z-40 shadow-sm">
         <div className="px-4 py-3">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-lg font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">Admin Panel</h1>
+              <h1 className="text-lg font-bold text-foreground">Admin Panel</h1>
               <p className="text-xs text-muted-foreground font-medium">{currentPage}</p>
             </div>
           </div>
@@ -72,9 +72,9 @@ export default function AdminDashboard() {
       </div>
 
       {/* Mobile Header */}
-      <div className="lg:hidden flex items-center justify-between p-4 bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 border-b border-border sticky top-0 z-50 shadow-md backdrop-blur-sm">
+      <div className="lg:hidden flex items-center justify-between p-4 bg-card border-b border-border sticky top-0 z-50 shadow-sm">
         <div>
-          <h1 className="text-base font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">Admin Panel</h1>
+          <h1 className="text-base font-bold text-foreground">Admin Panel</h1>
           <p className="text-xs text-muted-foreground font-medium">{currentPage}</p>
         </div>
         <button
