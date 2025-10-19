@@ -273,8 +273,9 @@ export default function Checkout() {
       notifyAdminsOfCheckout({
         id: paymentDocRef.id,
         name: formData.name,
+        email: formData.email,
         totalAmount: calculateTotal,
-        courseCount: cartItems.length,
+        courses: cartItems.map(item => ({ id: item.id, title: item.title, price: item.price || 0 })),
       }).catch(err => console.error('Failed to notify admins:', err))
 
       const coursesForState = [...cartItems]
@@ -286,7 +287,11 @@ export default function Checkout() {
           courses: coursesForState, 
           paymentData: {
             ...paymentData,
-            id: paymentDocRef.id
+            id: paymentDocRef.id,
+            totalAmount: calculateTotal,
+            subtotalAmount: getTotal(),
+            discountAmount: calculateDiscount,
+            courseCount: cartItems.length
           }
         },
         replace: true

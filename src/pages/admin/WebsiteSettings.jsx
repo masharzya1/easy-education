@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
-import { Settings, Save, AlertCircle, Bell, BellOff, CheckCircle } from "lucide-react"
+import { Settings, Save, AlertCircle, Bell, BellOff, CheckCircle, Upload, Smartphone, Loader2 } from "lucide-react"
 import { collection, getDocs, query, where, updateDoc, doc, setDoc, serverTimestamp } from "firebase/firestore"
 import { db, auth } from "../../lib/firebase"
 import { saveAdminFCMToken } from "../../lib/notifications"
 import { requestNotificationPermission } from "../../lib/pwa"
+import { uploadToImgbb } from "../../lib/imgbb"
 
 export default function WebsiteSettings() {
   const [loading, setLoading] = useState(true)
@@ -15,12 +16,20 @@ export default function WebsiteSettings() {
   const [errorMessage, setErrorMessage] = useState("")
   const [notificationStatus, setNotificationStatus] = useState('default')
   const [enablingNotifications, setEnablingNotifications] = useState(false)
+  const [uploadingIcon, setUploadingIcon] = useState(false)
+  const [uploadingLogo, setUploadingLogo] = useState(false)
 
   const [settings, setSettings] = useState({
     communityEnabled: true,
     paymentInstructions: "Please pay to 018XXXXXXXX via bKash",
     siteName: "Easy Education",
     siteDescription: "Learn from the best educators",
+    appName: "Easy Education",
+    appShortName: "EasyEdu",
+    appIcon: "",
+    appLogo: "",
+    themeColor: "#0ea5e9",
+    backgroundColor: "#ffffff",
   })
 
   useEffect(() => {
@@ -85,6 +94,13 @@ export default function WebsiteSettings() {
             settingsData.communityEnabled = data.communityEnabled !== false
           } else if (data.type === "payment") {
             settingsData.paymentInstructions = data.instructions || "Please pay to 018XXXXXXXX via bKash"
+          } else if (data.type === "pwa") {
+            settingsData.appName = data.appName || "Easy Education"
+            settingsData.appShortName = data.appShortName || "EasyEdu"
+            settingsData.appIcon = data.appIcon || ""
+            settingsData.appLogo = data.appLogo || ""
+            settingsData.themeColor = data.themeColor || "#0ea5e9"
+            settingsData.backgroundColor = data.backgroundColor || "#ffffff"
           }
         })
         setSettings((prev) => ({ ...prev, ...settingsData }))
@@ -94,6 +110,46 @@ export default function WebsiteSettings() {
       setErrorMessage("Failed to load settings")
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleIconUpload = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setUploadingIcon(true)
+    setErrorMessage("")
+    
+    try {
+      const imageUrl = await uploadToImgbb(file)
+      setSettings({ ...settings, appIcon: imageUrl })
+      setSuccessMessage("App icon uploaded successfully!")
+      setTimeout(() => setSuccessMessage(""), 3000)
+    } catch (error) {
+      console.error("Error uploading app icon:", error)
+      setErrorMessage("Failed to upload app icon. Please try again.")
+    } finally {
+      setUploadingIcon(false)
+    }
+  }
+
+  const handleLogoUpload = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setUploadingLogo(true)
+    setErrorMessage("")
+    
+    try {
+      const imageUrl = await uploadToImgbb(file)
+      setSettings({ ...settings, appLogo: imageUrl })
+      setSuccessMessage("App logo uploaded successfully!")
+      setTimeout(() => setSuccessMessage(""), 3000)
+    } catch (error) {
+      console.error("Error uploading app logo:", error)
+      setErrorMessage("Failed to upload app logo. Please try again.")
+    } finally {
+      setUploadingLogo(false)
     }
   }
 
@@ -133,6 +189,26 @@ export default function WebsiteSettings() {
         await updateDoc(doc(db, "settings", paymentSnapshot.docs[0].id), paymentData)
       } else {
         await setDoc(doc(collection(db, "settings")), paymentData)
+      }
+
+      const pwaSettingsRef = query(collection(db, "settings"), where("type", "==", "pwa"))
+      const pwaSnapshot = await getDocs(pwaSettingsRef)
+
+      const pwaData = {
+        type: "pwa",
+        appName: settings.appName,
+        appShortName: settings.appShortName,
+        appIcon: settings.appIcon,
+        appLogo: settings.appLogo,
+        themeColor: settings.themeColor,
+        backgroundColor: settings.backgroundColor,
+        updatedAt: serverTimestamp(),
+      }
+
+      if (!pwaSnapshot.empty) {
+        await updateDoc(doc(db, "settings", pwaSnapshot.docs[0].id), pwaData)
+      } else {
+        await setDoc(doc(collection(db, "settings")), pwaData)
       }
 
       setSuccessMessage("Settings saved successfully!")
@@ -289,6 +365,168 @@ export default function WebsiteSettings() {
                   </p>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+
+        {/* PWA Configuration */}
+        <div className="border-t border-border pt-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Smartphone className="w-5 h-5 text-primary" />
+            <h2 className="text-xl font-semibold">App Configuration (PWA)</h2>
+          </div>
+          <p className="text-sm text-muted-foreground mb-4">
+            Configure how your platform appears when installed as an app on mobile devices
+          </p>
+          
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">App Name</label>
+                <input
+                  type="text"
+                  value={settings.appName}
+                  onChange={(e) => setSettings({ ...settings, appName: e.target.value })}
+                  placeholder="Easy Education"
+                  className="w-full px-4 py-2 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary smooth-transition"
+                />
+                <p className="text-xs text-muted-foreground mt-1">Full name displayed in the app</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">App Short Name</label>
+                <input
+                  type="text"
+                  value={settings.appShortName}
+                  onChange={(e) => setSettings({ ...settings, appShortName: e.target.value })}
+                  placeholder="EasyEdu"
+                  maxLength={12}
+                  className="w-full px-4 py-2 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary smooth-transition"
+                />
+                <p className="text-xs text-muted-foreground mt-1">Short name for home screen (max 12 characters)</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">Theme Color</label>
+                <div className="flex gap-2">
+                  <input
+                    type="color"
+                    value={settings.themeColor}
+                    onChange={(e) => setSettings({ ...settings, themeColor: e.target.value })}
+                    className="h-10 w-20 rounded-lg border border-border cursor-pointer"
+                  />
+                  <input
+                    type="text"
+                    value={settings.themeColor}
+                    onChange={(e) => setSettings({ ...settings, themeColor: e.target.value })}
+                    placeholder="#0ea5e9"
+                    className="flex-1 px-4 py-2 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary smooth-transition"
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">Browser toolbar color on mobile</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">Background Color</label>
+                <div className="flex gap-2">
+                  <input
+                    type="color"
+                    value={settings.backgroundColor}
+                    onChange={(e) => setSettings({ ...settings, backgroundColor: e.target.value })}
+                    className="h-10 w-20 rounded-lg border border-border cursor-pointer"
+                  />
+                  <input
+                    type="text"
+                    value={settings.backgroundColor}
+                    onChange={(e) => setSettings({ ...settings, backgroundColor: e.target.value })}
+                    placeholder="#ffffff"
+                    className="flex-1 px-4 py-2 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary smooth-transition"
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">Splash screen background color</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">App Icon (512x512 recommended)</label>
+                <div className="space-y-2">
+                  {settings.appIcon && (
+                    <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg border border-border">
+                      <img 
+                        src={settings.appIcon} 
+                        alt="App Icon" 
+                        className="w-16 h-16 rounded-lg object-cover border border-border"
+                      />
+                      <div className="flex-1">
+                        <p className="text-xs text-muted-foreground">Current app icon</p>
+                      </div>
+                    </div>
+                  )}
+                  <label className="flex items-center justify-center gap-2 px-4 py-2 bg-muted hover:bg-muted/80 rounded-lg transition-colors cursor-pointer border border-border">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleIconUpload}
+                      className="hidden"
+                      disabled={uploadingIcon}
+                    />
+                    {uploadingIcon ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span className="text-sm">Uploading...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="w-4 h-4" />
+                        <span className="text-sm">Upload Icon</span>
+                      </>
+                    )}
+                  </label>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">Used for app icon on home screen</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">App Logo (any size)</label>
+                <div className="space-y-2">
+                  {settings.appLogo && (
+                    <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg border border-border">
+                      <img 
+                        src={settings.appLogo} 
+                        alt="App Logo" 
+                        className="w-16 h-16 rounded-lg object-contain border border-border bg-white"
+                      />
+                      <div className="flex-1">
+                        <p className="text-xs text-muted-foreground">Current app logo</p>
+                      </div>
+                    </div>
+                  )}
+                  <label className="flex items-center justify-center gap-2 px-4 py-2 bg-muted hover:bg-muted/80 rounded-lg transition-colors cursor-pointer border border-border">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleLogoUpload}
+                      className="hidden"
+                      disabled={uploadingLogo}
+                    />
+                    {uploadingLogo ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span className="text-sm">Uploading...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="w-4 h-4" />
+                        <span className="text-sm">Upload Logo</span>
+                      </>
+                    )}
+                  </label>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">Used for splash screen and branding</p>
+              </div>
             </div>
           </div>
         </div>

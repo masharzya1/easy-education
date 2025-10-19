@@ -3,11 +3,13 @@
 import { useState, useEffect } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { motion } from "framer-motion"
-import { Search, TrendingUp, Clock, Users, ArrowRight, ShoppingCart, Trash2, Check } from "lucide-react"
+import { Search, TrendingUp, Clock, Users, ArrowRight, ShoppingCart, Trash2, Check, Zap } from "lucide-react"
 import { collection, query, orderBy, limit, getDocs, where } from "firebase/firestore"
 import { db } from "../lib/firebase"
 import { useCart } from "../contexts/CartContext"
 import { useAuth } from "../contexts/AuthContext"
+import { enrollInFreeCourse } from "../lib/enrollment"
+import { toast } from "../hooks/use-toast"
 
 export default function Home() {
   const navigate = useNavigate()
@@ -133,6 +135,43 @@ export default function Home() {
     e.preventDefault()
     e.stopPropagation()
     removeFromCart(course.id)
+  }
+
+  const handleEnrollFree = async (course, e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    
+    if (!currentUser) {
+      toast({
+        variant: "error",
+        title: "Login Required",
+        description: "Please login to enroll in courses",
+      })
+      navigate("/login")
+      return
+    }
+
+    const result = await enrollInFreeCourse(
+      currentUser.uid,
+      currentUser.email,
+      currentUser.displayName || "User",
+      course
+    )
+
+    if (result.success) {
+      toast({
+        variant: "success",
+        title: "Enrolled Successfully!",
+        description: result.message,
+      })
+      checkPurchasedCourses()
+    } else {
+      toast({
+        variant: "error",
+        title: "Enrollment Failed",
+        description: result.message,
+      })
+    }
   }
 
   const handleCategoryClick = (category) => {
@@ -328,6 +367,14 @@ export default function Home() {
                             <Clock className="w-4 h-4" />
                             Payment Pending
                           </div>
+                        ) : (!course.price || course.price === 0 || course.price === "0") ? (
+                          <button
+                            onClick={(e) => handleEnrollFree(course, e)}
+                            className="w-full px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-lg transition-all flex items-center justify-center gap-2 text-sm font-medium shadow-sm"
+                          >
+                            <Zap className="w-4 h-4" />
+                            Enroll Free
+                          </button>
                         ) : cartItems.some((item) => item.id === course.id) ? (
                           <button
                             onClick={(e) => handleRemoveFromCart(course, e)}

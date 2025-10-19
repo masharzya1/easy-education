@@ -1,9 +1,21 @@
-import { collection, query, where, getDocs, doc, setDoc, serverTimestamp } from 'firebase/firestore'
+import { collection, query, where, getDocs, doc, setDoc, serverTimestamp, getDoc } from 'firebase/firestore'
 import { db } from './firebase'
 import { getFCMToken } from './pwa'
 
 export async function saveAdminFCMToken(userId) {
   try {
+    const userDoc = await getDoc(doc(db, 'users', userId))
+    if (!userDoc.exists()) {
+      console.log('User not found')
+      return null
+    }
+
+    const userData = userDoc.data()
+    if (userData.role !== 'admin') {
+      console.log('User is not an admin, FCM token not saved')
+      return null
+    }
+
     const token = await getFCMToken()
     if (!token) {
       console.log('No FCM token available')
@@ -15,6 +27,7 @@ export async function saveAdminFCMToken(userId) {
       {
         token,
         userId,
+        role: 'admin',
         updatedAt: serverTimestamp(),
       },
       { merge: true }
@@ -30,7 +43,9 @@ export async function saveAdminFCMToken(userId) {
 
 export async function notifyAdminsOfCheckout(paymentData) {
   try {
-    const adminTokensSnapshot = await getDocs(collection(db, 'adminTokens'))
+    const adminTokensSnapshot = await getDocs(
+      query(collection(db, 'adminTokens'), where('role', '==', 'admin'))
+    )
     
     if (adminTokensSnapshot.empty) {
       console.log('No admin tokens found')
@@ -44,16 +59,25 @@ export async function notifyAdminsOfCheckout(paymentData) {
       return
     }
 
+    const courseNames = paymentData.courses?.map(c => c.title).join(', ') || 'N/A'
+    const coursesText = paymentData.courses?.length > 1 
+      ? `${paymentData.courses.length} courses` 
+      : paymentData.courses?.[0]?.title || 'N/A'
+
     const notification = {
-      title: 'New Checkout Request',
-      body: `${paymentData.name} has submitted a payment of ৳${paymentData.totalAmount}`,
+      title: 'New Payment Submitted 🔔',
+      body: `${paymentData.name} (${paymentData.email}) submitted ৳${paymentData.totalAmount} for ${coursesText}. Click to review.`,
       icon: '/placeholder-logo.png',
       badge: '/placeholder-logo.png',
       tag: `checkout-${paymentData.id}`,
       data: {
-        url: '/admin/payments',
+        url: `/admin/payments?paymentId=${paymentData.id}`,
         paymentId: paymentData.id,
-        type: 'checkout'
+        type: 'checkout',
+        userName: paymentData.name,
+        userEmail: paymentData.email,
+        amount: paymentData.totalAmount,
+        courses: courseNames
       }
     }
 
@@ -68,7 +92,7 @@ export async function notifyAdminsOfCheckout(paymentData) {
       console.log('API endpoint not available, notifications will work via FCM service worker')
     })
 
-    console.log('Admin notification sent successfully')
+    console.log('Admin notification sent successfully to', tokens.length, 'admin(s)')
   } catch (error) {
     console.error('Error notifying admins:', error)
   }
