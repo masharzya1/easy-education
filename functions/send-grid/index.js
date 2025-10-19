@@ -1,5 +1,4 @@
-// Blink Edge Function for sending emails via SendGrid
-// Environment variables needed: SENDGRID_API_KEY, SENDGRID_FROM_EMAIL
+
 
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts"
 
