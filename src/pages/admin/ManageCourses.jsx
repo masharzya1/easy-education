@@ -19,7 +19,7 @@ export default function ManageCourses() {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    instructorName: "",
+    instructors: [],
     category: "",
     type: "subject",
     price: "",
@@ -60,7 +60,7 @@ export default function ManageCourses() {
       setFormData({
         title: course.title || "",
         description: course.description || "",
-        instructorName: course.instructorName || "",
+        instructors: course.instructors || (course.instructorName ? [course.instructorName] : []),
         category: course.category || "",
         type: course.type || "subject",
         price: course.price || "",
@@ -72,7 +72,7 @@ export default function ManageCourses() {
       setFormData({
         title: "",
         description: "",
-        instructorName: "",
+        instructors: [],
         category: "",
         type: "subject",
         price: "",
@@ -108,7 +108,8 @@ export default function ManageCourses() {
       const courseData = {
         title: formData.title,
         description: formData.description,
-        instructorName: formData.instructorName,
+        instructors: formData.instructors,
+        instructorName: formData.instructors.join(", "),
         category: formData.category,
         type: formData.type,
         price: Number(formData.price) || 0,
@@ -292,20 +293,40 @@ export default function ManageCourses() {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1.5">Instructor</label>
-                  <select
-                    value={formData.instructorName}
-                    onChange={(e) => setFormData({ ...formData, instructorName: e.target.value })}
-                    className="w-full px-3 py-2 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
-                  >
-                    <option value="">Select instructor</option>
-                    {teachers.map((teacher) => (
-                      <option key={teacher.id} value={teacher.name}>
-                        {teacher.name}
-                      </option>
-                    ))}
-                  </select>
+                <div className="sm:col-span-2">
+                  <label className="block text-sm font-medium mb-2">Instructors</label>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 p-3 bg-muted/30 rounded-lg border border-border max-h-48 overflow-y-auto">
+                    {teachers.length > 0 ? (
+                      teachers.map((teacher) => (
+                        <label
+                          key={teacher.id}
+                          className="flex items-center gap-2 p-2 rounded hover:bg-muted/50 cursor-pointer transition-colors"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={formData.instructors.includes(teacher.name)}
+                            onChange={(e) => {
+                              const newInstructors = e.target.checked
+                                ? [...formData.instructors, teacher.name]
+                                : formData.instructors.filter((name) => name !== teacher.name)
+                              setFormData({ ...formData, instructors: newInstructors })
+                            }}
+                            className="w-4 h-4 rounded border-border text-primary focus:ring-2 focus:ring-primary"
+                          />
+                          <span className="text-xs truncate">{teacher.name}</span>
+                        </label>
+                      ))
+                    ) : (
+                      <p className="text-xs text-muted-foreground col-span-full text-center py-2">
+                        No teachers available
+                      </p>
+                    )}
+                  </div>
+                  {formData.instructors.length > 0 && (
+                    <p className="text-xs text-muted-foreground mt-1.5">
+                      Selected: {formData.instructors.join(", ")}
+                    </p>
+                  )}
                 </div>
 
                 <div>
