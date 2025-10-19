@@ -2,15 +2,19 @@
 
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
-import { Settings, Save, AlertCircle } from "lucide-react"
+import { Settings, Save, AlertCircle, Bell, BellOff, CheckCircle } from "lucide-react"
 import { collection, getDocs, query, where, updateDoc, doc, setDoc, serverTimestamp } from "firebase/firestore"
-import { db } from "../../lib/firebase"
+import { db, auth } from "../../lib/firebase"
+import { saveAdminFCMToken } from "../../lib/notifications"
+import { requestNotificationPermission } from "../../lib/pwa"
 
 export default function WebsiteSettings() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [successMessage, setSuccessMessage] = useState("")
   const [errorMessage, setErrorMessage] = useState("")
+  const [notificationStatus, setNotificationStatus] = useState('default')
+  const [enablingNotifications, setEnablingNotifications] = useState(false)
 
   const [settings, setSettings] = useState({
     communityEnabled: true,
@@ -21,7 +25,50 @@ export default function WebsiteSettings() {
 
   useEffect(() => {
     fetchSettings()
+    checkNotificationStatus()
   }, [])
+
+  const checkNotificationStatus = () => {
+    if ('Notification' in window) {
+      setNotificationStatus(Notification.permission)
+    }
+  }
+
+  const handleEnableNotifications = async () => {
+    setEnablingNotifications(true)
+    setErrorMessage("")
+    
+    try {
+      const permission = await requestNotificationPermission()
+      
+      if (!permission) {
+        setErrorMessage("Notification permission denied. Please enable notifications in your browser settings.")
+        setNotificationStatus('denied')
+        return
+      }
+
+      const userId = auth.currentUser?.uid
+      if (!userId) {
+        setErrorMessage("You must be logged in to enable notifications")
+        return
+      }
+
+      const token = await saveAdminFCMToken(userId)
+      
+      if (token) {
+        setSuccessMessage("Push notifications enabled successfully!")
+        setNotificationStatus('granted')
+        setTimeout(() => setSuccessMessage(""), 3000)
+      } else {
+        setErrorMessage("Failed to get notification token. Please try again.")
+      }
+    } catch (error) {
+      console.error("Error enabling notifications:", error)
+      setErrorMessage("Failed to enable notifications. Check console for details.")
+    } finally {
+      setEnablingNotifications(false)
+    }
+  }
 
   const fetchSettings = async () => {
     try {
@@ -183,6 +230,65 @@ export default function WebsiteSettings() {
                 />
                 <div className="w-11 h-6 bg-muted peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
               </label>
+            </div>
+          </div>
+        </div>
+
+        {/* Push Notifications */}
+        <div className="border-t border-border pt-6">
+          <h2 className="text-xl font-semibold mb-4">Push Notifications</h2>
+          <div className="space-y-4">
+            <div className="p-4 bg-muted/30 rounded-lg border border-border">
+              <div className="flex items-start gap-3 mb-3">
+                {notificationStatus === 'granted' ? (
+                  <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                ) : notificationStatus === 'denied' ? (
+                  <BellOff className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                ) : (
+                  <Bell className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" />
+                )}
+                <div className="flex-1">
+                  <h3 className="font-medium mb-1">Admin Notifications</h3>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    Enable push notifications to receive alerts for new payments, user registrations, and important updates
+                  </p>
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-xs font-medium">Status:</span>
+                    <span className={`text-xs px-2 py-1 rounded-full ${
+                      notificationStatus === 'granted' 
+                        ? 'bg-green-500/10 text-green-600 border border-green-500/20' 
+                        : notificationStatus === 'denied'
+                        ? 'bg-red-500/10 text-red-600 border border-red-500/20'
+                        : 'bg-orange-500/10 text-orange-600 border border-orange-500/20'
+                    }`}>
+                      {notificationStatus === 'granted' ? 'Enabled' : notificationStatus === 'denied' ? 'Blocked' : 'Not enabled'}
+                    </span>
+                  </div>
+                  {notificationStatus !== 'granted' && (
+                    <button
+                      onClick={handleEnableNotifications}
+                      disabled={enablingNotifications}
+                      className="px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-colors disabled:opacity-50 text-sm font-medium flex items-center gap-2"
+                    >
+                      <Bell className="w-4 h-4" />
+                      {enablingNotifications ? 'Enabling...' : 'Enable Notifications'}
+                    </button>
+                  )}
+                  {notificationStatus === 'granted' && (
+                    <p className="text-xs text-green-600 flex items-center gap-1.5">
+                      <CheckCircle className="w-3.5 h-3.5" />
+                      You'll receive push notifications for important updates
+                    </p>
+                  )}
+                </div>
+              </div>
+              {notificationStatus === 'denied' && (
+                <div className="mt-3 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                  <p className="text-xs text-red-600">
+                    <strong>Notifications blocked:</strong> To enable notifications, please allow them in your browser settings for this site.
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>
