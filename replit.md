@@ -87,6 +87,10 @@ Accessible via `/admin` route for authorized users:
 - Configured Vite to allow all hosts for Replit proxy support
 - Set up development workflow on port 5000
 - Installed all npm dependencies
+- **FIXED**: Notification constructor error - now using ServiceWorkerRegistration.showNotification() for proper PWA notifications
+- **FIXED**: Service worker registration - both PWA and Firebase Messaging service workers now register correctly
+- **NEW**: Added visible PWA install button in header that appears when app is installable
+- All dependencies installed and project fully functional
 
 ### PWA Enhancements (2025-10-19)
   - Added Firebase Cloud Messaging for push notifications
