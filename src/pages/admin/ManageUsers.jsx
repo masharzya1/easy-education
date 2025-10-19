@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
-import { Search, Shield, ShieldOff, Trash2, Ban } from "lucide-react"
+import { Search, Shield, ShieldOff, Trash2, Ban, BookOpen, X } from "lucide-react"
 import { collection, getDocs, doc, updateDoc, deleteDoc, query, where } from "firebase/firestore"
 import { db } from "../../lib/firebase"
 import { toast } from "../../hooks/use-toast"
@@ -17,10 +17,12 @@ export default function ManageUsers() {
   const [showRemoveModal, setShowRemoveModal] = useState(false)
   const [selectedUser, setSelectedUser] = useState(null)
   const [selectedCourse, setSelectedCourse] = useState("")
+  const [userEnrollments, setUserEnrollments] = useState({})
 
   useEffect(() => {
     fetchUsers()
     fetchCourses()
+    fetchUserEnrollments()
   }, [])
 
   useEffect(() => {
@@ -52,6 +54,38 @@ export default function ManageUsers() {
       setCourses(coursesData)
     } catch (error) {
       console.error("Error fetching courses:", error)
+    }
+  }
+
+  const fetchUserEnrollments = async () => {
+    try {
+      const paymentsSnapshot = await getDocs(
+        query(collection(db, "payments"), where("status", "==", "approved"))
+      )
+      
+      const enrollments = {}
+      paymentsSnapshot.docs.forEach((doc) => {
+        const payment = doc.data()
+        const userId = payment.userId
+        
+        if (!enrollments[userId]) {
+          enrollments[userId] = []
+        }
+        
+        payment.courses?.forEach((course) => {
+          if (!enrollments[userId].find(c => c.id === course.id)) {
+            enrollments[userId].push({
+              ...course,
+              paymentId: doc.id,
+              enrolledAt: payment.submittedAt,
+            })
+          }
+        })
+      })
+      
+      setUserEnrollments(enrollments)
+    } catch (error) {
+      console.error("Error fetching user enrollments:", error)
     }
   }
 
@@ -143,8 +177,8 @@ export default function ManageUsers() {
     }
   }
 
-  const handleRemoveFromCourse = async () => {
-    if (!selectedUser || !selectedCourse) {
+  const handleRemoveFromCourse = async (courseId) => {
+    if (!selectedUser || !courseId) {
       toast({
         variant: "warning",
         title: "Selection Required",
@@ -153,10 +187,10 @@ export default function ManageUsers() {
       return
     }
 
-    if (!confirm("Are you sure you want to remove this student from the course?")) return
+    if (!confirm(`Are you sure you want to remove ${selectedUser.name} from this course?`)) return
 
     try {
-      console.log("[v0] Removing user from course:", selectedUser.id, selectedCourse)
+      console.log("[v0] Removing user from course:", selectedUser.id, courseId)
 
       const paymentsQuery = query(
         collection(db, "payments"),
@@ -167,7 +201,7 @@ export default function ManageUsers() {
 
       for (const paymentDoc of paymentsSnapshot.docs) {
         const payment = paymentDoc.data()
-        const updatedCourses = payment.courses?.filter((c) => c.id !== selectedCourse) || []
+        const updatedCourses = payment.courses?.filter((c) => c.id !== courseId) || []
 
         await updateDoc(doc(db, "payments", paymentDoc.id), {
           courses: updatedCourses,
@@ -175,10 +209,12 @@ export default function ManageUsers() {
       }
 
       showSuccess("Student removed from course successfully!")
-      setShowRemoveModal(false)
-      setSelectedUser(null)
-      setSelectedCourse("")
-      fetchUsers()
+      await fetchUserEnrollments()
+      
+      if (!userEnrollments[selectedUser.id] || userEnrollments[selectedUser.id].length <= 1) {
+        setShowRemoveModal(false)
+        setSelectedUser(null)
+      }
     } catch (error) {
       console.error("[v0] Error removing student from course:", error)
       toast({
@@ -327,16 +363,21 @@ export default function ManageUsers() {
                             className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${user.banned ? "text-green-500" : "text-yellow-500"}`}
                           />
                         </button>
-                        <button
-                          onClick={() => {
-                            setSelectedUser(user)
-                            setShowRemoveModal(true)
-                          }}
-                          className="p-1.5 sm:p-2 hover:bg-muted rounded-lg transition-colors"
-                          title="Remove from Course"
-                        >
-                          <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500" />
-                        </button>
+                        {userEnrollments[user.id] && userEnrollments[user.id].length > 0 && (
+                          <button
+                            onClick={() => {
+                              setSelectedUser(user)
+                              setShowRemoveModal(true)
+                            }}
+                            className="p-1.5 sm:p-2 hover:bg-muted rounded-lg transition-colors relative"
+                            title={`Manage Courses (${userEnrollments[user.id].length})`}
+                          >
+                            <BookOpen className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-500" />
+                            <span className="absolute -top-1 -right-1 w-4 h-4 bg-blue-500 text-white text-[10px] rounded-full flex items-center justify-center font-bold">
+                              {userEnrollments[user.id].length}
+                            </span>
+                          </button>
+                        )}
                         <button
                           onClick={() => handleDeleteUser(user.id)}
                           className="p-1.5 sm:p-2 hover:bg-muted rounded-lg transition-colors"
@@ -360,51 +401,95 @@ export default function ManageUsers() {
         </div>
       )}
 
-      {showRemoveModal && (
+      {showRemoveModal && selectedUser && (
         <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-card border border-border rounded-xl p-6 max-w-md w-full"
+            className="bg-card border border-border rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
           >
-            <h2 className="text-2xl font-bold mb-4">Remove Student from Course</h2>
-            <p className="text-muted-foreground mb-6">
-              Select a course to remove <strong>{selectedUser?.name}</strong> from:
-            </p>
-
-            <div className="mb-6">
-              <label className="block text-sm font-medium mb-2">Select Course</label>
-              <select
-                value={selectedCourse}
-                onChange={(e) => setSelectedCourse(e.target.value)}
-                className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-              >
-                <option value="">Choose a course...</option>
-                {courses.map((course) => (
-                  <option key={course.id} value={course.id}>
-                    {course.title}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="flex gap-3">
-              <button
-                onClick={handleRemoveFromCourse}
-                disabled={!selectedCourse}
-                className="flex-1 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors disabled:opacity-50 font-medium"
-              >
-                Remove
-              </button>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-2xl font-bold">Manage Course Enrollments</h2>
               <button
                 onClick={() => {
                   setShowRemoveModal(false)
                   setSelectedUser(null)
-                  setSelectedCourse("")
                 }}
-                className="flex-1 py-2 bg-muted hover:bg-muted/80 rounded-lg transition-colors font-medium"
+                className="p-2 hover:bg-muted rounded-lg transition-colors"
               >
-                Cancel
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="mb-6 p-4 bg-muted/50 rounded-lg">
+              <div className="flex items-center gap-3">
+                {selectedUser.photoURL ? (
+                  <img
+                    src={selectedUser.photoURL}
+                    alt={selectedUser.name}
+                    className="w-12 h-12 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
+                    <span className="text-primary font-semibold text-lg">
+                      {selectedUser.name?.[0] || "U"}
+                    </span>
+                  </div>
+                )}
+                <div>
+                  <p className="font-semibold text-lg">{selectedUser.name}</p>
+                  <p className="text-sm text-muted-foreground">{selectedUser.email}</p>
+                </div>
+              </div>
+            </div>
+
+            {userEnrollments[selectedUser.id] && userEnrollments[selectedUser.id].length > 0 ? (
+              <div className="space-y-3">
+                <p className="text-sm text-muted-foreground mb-3">
+                  Enrolled in {userEnrollments[selectedUser.id].length} course(s)
+                </p>
+                {userEnrollments[selectedUser.id].map((enrollment) => (
+                  <div
+                    key={enrollment.id}
+                    className="flex items-center justify-between p-4 bg-background border border-border rounded-lg hover:border-primary/50 transition-colors"
+                  >
+                    <div className="flex-1">
+                      <h3 className="font-semibold mb-1">{enrollment.title}</h3>
+                      <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                        <span>Price: ৳{enrollment.price || 0}</span>
+                        {enrollment.enrolledAt && (
+                          <span>
+                            Enrolled: {new Date(enrollment.enrolledAt.seconds * 1000).toLocaleDateString()}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleRemoveFromCourse(enrollment.id)}
+                      className="ml-4 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors text-sm font-medium flex items-center gap-2"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Remove
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12 text-muted-foreground">
+                <BookOpen className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                <p>This user is not enrolled in any courses</p>
+              </div>
+            )}
+
+            <div className="mt-6 pt-4 border-t border-border">
+              <button
+                onClick={() => {
+                  setShowRemoveModal(false)
+                  setSelectedUser(null)
+                }}
+                className="w-full py-2 bg-muted hover:bg-muted/80 rounded-lg transition-colors font-medium"
+              >
+                Close
               </button>
             </div>
           </motion.div>
