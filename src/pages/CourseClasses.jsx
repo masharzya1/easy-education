@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useParams, useNavigate } from "react-router-dom"
+import { useParams, useNavigate, useLocation } from "react-router-dom"
 import { motion } from "framer-motion"
 import { Play, ArrowLeft, Lock, Clock, User, Archive } from "lucide-react"
 import { doc, getDoc, collection, query, where, getDocs } from "firebase/firestore"
@@ -11,13 +11,14 @@ import { useAuth } from "../contexts/AuthContext"
 export default function CourseClasses() {
   const { courseId, subject, chapter } = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
   const { currentUser, isAdmin } = useAuth()
   const [course, setCourse] = useState(null)
   const [classes, setClasses] = useState([])
   const [loading, setLoading] = useState(true)
   const [hasAccess, setHasAccess] = useState(false)
 
-  const isArchive = subject && decodeURIComponent(subject) === "archive"
+  const isArchive = location.pathname.includes("/archive/")
 
   useEffect(() => {
     fetchCourseData()
@@ -53,6 +54,19 @@ export default function CourseClasses() {
           id: doc.id,
           ...doc.data(),
         }))
+
+        const isClassArchived = (cls) => {
+          if (cls.isArchived === true) return true
+          const subjectIsArchive = Array.isArray(cls.subject) ? cls.subject.includes("archive") : cls.subject === "archive"
+          const chapterIsArchive = Array.isArray(cls.chapter) ? cls.chapter.includes("archive") : cls.chapter === "archive"
+          return subjectIsArchive || chapterIsArchive
+        }
+
+        if (isArchive) {
+          classesData = classesData.filter((cls) => isClassArchived(cls))
+        } else {
+          classesData = classesData.filter((cls) => !isClassArchived(cls))
+        }
 
         if (subject) {
           const decodedSubject = decodeURIComponent(subject)
@@ -117,7 +131,9 @@ export default function CourseClasses() {
         <div className="mb-8">
           <button
             onClick={() => {
-              if (subject && course?.type === "batch") {
+              if (isArchive && subject) {
+                navigate(`/course/${courseId}/archive/${subject}/chapters`)
+              } else if (subject && course?.type === "batch") {
                 navigate(`/course/${courseId}/subjects/${subject}/chapters`)
               } else if (subject && !course?.type) {
                 navigate(`/course/${courseId}/subjects/${subject}/chapters`)

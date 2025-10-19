@@ -53,9 +53,16 @@ export default function CourseSubjects() {
           ...doc.data(),
         }))
 
+        const isClassArchived = (cls) => {
+          if (cls.isArchived === true) return true
+          const subjectIsArchive = Array.isArray(cls.subject) ? cls.subject.includes("archive") : cls.subject === "archive"
+          const chapterIsArchive = Array.isArray(cls.chapter) ? cls.chapter.includes("archive") : cls.chapter === "archive"
+          return subjectIsArchive || chapterIsArchive
+        }
+
         const regularSubjects = []
         classesData
-          .filter((cls) => cls.subject)
+          .filter((cls) => !isClassArchived(cls) && cls.subject)
           .forEach((cls) => {
             if (Array.isArray(cls.subject)) {
               cls.subject.forEach(s => {
@@ -68,12 +75,7 @@ export default function CourseSubjects() {
         const uniqueSubjects = [...new Set(regularSubjects)].sort()
         setSubjects(uniqueSubjects)
 
-        const archiveClasses = classesData.filter((cls) => {
-          if (Array.isArray(cls.subject)) {
-            return cls.subject.includes("archive")
-          }
-          return cls.subject === "archive"
-        })
+        const archiveClasses = classesData.filter((cls) => isClassArchived(cls))
         setHasArchive(archiveClasses.length > 0)
       }
     } catch (error) {

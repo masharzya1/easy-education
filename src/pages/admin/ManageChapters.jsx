@@ -229,17 +229,10 @@ export default function ManageChapters() {
           <div className="flex gap-2">
             <button
               onClick={() => setShowBulkForm(!showBulkForm)}
-              className="flex items-center gap-2 px-3 py-2 bg-secondary hover:bg-secondary/90 text-secondary-foreground rounded-lg transition-colors text-sm"
+              className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-colors text-sm"
             >
               <Plus className="w-4 h-4" />
-              Bulk Create
-            </button>
-            <button
-              onClick={() => handleOpenModal()}
-              className="w-full sm:w-auto flex items-center justify-center gap-2 px-3 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-colors text-sm"
-            >
-              <Plus className="w-4 h-4" />
-              Add Chapter
+              Bulk Create Chapters
             </button>
           </div>
         </div>

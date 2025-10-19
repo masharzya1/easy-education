@@ -49,6 +49,8 @@ function App() {
                 <Route path="/course/:courseId/chapters" element={<CourseChapters />} />
                 <Route path="/course/:courseId/subjects" element={<CourseSubjects />} />
                 <Route path="/course/:courseId/subjects/:subject/chapters" element={<CourseChapters />} />
+                <Route path="/course/:courseId/archive/:subject/chapters" element={<CourseChapters />} />
+                <Route path="/course/:courseId/archive/:subject/:chapter/classes" element={<CourseClasses />} />
                 <Route path="/course/:courseId/classes/:chapter" element={<CourseClasses />} />
                 <Route path="/course/:courseId/classes/:subject/:chapter" element={<CourseClasses />} />
                 <Route path="/course/:courseId/watch/:classId" element={<CourseWatch />} />

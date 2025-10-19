@@ -181,17 +181,10 @@ export default function ManageSubjects() {
           <div className="flex gap-2">
             <button
               onClick={() => setShowBulkForm(!showBulkForm)}
-              className="flex items-center gap-2 px-4 py-2 bg-secondary hover:bg-secondary/90 text-secondary-foreground rounded-lg transition-colors text-sm"
-            >
-              <Plus className="w-4 h-4" />
-              Bulk Create
-            </button>
-            <button
-              onClick={() => handleOpenModal()}
               className="flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-colors"
             >
               <Plus className="w-5 h-5" />
-              Add Subject
+              Bulk Create Subjects
             </button>
           </div>
         </div>

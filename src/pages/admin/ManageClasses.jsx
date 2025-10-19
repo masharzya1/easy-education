@@ -107,6 +107,12 @@ export default function ManageClasses() {
           id: doc.id,
           ...doc.data(),
         }))
+        .filter((cls) => {
+          if (cls.isArchived === true) return false
+          const subjectIsArchive = Array.isArray(cls.subject) ? cls.subject.includes("archive") : cls.subject === "archive"
+          const chapterIsArchive = Array.isArray(cls.chapter) ? cls.chapter.includes("archive") : cls.chapter === "archive"
+          return !subjectIsArchive && !chapterIsArchive
+        })
         .sort((a, b) => a.order - b.order)
       setClasses(classesData)
     } catch (error) {
@@ -248,10 +254,21 @@ export default function ManageClasses() {
   const fetchArchiveClasses = async (courseId) => {
     if (!courseId) return
     try {
-      const classesQuery = query(collection(db, "classes"), where("courseId", "==", courseId))
+      const isClassArchived = (cls) => {
+        if (cls.isArchived === true) return true
+        const subjectIsArchive = Array.isArray(cls.subject) ? cls.subject.includes("archive") : cls.subject === "archive"
+        const chapterIsArchive = Array.isArray(cls.chapter) ? cls.chapter.includes("archive") : cls.chapter === "archive"
+        return subjectIsArchive || chapterIsArchive
+      }
+
+      const classesQuery = query(
+        collection(db, "classes"), 
+        where("courseId", "==", courseId)
+      )
       const classesSnapshot = await getDocs(classesQuery)
       const classesData = classesSnapshot.docs
         .map((doc) => ({ id: doc.id, ...doc.data() }))
+        .filter((cls) => !isClassArchived(cls))
         .sort((a, b) => a.order - b.order)
       setArchiveClasses(classesData)
     } catch (error) {
@@ -290,7 +307,9 @@ export default function ManageClasses() {
         const newClass = {
           ...sourceClass,
           courseId: selectedCourse,
-          subject: "archive",
+          isArchived: true,
+          archivedAt: new Date().toISOString(),
+          archivedFrom: archiveSourceCourse,
           order: currentMaxOrder + i + 1,
         }
         delete newClass.id
@@ -300,7 +319,7 @@ export default function ManageClasses() {
       await fetchClasses()
       setShowArchiveModal(false)
       setSelectedArchiveClasses([])
-      alert(`Successfully archived ${selectedArchiveClasses.length} class(es) to "archive" subject!`)
+      alert(`Successfully archived ${selectedArchiveClasses.length} class(es)!`)
     } catch (error) {
       console.error("Error archiving classes:", error)
       alert("Failed to archive classes. Please try again.")
