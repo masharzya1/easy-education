@@ -123,12 +123,25 @@ Accessible via `/admin` route for authorized users:
   - **NEW**: Visual notification status indicators (Enabled/Blocked/Not enabled)
   - Prepared infrastructure for email notifications via SendGrid
 
+### Archive & Bulk Creation Features (2025-10-19)
+  - **NEW**: Archive system for transferring classes from old courses (e.g., HSC26) to new courses (e.g., HSC27)
+  - **NEW**: Archive appears as a separate section in batch courses with archived classes
+  - **NEW**: Archive navigation with special orange-themed styling to distinguish from regular subjects
+  - **NEW**: Bulk subject creation - create multiple subjects at once for batch-type courses
+  - **NEW**: Bulk chapter creation - create multiple chapters at once with course/subject selection
+  - **NEW**: Course filtering in subject and chapter management pages
+  - **IMPROVED**: Smart filtering handles both array and string values for subjects/chapters
+  - **IMPROVED**: Archive classes properly display in course navigation flow
+  - **IMPROVED**: Consistent navigation breadcrumbs throughout archive and regular course flows
+
 ### Bug Fixes (2025-10-19)
   - Fixed batch course chapters not displaying after subject selection in CourseSubjects.jsx
   - Payment history now displays correctly with proper timestamp sorting
   - Fixed checkout completion page navigation with improved debugging logs
   - Fixed Notification constructor error - now uses ServiceWorkerRegistration.showNotification()
   - Fixed service worker registration conflicts - both PWA and FCM service workers register properly
+  - Fixed archive routing to properly filter and display archived classes
+  - Fixed subject/chapter extraction to handle both array and string field values
 
 ## Known Issues & Limitations
 
