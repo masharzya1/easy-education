@@ -7,6 +7,7 @@ import { Plus, X } from "lucide-react"
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, where } from "firebase/firestore"
 import { db } from "../../lib/firebase"
 import { uploadToImgbb } from "../../lib/imgbb"
+import { useExam } from "../../contexts/ExamContext"
 
 export default function ManageClasses() {
   const [courses, setCourses] = useState([])
@@ -39,10 +40,14 @@ export default function ManageClasses() {
   const [archiveSourceCourse, setArchiveSourceCourse] = useState("")
   const [archiveClasses, setArchiveClasses] = useState([])
   const [selectedArchiveClasses, setSelectedArchiveClasses] = useState([])
+  const [archiveExams, setArchiveExams] = useState([])
+  const [selectedArchiveExams, setSelectedArchiveExams] = useState([])
   const [archiveSubject, setArchiveSubject] = useState("")
   const [archiveChapter, setArchiveChapter] = useState("")
   const [archiveSubmitting, setArchiveSubmitting] = useState(false)
   const [teachers, setTeachers] = useState([])
+
+  const { getExamsByCourse } = useExam()
 
   useEffect(() => {
     fetchCourses()
@@ -60,8 +65,22 @@ export default function ManageClasses() {
   useEffect(() => {
     if (archiveSourceCourse) {
       fetchArchiveClasses(archiveSourceCourse)
+      fetchArchiveExams(archiveSourceCourse)
     }
   }, [archiveSourceCourse])
+
+  const fetchArchiveExams = async (courseId) => {
+    if (!courseId) return
+    try {
+      const examsData = await getExamsByCourse(courseId)
+      // Filter out already archived exams
+      const nonArchivedExams = examsData.filter(exam => !exam.isArchived)
+      setArchiveExams(nonArchivedExams)
+    } catch (error) {
+      console.error("Error fetching archive exams:", error)
+      setArchiveExams([])
+    }
+  }
 
   const fetchCourses = async () => {
     try {
@@ -281,13 +300,29 @@ export default function ManageClasses() {
     setArchiveSourceCourse("")
     setArchiveClasses([])
     setSelectedArchiveClasses([])
+    setArchiveExams([])
+    setSelectedArchiveExams([])
     setArchiveSubject("")
     setArchiveChapter("")
   }
 
+  const toggleArchiveExam = (examId) => {
+    setSelectedArchiveExams(prev => 
+      prev.includes(examId) ? prev.filter(id => id !== examId) : [...prev, examId]
+    )
+  }
+
+  const toggleAllArchiveExams = () => {
+    if (selectedArchiveExams.length === archiveExams.length && archiveExams.length > 0) {
+      setSelectedArchiveExams([])
+    } else {
+      setSelectedArchiveExams(archiveExams.map(e => e.id))
+    }
+  }
+
   const handleArchiveSubmit = async () => {
-    if (selectedArchiveClasses.length === 0) {
-      alert("Please select at least one class to archive")
+    if (selectedArchiveClasses.length === 0 && selectedArchiveExams.length === 0) {
+      alert("Please select at least one class or exam to archive")
       return
     }
 
@@ -298,31 +333,57 @@ export default function ManageClasses() {
 
     setArchiveSubmitting(true)
     try {
-      const currentMaxOrder = classes.length > 0 ? Math.max(...classes.map(c => c.order)) : -1
-      
-      for (let i = 0; i < selectedArchiveClasses.length; i++) {
-        const sourceClass = archiveClasses.find(c => c.id === selectedArchiveClasses[i])
-        if (!sourceClass) continue
+      let archivedCount = 0
 
-        const newClass = {
-          ...sourceClass,
-          courseId: selectedCourse,
-          isArchived: true,
-          archivedAt: new Date().toISOString(),
-          archivedFrom: archiveSourceCourse,
-          order: currentMaxOrder + i + 1,
+      // Archive classes
+      if (selectedArchiveClasses.length > 0) {
+        const currentMaxOrder = classes.length > 0 ? Math.max(...classes.map(c => c.order)) : -1
+        
+        for (let i = 0; i < selectedArchiveClasses.length; i++) {
+          const sourceClass = archiveClasses.find(c => c.id === selectedArchiveClasses[i])
+          if (!sourceClass) continue
+
+          const newClass = {
+            ...sourceClass,
+            courseId: selectedCourse,
+            isArchived: true,
+            archivedAt: new Date().toISOString(),
+            archivedFrom: archiveSourceCourse,
+            order: currentMaxOrder + i + 1,
+          }
+          delete newClass.id
+          await addDoc(collection(db, "classes"), newClass)
+          archivedCount++
         }
-        delete newClass.id
-        await addDoc(collection(db, "classes"), newClass)
+      }
+
+      // Archive exams
+      if (selectedArchiveExams.length > 0) {
+        for (const examId of selectedArchiveExams) {
+          const sourceExam = archiveExams.find(e => e.id === examId)
+          if (!sourceExam) continue
+
+          const newExam = {
+            ...sourceExam,
+            courseId: selectedCourse,
+            isArchived: true,
+            archivedAt: new Date().toISOString(),
+            archivedFrom: archiveSourceCourse,
+          }
+          delete newExam.id
+          await addDoc(collection(db, "exams"), newExam)
+          archivedCount++
+        }
       }
 
       await fetchClasses()
       setShowArchiveModal(false)
       setSelectedArchiveClasses([])
-      alert(`Successfully archived ${selectedArchiveClasses.length} class(es)!`)
+      setSelectedArchiveExams([])
+      alert(`Successfully archived ${archivedCount} item(s)!`)
     } catch (error) {
-      console.error("Error archiving classes:", error)
-      alert("Failed to archive classes. Please try again.")
+      console.error("Error archiving:", error)
+      alert("Failed to archive. Please try again.")
     } finally {
       setArchiveSubmitting(false)
     }

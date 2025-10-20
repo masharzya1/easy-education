@@ -19,7 +19,8 @@ export default function ManageExamQuestions() {
   const [questionType, setQuestionType] = useState("mcq")
   const [uploadingImage, setUploadingImage] = useState(false)
   const [showBulkModal, setShowBulkModal] = useState(false)
-  const [bulkData, setBulkData] = useState("")
+  const [bulkQuestionType, setBulkQuestionType] = useState("mcq")
+  const [questionTexts, setQuestionTexts] = useState("")
   const [bulkProcessing, setBulkProcessing] = useState(false)
 
   const [formData, setFormData] = useState({
@@ -249,100 +250,83 @@ export default function ManageExamQuestions() {
     })
   }
 
-  const handleBulkUpload = async () => {
-    if (!bulkData.trim()) {
+  const handleBulkCreate = async () => {
+    if (!questionTexts.trim()) {
       toast({
         variant: "error",
-        title: "Empty Data",
-        description: "Please provide JSON data for bulk upload",
+        title: "Question Texts Required",
+        description: "Please enter at least one question",
       })
       return
     }
 
     setBulkProcessing(true)
     try {
-      const questionsArray = JSON.parse(bulkData)
-      
-      if (!Array.isArray(questionsArray)) {
-        throw new Error("Data must be an array of questions")
+      // Parse question texts - support both newline and numbered list
+      const texts = questionTexts
+        .split(/\n+/)
+        .map(text => text.trim().replace(/^\d+[\.\)]\s*/, '')) // Remove numbering like "1. " or "1) "
+        .filter(text => text.length > 0)
+
+      if (texts.length === 0) {
+        toast({
+          variant: "error",
+          title: "No Valid Questions",
+          description: "Please enter valid question texts",
+        })
+        setBulkProcessing(false)
+        return
       }
 
       let successCount = 0
       let errorCount = 0
+      const errors = []
 
-      for (const q of questionsArray) {
+      for (const text of texts) {
         try {
           const questionData = {
             examId,
-            type: q.type || "mcq",
-            questionText: q.questionText || "",
-            questionImageUrl: q.questionImageUrl || "",
-            marks: q.marks || 1,
+            type: bulkQuestionType,
+            questionText: text,
+            questionImageUrl: "",
+            marks: 1,
           }
 
-          if (q.type === "mcq" || !q.type) {
-            questionData.options = q.options || ["", "", "", ""]
-            questionData.optionImages = q.optionImages || ["", "", "", ""]
-            questionData.correctAnswer = q.correctAnswer || 0
+          if (bulkQuestionType === "mcq") {
+            // Create default MCQ options with first option as correct
+            questionData.options = ["Option A", "Option B", "Option C", "Option D"]
+            questionData.optionImages = ["", "", "", ""]
+            questionData.correctAnswer = 0
           }
 
           await addQuestion(questionData)
           successCount++
         } catch (err) {
-          console.error("Error adding question:", err)
+          console.error(`Error adding question:`, err)
           errorCount++
+          errors.push(text.substring(0, 30) + "...")
         }
       }
 
       toast({
-        title: "Bulk Upload Complete",
+        title: "Bulk Creation Complete",
         description: `Successfully added ${successCount} question(s). ${errorCount > 0 ? `Failed: ${errorCount}` : ""}`,
       })
 
       setShowBulkModal(false)
-      setBulkData("")
+      setBulkQuestionType("mcq")
+      setQuestionTexts("")
       fetchData()
     } catch (error) {
-      console.error("Error parsing bulk data:", error)
+      console.error("Error in bulk creation:", error)
       toast({
         variant: "error",
-        title: "Invalid JSON",
-        description: "Please check your JSON format and try again",
+        title: "Error",
+        description: "Failed to create questions",
       })
     } finally {
       setBulkProcessing(false)
     }
-  }
-
-  const downloadTemplate = () => {
-    const template = [
-      {
-        type: "mcq",
-        questionText: "What is 2+2?",
-        questionImageUrl: "",
-        options: ["3", "4", "5", "6"],
-        optionImages: ["", "", "", ""],
-        correctAnswer: 1,
-        marks: 1
-      },
-      {
-        type: "cq",
-        questionText: "Explain your answer",
-        questionImageUrl: "",
-        marks: 5
-      }
-    ]
-    
-    const dataStr = JSON.stringify(template, null, 2)
-    const dataBlob = new Blob([dataStr], { type: "application/json" })
-    const url = URL.createObjectURL(dataBlob)
-    const link = document.createElement("a")
-    link.href = url
-    link.download = "questions_template.json"
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    URL.revokeObjectURL(url)
   }
 
   if (loading) {
@@ -375,8 +359,8 @@ export default function ManageExamQuestions() {
             onClick={() => setShowBulkModal(true)}
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
-            <Upload className="w-5 h-5" />
-            <span className="hidden sm:inline">Bulk Upload</span>
+            <Plus className="w-5 h-5" />
+            <span className="hidden sm:inline">Quick Add Multiple</span>
           </button>
           <button
             onClick={() => {
@@ -711,37 +695,78 @@ export default function ManageExamQuestions() {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-card border border-border rounded-lg p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto"
+            className="bg-card border border-border rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto"
           >
-            <h2 className="text-2xl font-bold mb-4">Bulk Upload Questions</h2>
+            <h2 className="text-2xl font-bold mb-4">Quick Add Multiple Questions</h2>
             <p className="text-sm text-muted-foreground mb-4">
-              Upload multiple questions at once using JSON format. Download the template to see the correct format.
+              Select question type and enter questions to add multiple at once.
             </p>
 
-            <button
-              onClick={downloadTemplate}
-              className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors mb-4"
-            >
-              <Download className="w-4 h-4" />
-              Download Template
-            </button>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">Question Type *</label>
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setBulkQuestionType("mcq")}
+                    className={`flex-1 py-2 px-4 rounded-lg border-2 transition-all ${
+                      bulkQuestionType === "mcq"
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-border hover:border-primary/50"
+                    }`}
+                    disabled={bulkProcessing}
+                  >
+                    <Type className="w-4 h-4 mx-auto mb-1" />
+                    <span className="block font-medium text-sm">MCQ (Multiple Choice)</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setBulkQuestionType("cq")}
+                    className={`flex-1 py-2 px-4 rounded-lg border-2 transition-all ${
+                      bulkQuestionType === "cq"
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-border hover:border-primary/50"
+                    }`}
+                    disabled={bulkProcessing}
+                  >
+                    <Type className="w-4 h-4 mx-auto mb-1" />
+                    <span className="block font-medium text-sm">CQ (Creative)</span>
+                  </button>
+                </div>
+              </div>
 
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-2">Paste JSON Data</label>
-              <textarea
-                value={bulkData}
-                onChange={(e) => setBulkData(e.target.value)}
-                className="w-full px-3 py-2 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary font-mono text-sm"
-                rows={15}
-                placeholder='[\n  {\n    "type": "mcq",\n    "questionText": "What is 2+2?",\n    "options": ["3", "4", "5", "6"],\n    "correctAnswer": 1,\n    "marks": 1\n  }\n]'
-              />
+              <div>
+                <label className="block text-sm font-medium mb-2">Question Texts *</label>
+                <p className="text-xs text-muted-foreground mb-2">
+                  Enter one question per line. Numbering is optional.
+                </p>
+                <textarea
+                  value={questionTexts}
+                  onChange={(e) => setQuestionTexts(e.target.value)}
+                  className="w-full px-3 py-2 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  rows={12}
+                  placeholder={bulkQuestionType === "mcq" 
+                    ? "What is 2+2?\nWhat is the capital of Bangladesh?\n1) Which planet is closest to the sun?\n2) What is photosynthesis?"
+                    : "Explain the process of photosynthesis in detail.\nDescribe the causes of climate change.\n1. Write an essay on the importance of education."}
+                  disabled={bulkProcessing}
+                />
+              </div>
+
+              <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                <p className="text-xs text-blue-700 dark:text-blue-300">
+                  <strong>Note:</strong> {bulkQuestionType === "mcq" 
+                    ? "MCQ questions will be created with default options (A, B, C, D) with option A as correct. You can edit each question later to set proper options and correct answers."
+                    : "Creative questions will be created with 1 mark each. You can edit individual questions later to set specific marks."}
+                </p>
+              </div>
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex gap-2 mt-6">
               <button
                 onClick={() => {
                   setShowBulkModal(false)
-                  setBulkData("")
+                  setBulkQuestionType("mcq")
+                  setQuestionTexts("")
                 }}
                 className="flex-1 px-4 py-2 bg-muted hover:bg-muted/80 rounded-lg transition-colors"
                 disabled={bulkProcessing}
@@ -749,11 +774,11 @@ export default function ManageExamQuestions() {
                 Cancel
               </button>
               <button
-                onClick={handleBulkUpload}
+                onClick={handleBulkCreate}
                 className="flex-1 px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg transition-colors disabled:opacity-50"
                 disabled={bulkProcessing}
               >
-                {bulkProcessing ? "Processing..." : "Upload Questions"}
+                {bulkProcessing ? "Creating..." : "Create Questions"}
               </button>
             </div>
           </motion.div>

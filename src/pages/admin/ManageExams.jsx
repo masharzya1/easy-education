@@ -14,7 +14,8 @@ export default function ManageExams() {
   const [editingExam, setEditingExam] = useState(null)
   const [courses, setCourses] = useState([])
   const [showBulkModal, setShowBulkModal] = useState(false)
-  const [bulkData, setBulkData] = useState("")
+  const [bulkCourseId, setBulkCourseId] = useState("")
+  const [examNames, setExamNames] = useState("")
   const [bulkProcessing, setBulkProcessing] = useState(false)
   const [formData, setFormData] = useState({
     title: "",
@@ -144,91 +145,83 @@ export default function ManageExams() {
     }
   }
 
-  const handleBulkUpload = async () => {
-    if (!bulkData.trim()) {
+  const handleBulkCreate = async () => {
+    if (!bulkCourseId) {
       toast({
         variant: "error",
-        title: "Empty Data",
-        description: "Please provide JSON data for bulk upload",
+        title: "Course Required",
+        description: "Please select a course first",
+      })
+      return
+    }
+
+    if (!examNames.trim()) {
+      toast({
+        variant: "error",
+        title: "Exam Names Required",
+        description: "Please enter at least one exam name",
       })
       return
     }
 
     setBulkProcessing(true)
     try {
-      const examsArray = JSON.parse(bulkData)
-      
-      if (!Array.isArray(examsArray)) {
-        throw new Error("Data must be an array of exams")
+      // Parse exam names - support both newline and comma separation
+      const names = examNames
+        .split(/[\n,]+/)
+        .map(name => name.trim())
+        .filter(name => name.length > 0)
+
+      if (names.length === 0) {
+        toast({
+          variant: "error",
+          title: "No Valid Names",
+          description: "Please enter valid exam names",
+        })
+        setBulkProcessing(false)
+        return
       }
 
       let successCount = 0
       let errorCount = 0
+      const errors = []
 
-      for (const exam of examsArray) {
+      for (const name of names) {
         try {
           await createExam({
-            title: exam.title || "Untitled Exam",
-            description: exam.description || "",
-            courseId: exam.courseId || "",
-            duration: exam.duration || 60,
-            passingScore: exam.passingScore || 70,
+            title: name,
+            description: "",
+            courseId: bulkCourseId,
+            duration: 60,
+            passingScore: 70,
           })
           successCount++
         } catch (err) {
-          console.error("Error creating exam:", err)
+          console.error(`Error creating exam "${name}":`, err)
           errorCount++
+          errors.push(name)
         }
       }
 
       toast({
-        title: "Bulk Upload Complete",
-        description: `Successfully created ${successCount} exam(s). ${errorCount > 0 ? `Failed: ${errorCount}` : ""}`,
+        title: "Bulk Creation Complete",
+        description: `Successfully created ${successCount} exam(s). ${errorCount > 0 ? `Failed: ${errorCount} (${errors.join(", ")})` : ""}`,
       })
 
       setShowBulkModal(false)
-      setBulkData("")
+      setBulkCourseId("")
+      setExamNames("")
       fetchData()
     } catch (error) {
-      console.error("Error parsing bulk data:", error)
+      console.error("Error in bulk creation:", error)
       toast({
         variant: "error",
-        title: "Invalid JSON",
-        description: "Please check your JSON format and try again",
+        title: "Error",
+        description: "Failed to create exams",
       })
     } finally {
       setBulkProcessing(false)
     }
-  }
-
-  const downloadTemplate = () => {
-    const template = [
-      {
-        title: "Math Final Exam",
-        description: "Comprehensive math test covering all chapters",
-        courseId: "YOUR_COURSE_ID_HERE",
-        duration: 90,
-        passingScore: 70
-      },
-      {
-        title: "Science Quiz",
-        description: "Quick quiz on basic science concepts",
-        courseId: "YOUR_COURSE_ID_HERE",
-        duration: 30,
-        passingScore: 60
-      }
-    ]
-    
-    const dataStr = JSON.stringify(template, null, 2)
-    const dataBlob = new Blob([dataStr], { type: "application/json" })
-    const url = URL.createObjectURL(dataBlob)
-    const link = document.createElement("a")
-    link.href = url
-    link.download = "exams_template.json"
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    URL.revokeObjectURL(url)
   }
 
   if (loading) {
@@ -251,8 +244,8 @@ export default function ManageExams() {
             onClick={() => setShowBulkModal(true)}
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
-            <Upload className="w-5 h-5" />
-            <span className="hidden sm:inline">Bulk Upload</span>
+            <Plus className="w-5 h-5" />
+            <span className="hidden sm:inline">Quick Add Multiple</span>
           </button>
           <button
             onClick={() => {
@@ -440,43 +433,59 @@ export default function ManageExams() {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-card border border-border rounded-lg p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto"
+            className="bg-card border border-border rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto"
           >
-            <h2 className="text-2xl font-bold mb-4">Bulk Upload Exams</h2>
+            <h2 className="text-2xl font-bold mb-4">Quick Add Multiple Exams</h2>
             <p className="text-sm text-muted-foreground mb-4">
-              Create multiple exams at once using JSON format. Download the template to see the correct format.
+              Select a course and enter exam names to create multiple exams at once.
             </p>
 
-            <button
-              onClick={downloadTemplate}
-              className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors mb-4"
-            >
-              <Download className="w-4 h-4" />
-              Download Template
-            </button>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">Select Course *</label>
+                <select
+                  value={bulkCourseId}
+                  onChange={(e) => setBulkCourseId(e.target.value)}
+                  className="w-full px-3 py-2 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  disabled={bulkProcessing}
+                >
+                  <option value="">Choose a course</option>
+                  {courses.map((course) => (
+                    <option key={course.id} value={course.id}>
+                      {course.title}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-            <div className="mb-4 bg-yellow-50 dark:bg-yellow-950/30 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
-              <p className="text-sm text-yellow-700 dark:text-yellow-300">
-                <strong>Note:</strong> Replace "YOUR_COURSE_ID_HERE" with actual course IDs from your system.
-              </p>
+              <div>
+                <label className="block text-sm font-medium mb-2">Exam Names *</label>
+                <p className="text-xs text-muted-foreground mb-2">
+                  Enter one exam name per line, or separate with commas
+                </p>
+                <textarea
+                  value={examNames}
+                  onChange={(e) => setExamNames(e.target.value)}
+                  className="w-full px-3 py-2 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  rows={10}
+                  placeholder="Chapter 1 Exam&#10;Midterm Exam&#10;Final Exam&#10;or&#10;Quiz 1, Quiz 2, Quiz 3"
+                  disabled={bulkProcessing}
+                />
+              </div>
+
+              <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                <p className="text-xs text-blue-700 dark:text-blue-300">
+                  <strong>Note:</strong> All exams will be created with default settings (Duration: 60 min, Passing Score: 70%). You can edit individual exams later.
+                </p>
+              </div>
             </div>
 
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-2">Paste JSON Data</label>
-              <textarea
-                value={bulkData}
-                onChange={(e) => setBulkData(e.target.value)}
-                className="w-full px-3 py-2 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary font-mono text-sm"
-                rows={15}
-                placeholder='[\n  {\n    "title": "Math Final Exam",\n    "description": "Comprehensive test",\n    "courseId": "course_id_here",\n    "duration": 90,\n    "passingScore": 70\n  }\n]'
-              />
-            </div>
-
-            <div className="flex gap-2">
+            <div className="flex gap-2 mt-6">
               <button
                 onClick={() => {
                   setShowBulkModal(false)
-                  setBulkData("")
+                  setBulkCourseId("")
+                  setExamNames("")
                 }}
                 className="flex-1 px-4 py-2 bg-muted hover:bg-muted/80 rounded-lg transition-colors"
                 disabled={bulkProcessing}
@@ -484,11 +493,11 @@ export default function ManageExams() {
                 Cancel
               </button>
               <button
-                onClick={handleBulkUpload}
+                onClick={handleBulkCreate}
                 className="flex-1 px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg transition-colors disabled:opacity-50"
                 disabled={bulkProcessing}
               >
-                {bulkProcessing ? "Processing..." : "Upload Exams"}
+                {bulkProcessing ? "Creating..." : "Create Exams"}
               </button>
             </div>
           </motion.div>
