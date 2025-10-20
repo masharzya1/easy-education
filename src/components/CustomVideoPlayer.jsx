@@ -758,6 +758,44 @@ export default function CustomVideoPlayer({ url, onNext, onPrevious }) {
           opacity: 0 !important;
         }
         
+        /* Enhanced blocking for pause/play/seek states */
+        .html5-video-player:hover .ytp-gradient-top,
+        .html5-video-player.ytp-autohide .ytp-gradient-top,
+        .html5-video-player.ytp-autohide .ytp-chrome-top,
+        .html5-video-player.paused-mode .ytp-gradient-top,
+        .html5-video-player.playing-mode .ytp-gradient-top,
+        .html5-video-player.seeking .ytp-gradient-top,
+        .ytp-pause-overlay,
+        .ytp-pause-overlay *,
+        .ytp-info-panel-preview,
+        div[class*="pause-overlay"],
+        div[class*="info-panel"] {
+          display: none !important;
+          visibility: hidden !important;
+          opacity: 0 !important;
+          pointer-events: none !important;
+          position: absolute !important;
+          left: -10000px !important;
+        }
+        
+        /* Block YouTube logo and title during all states */
+        .ytp-chrome-top-buttons,
+        .ytp-cards-teaser,
+        .ytp-cards-teaser-label,
+        .ytp-preview,
+        .ytp-cued-thumbnail-overlay,
+        .ytp-ce-element,
+        .ytp-ce-covering-overlay,
+        .ytp-ce-covering-image,
+        .html5-video-player .ytp-title-beacon,
+        .html5-video-player .ytp-title-channel-logo {
+          display: none !important;
+          visibility: hidden !important;
+          opacity: 0 !important;
+          width: 0 !important;
+          height: 0 !important;
+        }
+        
         /* Improved seek bar */
         .seek-bar-container {
           position: relative;

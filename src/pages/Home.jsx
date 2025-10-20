@@ -309,8 +309,16 @@ export default function Home() {
               className="text-5xl md:text-7xl lg:text-8xl font-bold mb-6 text-balance leading-[1.1] tracking-tight"
             >
               Transform Your Future with{" "}
-              <span className="bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 bg-clip-text text-transparent animate-gradient">
-                World-Class Learning
+              <span className="relative inline-block">
+                <span className="bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 bg-clip-text text-transparent animate-gradient">
+                  World-Class Learning
+                </span>
+                <motion.span
+                  initial={{ scaleX: 0 }}
+                  animate={{ scaleX: 1 }}
+                  transition={{ delay: 0.5, duration: 0.8 }}
+                  className="absolute -bottom-2 left-0 right-0 h-1 bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 rounded-full origin-left"
+                />
               </span>
             </motion.h1>
 
