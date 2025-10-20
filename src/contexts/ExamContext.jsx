@@ -41,6 +41,17 @@ export function ExamProvider({ children }) {
     }
   }
 
+  const getExamsByCourse = async (courseId) => {
+    try {
+      const q = query(collection(db, "exams"), where("courseId", "==", courseId))
+      const snapshot = await getDocs(q)
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+    } catch (error) {
+      console.error("Error fetching exams:", error)
+      return []
+    }
+  }
+
   const getExamById = async (examId) => {
     try {
       const docRef = doc(db, "exams", examId)
@@ -124,13 +135,26 @@ export function ExamProvider({ children }) {
     }
   }
 
-  const submitExamResult = async (userId, examId, answers, score) => {
+  const submitExamResult = async (userId, examId, answers, score, questions) => {
     try {
+      const wrongAnswers = questions.filter((q, index) => {
+        const userAnswer = answers[q.id]
+        return userAnswer !== q.correctAnswer
+      }).map(q => ({
+        questionId: q.id,
+        questionText: q.questionText,
+        correctAnswer: q.correctAnswer,
+        userAnswer: answers[q.id],
+        options: q.options
+      }))
+
       await addDoc(collection(db, "examResults"), {
         userId,
         examId,
         answers,
         score,
+        wrongAnswers,
+        totalQuestions: questions.length,
         submittedAt: serverTimestamp(),
       })
     } catch (error) {
@@ -157,11 +181,26 @@ export function ExamProvider({ children }) {
     }
   }
 
+  const getUserExamResults = async (userId) => {
+    try {
+      const q = query(
+        collection(db, "examResults"),
+        where("userId", "==", userId)
+      )
+      const snapshot = await getDocs(q)
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+    } catch (error) {
+      console.error("Error fetching user exam results:", error)
+      return []
+    }
+  }
+
   const value = {
     exams,
     loading,
     createExam,
     getExamsByClass,
+    getExamsByCourse,
     getExamById,
     updateExam,
     deleteExam,
@@ -171,6 +210,7 @@ export function ExamProvider({ children }) {
     deleteQuestion,
     submitExamResult,
     getExamResult,
+    getUserExamResults,
   }
 
   return <ExamContext.Provider value={value}>{children}</ExamContext.Provider>

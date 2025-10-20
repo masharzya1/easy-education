@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
-import { Plus, Edit, Trash2, FileQuestion, BookOpen, GraduationCap } from "lucide-react"
+import { Plus, Edit, Trash2, FileQuestion, BookOpen, GraduationCap, Upload } from "lucide-react"
 import { collection, getDocs, query, orderBy, doc, getDoc } from "firebase/firestore"
 import { db } from "../../lib/firebase"
 import { useExam } from "../../contexts/ExamContext"
@@ -12,11 +12,11 @@ export default function ManageExams() {
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [editingExam, setEditingExam] = useState(null)
-  const [classes, setClasses] = useState([])
+  const [courses, setCourses] = useState([])
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    classId: "",
+    courseId: "",
     duration: 60,
     passingScore: 70,
   })
@@ -35,10 +35,10 @@ export default function ManageExams() {
         examsSnapshot.docs.map(async (examDoc) => {
           const exam = { id: examDoc.id, ...examDoc.data() }
           
-          if (exam.classId) {
-            const classDoc = await getDoc(doc(db, "classes", exam.classId))
-            if (classDoc.exists()) {
-              exam.className = classDoc.data().title
+          if (exam.courseId) {
+            const courseDoc = await getDoc(doc(db, "courses", exam.courseId))
+            if (courseDoc.exists()) {
+              exam.courseName = courseDoc.data().title
             }
           }
           
@@ -47,9 +47,9 @@ export default function ManageExams() {
       )
       setExams(examsData)
 
-      const classesSnapshot = await getDocs(collection(db, "classes"))
-      const classesData = classesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
-      setClasses(classesData)
+      const coursesSnapshot = await getDocs(collection(db, "courses"))
+      const coursesData = coursesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+      setCourses(coursesData)
     } catch (error) {
       console.error("Error fetching data:", error)
       toast({
@@ -65,7 +65,7 @@ export default function ManageExams() {
   const handleSubmit = async (e) => {
     e.preventDefault()
 
-    if (!formData.title || !formData.classId) {
+    if (!formData.title || !formData.courseId) {
       toast({
         variant: "error",
         title: "Missing Fields",
@@ -94,7 +94,7 @@ export default function ManageExams() {
       setFormData({
         title: "",
         description: "",
-        classId: "",
+        courseId: "",
         duration: 60,
         passingScore: 70,
       })
@@ -114,7 +114,7 @@ export default function ManageExams() {
     setFormData({
       title: exam.title,
       description: exam.description || "",
-      classId: exam.classId,
+      courseId: exam.courseId,
       duration: exam.duration || 60,
       passingScore: exam.passingScore || 70,
     })
@@ -154,7 +154,7 @@ export default function ManageExams() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold">Manage Exams</h1>
-          <p className="text-muted-foreground mt-1">Create and manage exams for classes</p>
+          <p className="text-muted-foreground mt-1">Create and manage exams for courses</p>
         </div>
         <button
           onClick={() => {
@@ -162,7 +162,7 @@ export default function ManageExams() {
             setFormData({
               title: "",
               description: "",
-              classId: "",
+              courseId: "",
               duration: 60,
               passingScore: 70,
             })
@@ -205,7 +205,7 @@ export default function ManageExams() {
               <div className="space-y-2 mb-4 text-sm">
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <BookOpen className="w-4 h-4" />
-                  <span>{exam.className || "Unknown Class"}</span>
+                  <span>{exam.courseName || "Unknown Course"}</span>
                 </div>
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <GraduationCap className="w-4 h-4" />
@@ -244,7 +244,7 @@ export default function ManageExams() {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-card border border-border rounded-lg p-6 w-full max-w-md"
+            className="bg-card border border-border rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto"
           >
             <h2 className="text-2xl font-bold mb-4">{editingExam ? "Edit Exam" : "Create New Exam"}</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -255,7 +255,7 @@ export default function ManageExams() {
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   className="w-full px-3 py-2 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                  placeholder="e.g., Vector 1 Final Exam"
+                  placeholder="e.g., Physics Chapter 1 Exam"
                   required
                 />
               </div>
@@ -272,17 +272,17 @@ export default function ManageExams() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">Class *</label>
+                <label className="block text-sm font-medium mb-2">Course *</label>
                 <select
-                  value={formData.classId}
-                  onChange={(e) => setFormData({ ...formData, classId: e.target.value })}
+                  value={formData.courseId}
+                  onChange={(e) => setFormData({ ...formData, courseId: e.target.value })}
                   className="w-full px-3 py-2 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                   required
                 >
-                  <option value="">Select a class</option>
-                  {classes.map((cls) => (
-                    <option key={cls.id} value={cls.id}>
-                      {cls.title}
+                  <option value="">Select a course</option>
+                  {courses.map((course) => (
+                    <option key={course.id} value={course.id}>
+                      {course.title}
                     </option>
                   ))}
                 </select>

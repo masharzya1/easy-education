@@ -3,18 +3,21 @@
 import { useState, useEffect } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { motion } from "framer-motion"
-import { BookOpen, ArrowLeft, Lock, Archive } from "lucide-react"
+import { BookOpen, ArrowLeft, Lock, Archive, FileQuestion } from "lucide-react"
 import { doc, getDoc, collection, query, where, getDocs } from "firebase/firestore"
 import { db } from "../lib/firebase"
 import { useAuth } from "../contexts/AuthContext"
+import { useExam } from "../contexts/ExamContext"
 
 export default function CourseSubjects() {
   const { courseId } = useParams()
   const navigate = useNavigate()
   const { currentUser, isAdmin } = useAuth()
+  const { getExamsByCourse } = useExam()
   const [course, setCourse] = useState(null)
   const [subjects, setSubjects] = useState([])
   const [hasArchive, setHasArchive] = useState(false)
+  const [exams, setExams] = useState([])
   const [loading, setLoading] = useState(true)
   const [hasAccess, setHasAccess] = useState(false)
 
@@ -77,6 +80,9 @@ export default function CourseSubjects() {
 
         const archiveClasses = classesData.filter((cls) => isClassArchived(cls))
         setHasArchive(archiveClasses.length > 0)
+
+        const examsData = await getExamsByCourse(courseId)
+        setExams(examsData)
       }
     } catch (error) {
       console.error("Error fetching course data:", error)
@@ -129,12 +135,31 @@ export default function CourseSubjects() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {exams.length > 0 && (
+            <motion.button
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0 }}
+              onClick={() => navigate(`/course/${courseId}/exams`)}
+              className="group relative bg-gradient-to-br from-primary/10 to-secondary/10 border border-primary/30 rounded-xl p-6 hover:border-primary/50 hover:shadow-lg transition-all duration-300 text-left"
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-secondary/5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="relative">
+                <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
+                  <FileQuestion className="w-6 h-6 text-primary" />
+                </div>
+                <h3 className="text-xl font-bold mb-2 text-primary group-hover:text-primary/80 transition-colors">Exams</h3>
+                <p className="text-sm text-muted-foreground">{exams.length} exam{exams.length !== 1 ? "s" : ""} available</p>
+              </div>
+            </motion.button>
+          )}
+
           {subjects.map((subject, index) => (
             <motion.button
               key={subject}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
+              transition={{ delay: (index + (exams.length > 0 ? 1 : 0)) * 0.1 }}
               onClick={() => {
                 navigate(`/course/${courseId}/subjects/${encodeURIComponent(subject)}/chapters`)
               }}
@@ -155,7 +180,7 @@ export default function CourseSubjects() {
             <motion.button
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: subjects.length * 0.1 }}
+              transition={{ delay: (subjects.length + (exams.length > 0 ? 1 : 0)) * 0.1 }}
               onClick={() => {
                 navigate(`/course/${courseId}/subjects/archive/chapters`)
               }}

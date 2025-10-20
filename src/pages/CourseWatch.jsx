@@ -39,8 +39,9 @@ export default function CourseWatch() {
   const [hasAccess, setHasAccess] = useState(false)
   const [toast, setToast] = useState(null)
   const [exams, setExams] = useState([])
+  const [showExams, setShowExams] = useState(false)
   
-  const { getExamsByClass } = useExam()
+  const { getExamsByCourse } = useExam()
 
   useEffect(() => {
     fetchCourseData()
@@ -49,14 +50,19 @@ export default function CourseWatch() {
   useEffect(() => {
     if (currentClass && currentUser) {
       checkUserReaction()
-      fetchExamsForClass()
     }
   }, [currentClass, currentUser])
+
+  useEffect(() => {
+    if (courseId) {
+      fetchExamsForCourse()
+    }
+  }, [courseId])
   
-  const fetchExamsForClass = async () => {
-    if (!currentClass) return
+  const fetchExamsForCourse = async () => {
+    if (!courseId) return
     try {
-      const examsData = await getExamsByClass(currentClass.id)
+      const examsData = await getExamsByCourse(courseId)
       setExams(examsData)
     } catch (error) {
       console.error("Error fetching exams:", error)
@@ -506,12 +512,20 @@ export default function CourseWatch() {
 
             {exams.length > 0 && (
               <div className="bg-card border border-border rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-lg">
-                <h2 className="text-lg sm:text-xl font-bold mb-4 flex items-center gap-2">
-                  <FileQuestion className="w-5 h-5 text-primary" />
-                  Exams for this class
-                </h2>
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-lg sm:text-xl font-bold flex items-center gap-2">
+                    <FileQuestion className="w-5 h-5 text-primary" />
+                    Course Exams
+                  </h2>
+                  <Link
+                    to={`/course/${courseId}/exams`}
+                    className="text-sm text-primary hover:underline"
+                  >
+                    View All
+                  </Link>
+                </div>
                 <div className="space-y-4">
-                  {exams.map((exam) => (
+                  {exams.slice(0, 3).map((exam) => (
                     <ExamCard key={exam.id} exam={exam} classId={currentClass?.id} />
                   ))}
                 </div>

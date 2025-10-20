@@ -30,6 +30,8 @@ import CheckoutComplete from "./pages/CheckoutComplete"
 import PaymentHistory from "./pages/PaymentHistory"
 import MyCourses from "./pages/MyCourses"
 import ExamView from "./pages/ExamView"
+import ExamList from "./pages/ExamList"
+import Analytics from "./pages/Analytics"
 
 console.log("[v0] App.jsx loaded")
 
@@ -97,10 +99,26 @@ function App() {
                   }
                 />
                 <Route
+                  path="/course/:courseId/exams"
+                  element={
+                    <ProtectedRoute>
+                      <ExamList />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
                   path="/exam/:examId"
                   element={
                     <ProtectedRoute>
                       <ExamView />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/analytics"
+                  element={
+                    <ProtectedRoute>
+                      <Analytics />
                     </ProtectedRoute>
                   }
                 />

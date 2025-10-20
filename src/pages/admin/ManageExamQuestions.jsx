@@ -49,9 +49,11 @@ export default function ManageExamQuestions() {
         return
       }
 
-      const classDoc = await getDoc(doc(db, "classes", examData.classId))
-      if (classDoc.exists()) {
-        examData.className = classDoc.data().title
+      if (examData.courseId) {
+        const courseDoc = await getDoc(doc(db, "courses", examData.courseId))
+        if (courseDoc.exists()) {
+          examData.courseName = courseDoc.data().title
+        }
       }
 
       setExam(examData)
@@ -266,7 +268,7 @@ export default function ManageExamQuestions() {
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold">{exam?.title}</h1>
           <p className="text-muted-foreground mt-1">
-            {exam?.className} • {questions.length} question{questions.length !== 1 ? "s" : ""}
+            {exam?.courseName} • {questions.length} question{questions.length !== 1 ? "s" : ""}
           </p>
         </div>
         <button

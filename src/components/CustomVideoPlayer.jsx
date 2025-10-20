@@ -12,6 +12,8 @@ import {
   AlertCircle,
   ChevronLeft,
   ChevronRight,
+  SkipForward,
+  SkipBack,
 } from "lucide-react"
 
 export default function CustomVideoPlayer({ url, onNext, onPrevious }) {
@@ -309,8 +311,43 @@ export default function CustomVideoPlayer({ url, onNext, onPrevious }) {
     }
   }, [isYouTube])
 
-  const handleDoubleTap = (side) => {
-    handlePlayPause()
+  const skipForward = () => {
+    const newTime = Math.min(currentTime + 10, duration)
+    if (isYouTube && playerRef.current) {
+      playerRef.current.seekTo(newTime, true)
+    } else if (videoRef.current) {
+      videoRef.current.currentTime = newTime
+    }
+    setCurrentTime(newTime)
+  }
+
+  const skipBackward = () => {
+    const newTime = Math.max(currentTime - 10, 0)
+    if (isYouTube && playerRef.current) {
+      playerRef.current.seekTo(newTime, true)
+    } else if (videoRef.current) {
+      videoRef.current.currentTime = newTime
+    }
+    setCurrentTime(newTime)
+  }
+
+  const handleSingleTap = (action) => {
+    const now = Date.now()
+    const timeSinceLastTap = now - lastTapRef.current.time
+
+    if (timeSinceLastTap < 300) {
+      lastTapRef.current = { time: 0, side: null }
+      return
+    }
+
+    setTimeout(() => {
+      if (lastTapRef.current.time !== 0) {
+        action()
+        lastTapRef.current = { time: 0, side: null }
+      }
+    }, 300)
+    
+    lastTapRef.current = { time: now, side: null }
   }
 
   const resetControlsTimeout = () => {
@@ -738,9 +775,26 @@ export default function CustomVideoPlayer({ url, onNext, onPrevious }) {
         )}
 
         <div className="absolute inset-0 flex z-30 pointer-events-none">
-          <div className="w-1/3 h-full pointer-events-auto cursor-pointer" onClick={handlePlayPause} />
-          <div className="w-1/3 h-full pointer-events-auto cursor-pointer" onClick={handlePlayPause} />
-          <div className="w-1/3 h-full pointer-events-auto cursor-pointer" onClick={handlePlayPause} />
+          <div 
+            className="w-1/3 h-full pointer-events-auto cursor-pointer" 
+            onClick={() => handleSingleTap(handlePlayPause)}
+            onDoubleClick={(e) => {
+              e.preventDefault()
+              skipBackward()
+            }}
+          />
+          <div 
+            className="w-1/3 h-full pointer-events-auto cursor-pointer" 
+            onClick={() => handleSingleTap(handlePlayPause)}
+          />
+          <div 
+            className="w-1/3 h-full pointer-events-auto cursor-pointer" 
+            onClick={() => handleSingleTap(handlePlayPause)}
+            onDoubleClick={(e) => {
+              e.preventDefault()
+              skipForward()
+            }}
+          />
         </div>
 
         {loading && (
@@ -815,6 +869,28 @@ export default function CustomVideoPlayer({ url, onNext, onPrevious }) {
                   <Play className="w-6 h-6 sm:w-7 sm:h-7 fill-current" />
                 )}
               </motion.button>
+
+              <div className="flex items-center gap-2 border-l border-white/20 pl-3">
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={skipBackward}
+                  className="text-white hover:text-red-500 transition-colors p-1"
+                  aria-label="Skip backward 10 seconds"
+                >
+                  <SkipBack className="w-5 h-5 sm:w-6 sm:h-6" />
+                </motion.button>
+
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={skipForward}
+                  className="text-white hover:text-red-500 transition-colors p-1"
+                  aria-label="Skip forward 10 seconds"
+                >
+                  <SkipForward className="w-5 h-5 sm:w-6 sm:h-6" />
+                </motion.button>
+              </div>
 
               <div className="flex items-center gap-2 border-l border-white/20 pl-3">
                 <motion.button
