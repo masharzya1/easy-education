@@ -188,7 +188,7 @@ export default function CourseCard({ course, onAddToCart, showProgress = false }
               <div className="mb-3">
                 <ProgressBar progress={progress} showLabel={true} showPercentage={true} animated={false} />
               </div>
-              <Link to={`/course/${course.id}/chapters`} onClick={(e) => e.stopPropagation()}>
+              <Link to={course.type === "batch" ? `/course/${course.id}/subjects` : `/course/${course.id}/chapters`} onClick={(e) => e.stopPropagation()}>
                 <button className="w-full px-4 py-2 bg-green-500/20 text-green-700 dark:text-green-400 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm font-medium hover:bg-green-500/30">
                   <Check className="w-4 h-4" />
                   Continue Course
