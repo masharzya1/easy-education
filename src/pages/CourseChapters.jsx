@@ -198,7 +198,7 @@ export default function CourseChapters() {
             {isArchive ? (
               <span className="flex items-center gap-2">
                 <Archive className="w-4 h-4 text-orange-500" />
-                Archive - Select a subject to view archived chapters
+                Archive
               </span>
             ) : subject ? (
               `Subject: ${decodeURIComponent(subject)} - Select a chapter`
