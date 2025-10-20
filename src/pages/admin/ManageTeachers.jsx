@@ -5,6 +5,7 @@ import { Plus, Edit, Trash2, Loader2, User, Image as ImageIcon } from "lucide-re
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from "firebase/firestore"
 import { db } from "../../lib/firebase"
 import { uploadImageToImgBB } from "../../lib/imgbb"
+import ConfirmDialog from "../../components/ConfirmDialog"
 
 export default function ManageTeachers() {
   const [teachers, setTeachers] = useState([])
@@ -12,6 +13,7 @@ export default function ManageTeachers() {
   const [showForm, setShowForm] = useState(false)
   const [editingTeacher, setEditingTeacher] = useState(null)
   const [uploading, setUploading] = useState(false)
+  const [confirmDialog, setConfirmDialog] = useState({ isOpen: false, title: "", message: "", onConfirm: () => {} })
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -31,6 +33,11 @@ export default function ManageTeachers() {
       setTeachers(data)
     } catch (error) {
       console.error("Error fetching teachers:", error)
+      toast({
+        variant: "error",
+        title: "Error",
+        description: "Failed to load teachers"
+      })
     } finally {
       setLoading(false)
     }
@@ -44,9 +51,17 @@ export default function ManageTeachers() {
     try {
       const imageUrl = await uploadImageToImgBB(file)
       setFormData({ ...formData, imageURL: imageUrl })
+      toast({
+        title: "Success",
+        description: "Image uploaded successfully!"
+      })
     } catch (error) {
       console.error("Error uploading image:", error)
-      alert("Failed to upload image")
+      toast({
+        variant: "error",
+        title: "Upload Failed",
+        description: "Failed to upload image. Please try again."
+      })
     } finally {
       setUploading(false)
     }
@@ -62,10 +77,18 @@ export default function ManageTeachers() {
           ...formData,
           updatedAt: serverTimestamp(),
         })
+        toast({
+          title: "Success",
+          description: "Teacher updated successfully!"
+        })
       } else {
         await addDoc(collection(db, "teachers"), {
           ...formData,
           createdAt: serverTimestamp(),
+        })
+        toast({
+          title: "Success",
+          description: "Teacher created successfully!"
         })
       }
 
@@ -75,7 +98,11 @@ export default function ManageTeachers() {
       fetchTeachers()
     } catch (error) {
       console.error("Error saving teacher:", error)
-      alert("Failed to save teacher")
+      toast({
+        variant: "error",
+        title: "Error",
+        description: "Failed to save teacher. Please try again."
+      })
     } finally {
       setLoading(false)
     }
@@ -94,15 +121,29 @@ export default function ManageTeachers() {
   }
 
   const handleDelete = async (id) => {
-    if (!confirm("Are you sure you want to delete this teacher?")) return
-
-    try {
-      await deleteDoc(doc(db, "teachers", id))
-      fetchTeachers()
-    } catch (error) {
-      console.error("Error deleting teacher:", error)
-      alert("Failed to delete teacher")
-    }
+    setConfirmDialog({
+      isOpen: true,
+      title: "Delete Teacher",
+      message: "Are you sure you want to delete this teacher? This action cannot be undone.",
+      variant: "destructive",
+      onConfirm: async () => {
+        try {
+          await deleteDoc(doc(db, "teachers", id))
+          toast({
+            title: "Success",
+            description: "Teacher deleted successfully"
+          })
+          fetchTeachers()
+        } catch (error) {
+          console.error("Error deleting teacher:", error)
+          toast({
+            variant: "error",
+            title: "Error",
+            description: "Failed to delete teacher. Please try again."
+          })
+        }
+      }
+    })
   }
 
   return (
@@ -282,6 +323,15 @@ export default function ManageTeachers() {
           <p className="text-muted-foreground">No teachers yet. Add your first teacher!</p>
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        onClose={() => setConfirmDialog({ ...confirmDialog, isOpen: false })}
+        onConfirm={confirmDialog.onConfirm}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        variant={confirmDialog.variant}
+      />
     </div>
   )
 }

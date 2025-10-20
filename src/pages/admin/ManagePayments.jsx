@@ -7,11 +7,13 @@ import { CreditCard, Check, X, Clock } from "lucide-react"
 import { collection, getDocs, updateDoc, doc, setDoc, serverTimestamp, query, orderBy } from "firebase/firestore"
 import { db } from "../../lib/firebase"
 import { sendPaymentConfirmationEmail } from "../../lib/email"
+import ConfirmDialog from "../../components/ConfirmDialog"
 
 export default function ManagePayments() {
   const [payments, setPayments] = useState([])
   const [loading, setLoading] = useState(true)
-  const [filter, setFilter] = useState("all") // all, pending, approved, rejected
+  const [filter, setFilter] = useState("all")
+  const [confirmDialog, setConfirmDialog] = useState({ isOpen: false, title: "", message: "", onConfirm: () => {} })
 
   useEffect(() => {
     fetchPayments()
@@ -31,59 +33,85 @@ export default function ManagePayments() {
   }
 
   const handleApprove = async (payment) => {
-    if (!confirm("Approve this payment and grant course access?")) return
+    setConfirmDialog({
+      isOpen: true,
+      title: "Approve Payment",
+      message: "Approve this payment and grant course access?",
+      variant: "default",
+      onConfirm: async () => {
+        try {
+          await updateDoc(doc(db, "payments", payment.id), {
+            status: "approved",
+            approvedAt: serverTimestamp(),
+          })
 
-    try {
-      await updateDoc(doc(db, "payments", payment.id), {
-        status: "approved",
-        approvedAt: serverTimestamp(),
-      })
+          for (const course of payment.courses) {
+            await setDoc(doc(db, "userCourses", `${payment.userId}_${course.id}`), {
+              userId: payment.userId,
+              courseId: course.id,
+              enrolledAt: serverTimestamp(),
+              progress: 0,
+            })
+          }
 
-      for (const course of payment.courses) {
-        await setDoc(doc(db, "userCourses", `${payment.userId}_${course.id}`), {
-          userId: payment.userId,
-          courseId: course.id,
-          enrolledAt: serverTimestamp(),
-          progress: 0,
-        })
+          try {
+            await sendPaymentConfirmationEmail(payment.userEmail, payment.userName, {
+              courses: payment.courses,
+              subtotal: payment.subtotal,
+              discount: payment.discount || 0,
+              finalAmount: payment.finalAmount,
+              transactionId: payment.transactionId
+            })
+          } catch (error) {
+            console.error('Email notification failed:', error)
+          }
+
+          toast({
+            title: "Success",
+            description: "Payment approved and course access granted!",
+          })
+          fetchPayments()
+        } catch (error) {
+          console.error("Error approving payment:", error)
+          toast({
+            variant: "error",
+            title: "Error",
+            description: "Failed to approve payment. Check console for details.",
+          })
+        }
       }
-
-      try {
-        await sendPaymentConfirmationEmail(payment.userEmail, payment.userName, {
-          courses: payment.courses,
-          subtotal: payment.subtotal,
-          discount: payment.discount || 0,
-          finalAmount: payment.finalAmount,
-          transactionId: payment.transactionId
-        })
-      } catch (error) {
-        console.error('Email notification failed:', error)
-      }
-
-      alert("Payment approved and course access granted!")
-      fetchPayments()
-    } catch (error) {
-      console.error("Error approving payment:", error)
-      alert("Failed to approve payment. Check console for details.")
-    }
+    })
   }
 
   const handleReject = async (paymentId) => {
-    const reason = prompt("Enter rejection reason (optional):")
+    setConfirmDialog({
+      isOpen: true,
+      title: "Reject Payment",
+      message: "Are you sure you want to reject this payment? This action cannot be undone.",
+      variant: "destructive",
+      onConfirm: async () => {
+        try {
+          await updateDoc(doc(db, "payments", paymentId), {
+            status: "rejected",
+            rejectedAt: serverTimestamp(),
+            rejectionReason: "Payment verification failed",
+          })
 
-    try {
-      await updateDoc(doc(db, "payments", paymentId), {
-        status: "rejected",
-        rejectedAt: serverTimestamp(),
-        rejectionReason: reason || "Payment verification failed",
-      })
-
-      alert("Payment rejected successfully!")
-      fetchPayments()
-    } catch (error) {
-      console.error("Error rejecting payment:", error)
-      alert("Failed to reject payment")
-    }
+          toast({
+            title: "Success",
+            description: "Payment rejected successfully!",
+          })
+          fetchPayments()
+        } catch (error) {
+          console.error("Error rejecting payment:", error)
+          toast({
+            variant: "error",
+            title: "Error",
+            description: "Failed to reject payment",
+          })
+        }
+      }
+    })
   }
 
   const filteredPayments = payments.filter((payment) => {
@@ -238,6 +266,15 @@ export default function ManagePayments() {
           <p className="text-sm sm:text-base text-muted-foreground">No {filter !== "all" && filter} payments found</p>
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        onClose={() => setConfirmDialog({ ...confirmDialog, isOpen: false })}
+        onConfirm={confirmDialog.onConfirm}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        variant={confirmDialog.variant}
+      />
     </div>
   )
 }

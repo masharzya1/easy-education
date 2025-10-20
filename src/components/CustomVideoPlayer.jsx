@@ -614,7 +614,7 @@ export default function CustomVideoPlayer({ url, onNext, onPrevious }) {
   return (
     <>
       <style jsx>{`
-        /* Maximum YouTube branding blocking */
+        /* Maximum YouTube branding blocking - Enhanced */
         #yt-player iframe {
           pointer-events: none !important;
         }
@@ -622,7 +622,7 @@ export default function CustomVideoPlayer({ url, onNext, onPrevious }) {
           pointer-events: auto;
         }
         
-        /* Hide all YouTube UI elements */
+        /* Aggressive YouTube UI blocking - All variations */
         .ytp-watermark,
         .ytp-chrome-top-buttons,
         .ytp-show-cards-title,
@@ -688,6 +688,35 @@ export default function CustomVideoPlayer({ url, onNext, onPrevious }) {
         .ytp-settings-menu,
         .ytp-panel,
         .ytp-menuitem,
+        .ytp-iv-video-content,
+        .ytp-cards-teaser-box,
+        .ytp-flyout,
+        .ytp-share-panel,
+        .ytp-overflow-panel,
+        .ytp-time-display,
+        .ytp-volume-panel,
+        .ytp-autonav-toggle-button,
+        .ytp-fullerscreen-edu-button,
+        .ytp-miniplayer-button,
+        .ytp-size-button,
+        .ytp-subtitles-button,
+        .ytp-ad-overlay-container,
+        .ytp-ad-text-overlay,
+        .ytp-ad-player-overlay,
+        .ytp-ad-overlay-close-button,
+        .ytp-related-on-error-overlay,
+        .ytp-upnext,
+        .ytp-impression-link-content,
+        .ytp-paid-content-overlay-text,
+        .ytp-sb-unsubscribe,
+        .ytp-sb-subscribe,
+        .ytp-videowall-still-info-content,
+        .ytp-cards-button-icon-default,
+        .ytp-multicam-menu,
+        .ytp-remote-button,
+        .ytp-youtube-logo,
+        .branding-img,
+        .branding-img-container,
         [class*="branding"],
         [class*="watermark"],
         [class*="youtube"] {
@@ -699,11 +728,34 @@ export default function CustomVideoPlayer({ url, onNext, onPrevious }) {
           height: 0 !important;
           position: absolute !important;
           left: -9999px !important;
-          z-index: -1 !important;
+          z-index: -9999 !important;
+          overflow: hidden !important;
         }
         
-        iframe[src*="youtube.com"] {
+        /* Block all iframes from accepting pointer events */
+        iframe[src*="youtube.com"],
+        iframe[src*="youtube-nocookie.com"] {
           pointer-events: none !important;
+        }
+        
+        /* Additional blocking for any remaining UI elements */
+        .html5-video-player .ytp-chrome-bottom,
+        .html5-video-player .ytp-chrome-top,
+        .html5-video-player .ytp-gradient-top,
+        .html5-video-player .ytp-gradient-bottom {
+          display: none !important;
+          visibility: hidden !important;
+          opacity: 0 !important;
+          pointer-events: none !important;
+        }
+        
+        /* Force hide on any state */
+        .ytp-pause-overlay-container,
+        .ytp-scroll-min,
+        .ytp-player-content.ytp-iv-player-content {
+          display: none !important;
+          visibility: hidden !important;
+          opacity: 0 !important;
         }
         
         /* Improved seek bar */
@@ -827,12 +879,16 @@ export default function CustomVideoPlayer({ url, onNext, onPrevious }) {
             <div id="yt-player" className="absolute inset-0 w-full h-full" />
             {!hasStartedPlaying && <div className="absolute inset-0 bg-black z-10 pointer-events-none" />}
             <div className="absolute inset-0 pointer-events-none z-[5] bg-transparent" />
+            <div className="absolute inset-0 pointer-events-none z-[10] bg-transparent" />
             <div className="absolute inset-0 pointer-events-none z-[15] bg-transparent" />
             <div className="absolute inset-0 pointer-events-none z-[20] bg-transparent" />
             <div className="absolute inset-0 pointer-events-none z-[25] bg-transparent" />
-            <div className="absolute inset-0 pointer-events-none z-[30] bg-transparent" />
-            <div className="absolute inset-0 pointer-events-none z-[35] bg-transparent" />
+            <div className="absolute inset-0 pointer-events-none z-[28] bg-transparent" />
+            <div className="absolute top-0 right-0 w-32 h-20 pointer-events-none z-[35] bg-transparent" />
+            <div className="absolute top-0 left-0 right-0 h-16 pointer-events-none z-[35] bg-transparent" />
+            <div className="absolute bottom-12 left-0 right-0 h-24 pointer-events-none z-[35] bg-transparent" />
             <div className="absolute inset-0 pointer-events-none z-[40] bg-transparent" />
+            <div className="absolute inset-0 pointer-events-none z-[45] bg-transparent" />
           </>
         ) : (
           <video

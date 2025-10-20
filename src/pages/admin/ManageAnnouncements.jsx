@@ -14,6 +14,7 @@ import {
 } from "firebase/firestore"
 import { db } from "../../lib/firebase"
 import { uploadToImgbb } from "../../lib/imgbb"
+import ConfirmDialog from "../../components/ConfirmDialog"
 
 export default function ManageAnnouncements() {
   const [announcements, setAnnouncements] = useState([])
@@ -21,6 +22,7 @@ export default function ManageAnnouncements() {
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState(null)
   const [uploading, setUploading] = useState(false)
+  const [confirmDialog, setConfirmDialog] = useState({ isOpen: false, title: "", message: "", onConfirm: () => {} })
   
   const [formData, setFormData] = useState({
     title: "",
@@ -53,10 +55,17 @@ export default function ManageAnnouncements() {
     try {
       const imageUrl = await uploadToImgbb(file)
       setFormData({ ...formData, imageURL: imageUrl })
-      alert("Image uploaded successfully!")
+      toast({
+        title: "Success",
+        description: "Image uploaded successfully!",
+      })
     } catch (error) {
       console.error("Error uploading image:", error)
-      alert("Failed to upload image: " + error.message)
+      toast({
+        variant: "error",
+        title: "Upload Failed",
+        description: "Failed to upload image: " + error.message,
+      })
     } finally {
       setUploading(false)
     }
@@ -74,10 +83,16 @@ export default function ManageAnnouncements() {
 
       if (editingId) {
         await updateDoc(doc(db, "announcements", editingId), announcementData)
-        alert("Announcement updated successfully!")
+        toast({
+          title: "Success",
+          description: "Announcement updated successfully!",
+        })
       } else {
         await addDoc(collection(db, "announcements"), announcementData)
-        alert("Announcement created successfully!")
+        toast({
+          title: "Success",
+          description: "Announcement created successfully!",
+        })
       }
 
       setShowForm(false)
@@ -86,7 +101,11 @@ export default function ManageAnnouncements() {
       fetchAnnouncements()
     } catch (error) {
       console.error("Error saving announcement:", error)
-      alert("Failed to save announcement")
+      toast({
+        variant: "error",
+        title: "Error",
+        description: "Failed to save announcement",
+      })
     }
   }
 
@@ -102,16 +121,29 @@ export default function ManageAnnouncements() {
   }
 
   const handleDelete = async (id) => {
-    if (!confirm("Are you sure you want to delete this announcement?")) return
-
-    try {
-      await deleteDoc(doc(db, "announcements", id))
-      alert("Announcement deleted successfully!")
-      fetchAnnouncements()
-    } catch (error) {
-      console.error("Error deleting announcement:", error)
-      alert("Failed to delete announcement")
-    }
+    setConfirmDialog({
+      isOpen: true,
+      title: "Delete Announcement",
+      message: "Are you sure you want to delete this announcement? This action cannot be undone.",
+      variant: "destructive",
+      onConfirm: async () => {
+        try {
+          await deleteDoc(doc(db, "announcements", id))
+          toast({
+            title: "Success",
+            description: "Announcement deleted successfully!",
+          })
+          fetchAnnouncements()
+        } catch (error) {
+          console.error("Error deleting announcement:", error)
+          toast({
+            variant: "error",
+            title: "Error",
+            description: "Failed to delete announcement",
+          })
+        }
+      }
+    })
   }
 
   const resetForm = () => {
@@ -266,6 +298,15 @@ export default function ManageAnnouncements() {
           <p className="text-muted-foreground">No announcements yet. Create your first one!</p>
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        onClose={() => setConfirmDialog({ ...confirmDialog, isOpen: false })}
+        onConfirm={confirmDialog.onConfirm}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        variant={confirmDialog.variant}
+      />
     </div>
   )
 }

@@ -6,6 +6,7 @@ import { Plus, Edit, Trash2, X } from "lucide-react"
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from "firebase/firestore"
 import { db } from "../../lib/firebase"
 import { toast } from "../../hooks/use-toast"
+import ConfirmDialog from "../../components/ConfirmDialog"
 
 export default function ManageChapters() {
   const [courses, setCourses] = useState([])
@@ -19,6 +20,7 @@ export default function ManageChapters() {
   const [selectedSubject, setSelectedSubject] = useState("")
   const [bulkChapters, setBulkChapters] = useState([{ title: "", description: "" }])
   const [submitting, setSubmitting] = useState(false)
+  const [confirmDialog, setConfirmDialog] = useState({ isOpen: false, title: "", message: "", onConfirm: () => {} })
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -121,24 +123,30 @@ export default function ManageChapters() {
   }
 
   const handleDelete = async (id) => {
-    if (!confirm("Are you sure you want to delete this chapter?")) return
-
-    try {
-      await deleteDoc(doc(db, "chapters", id))
-      await fetchChapters()
-      toast({
-        variant: "success",
-        title: "Chapter Deleted",
-        description: "Chapter deleted successfully!",
-      })
-    } catch (error) {
-      console.error("Error deleting chapter:", error)
-      toast({
-        variant: "error",
-        title: "Deletion Failed",
-        description: "Failed to delete chapter",
-      })
-    }
+    setConfirmDialog({
+      isOpen: true,
+      title: "Delete Chapter",
+      message: "Are you sure you want to delete this chapter? This action cannot be undone.",
+      variant: "destructive",
+      onConfirm: async () => {
+        try {
+          await deleteDoc(doc(db, "chapters", id))
+          await fetchChapters()
+          toast({
+            variant: "success",
+            title: "Chapter Deleted",
+            description: "Chapter deleted successfully!",
+          })
+        } catch (error) {
+          console.error("Error deleting chapter:", error)
+          toast({
+            variant: "error",
+            title: "Deletion Failed",
+            description: "Failed to delete chapter",
+          })
+        }
+      }
+    })
   }
 
   const handleBulkAdd = (index) => {
@@ -161,13 +169,21 @@ export default function ManageChapters() {
     e.preventDefault()
     
     if (!selectedCourse) {
-      alert("Please select a course first!")
+      toast({
+        variant: "error",
+        title: "Course Required",
+        description: "Please select a course first!",
+      })
       return
     }
 
     const validChapters = bulkChapters.filter(c => c.title.trim() !== "")
     if (validChapters.length === 0) {
-      alert("Please add at least one chapter with a title!")
+      toast({
+        variant: "error",
+        title: "Chapters Required",
+        description: "Please add at least one chapter with a title!",
+      })
       return
     }
 
@@ -238,7 +254,6 @@ export default function ManageChapters() {
         </div>
       </motion.div>
 
-      {/* Bulk Create Form */}
       {showBulkForm && (
         <motion.div 
           initial={{ opacity: 0, y: -20 }} 
@@ -363,7 +378,6 @@ export default function ManageChapters() {
         </motion.div>
       )}
 
-      {/* Course Filter */}
       <div className="mb-6">
         <label className="block text-sm font-medium mb-2">Filter by Course (optional)</label>
         <select
@@ -380,7 +394,6 @@ export default function ManageChapters() {
         </select>
       </div>
 
-      {/* Chapters Grid */}
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
           {[...Array(6)].map((_, i) => (
@@ -438,7 +451,6 @@ export default function ManageChapters() {
         </div>
       )}
 
-      {/* Edit Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <motion.div
@@ -496,6 +508,15 @@ export default function ManageChapters() {
           </motion.div>
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        onClose={() => setConfirmDialog({ ...confirmDialog, isOpen: false })}
+        onConfirm={confirmDialog.onConfirm}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        variant={confirmDialog.variant}
+      />
     </div>
   )
 }

@@ -1,11 +1,12 @@
 import { useState, useEffect, useMemo } from "react"
 import { useNavigate, Link } from "react-router-dom"
 import { motion } from "framer-motion"
-import { TrendingUp, Award, FileQuestion, CheckCircle, XCircle, Clock, BookOpen, ArrowLeft, AlertCircle } from "lucide-react"
+import { TrendingUp, Award, FileQuestion, CheckCircle, XCircle, Clock, BookOpen, ArrowLeft, AlertCircle, Filter, Calendar } from "lucide-react"
 import { doc, getDoc } from "firebase/firestore"
 import { db } from "../lib/firebase"
 import { useAuth } from "../contexts/AuthContext"
 import { useExam } from "../contexts/ExamContext"
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from "recharts"
 
 export default function Analytics() {
   const navigate = useNavigate()
@@ -14,6 +15,8 @@ export default function Analytics() {
   const [examResults, setExamResults] = useState([])
   const [loading, setLoading] = useState(true)
   const [selectedResult, setSelectedResult] = useState(null)
+  const [courseFilter, setCourseFilter] = useState("all")
+  const [dateFilter, setDateFilter] = useState("all")
 
   useEffect(() => {
     if (!currentUser) {
@@ -60,15 +63,52 @@ export default function Analytics() {
     }
   }
 
+  const uniqueCourses = useMemo(() => {
+    const courses = new Set()
+    examResults.forEach(result => {
+      if (result.courseName) courses.add(result.courseName)
+    })
+    return Array.from(courses)
+  }, [examResults])
+
+  const filteredResults = useMemo(() => {
+    let filtered = [...examResults]
+
+    if (courseFilter !== "all") {
+      filtered = filtered.filter(result => result.courseName === courseFilter)
+    }
+
+    if (dateFilter !== "all") {
+      const now = new Date()
+      filtered = filtered.filter(result => {
+        const examDate = result.submittedAt?.toDate?.() || new Date()
+        const daysDiff = Math.floor((now - examDate) / (1000 * 60 * 60 * 24))
+        
+        switch (dateFilter) {
+          case "week":
+            return daysDiff <= 7
+          case "month":
+            return daysDiff <= 30
+          case "3months":
+            return daysDiff <= 90
+          default:
+            return true
+        }
+      })
+    }
+
+    return filtered
+  }, [examResults, courseFilter, dateFilter])
+
   const stats = useMemo(() => {
-    if (examResults.length === 0) {
+    if (filteredResults.length === 0) {
       return { totalExams: 0, averageScore: 0, passedExams: 0, passRate: 0 }
     }
 
-    const totalExams = examResults.length
-    const totalScore = examResults.reduce((sum, result) => sum + (result.score || 0), 0)
+    const totalExams = filteredResults.length
+    const totalScore = filteredResults.reduce((sum, result) => sum + (result.score || 0), 0)
     const averageScore = totalScore / totalExams
-    const passedExams = examResults.filter(result => result.score >= (result.passingScore || 70)).length
+    const passedExams = filteredResults.filter(result => result.score >= (result.passingScore || 70)).length
     const passRate = (passedExams / totalExams) * 100
 
     return { 
@@ -77,7 +117,19 @@ export default function Analytics() {
       passedExams, 
       passRate: Math.round(passRate) 
     }
-  }, [examResults])
+  }, [filteredResults])
+
+  const chartData = useMemo(() => {
+    return filteredResults
+      .map(result => ({
+        date: result.submittedAt?.toDate?.().toLocaleDateString() || "N/A",
+        score: result.score || 0,
+        exam: result.examTitle?.substring(0, 20) || "Exam",
+        timestamp: result.submittedAt?.seconds || 0
+      }))
+      .sort((a, b) => a.timestamp - b.timestamp)
+      .slice(-10)
+  }, [filteredResults])
 
   if (loading) {
     return (
@@ -115,20 +167,67 @@ export default function Analytics() {
           </div>
         ) : (
           <>
+            {/* Filters */}
+            <div className="bg-card border border-border rounded-xl p-6 mb-8">
+              <div className="flex items-center gap-2 mb-4">
+                <Filter className="w-5 h-5 text-primary" />
+                <h2 className="text-lg font-bold">Filters</h2>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Filter by Course</label>
+                  <select
+                    value={courseFilter}
+                    onChange={(e) => setCourseFilter(e.target.value)}
+                    className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  >
+                    <option value="all">All Courses</option>
+                    {uniqueCourses.map(course => (
+                      <option key={course} value={course}>{course}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Filter by Date</label>
+                  <select
+                    value={dateFilter}
+                    onChange={(e) => setDateFilter(e.target.value)}
+                    className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  >
+                    <option value="all">All Time</option>
+                    <option value="week">Last 7 Days</option>
+                    <option value="month">Last 30 Days</option>
+                    <option value="3months">Last 3 Months</option>
+                  </select>
+                </div>
+              </div>
+              {(courseFilter !== "all" || dateFilter !== "all") && (
+                <button
+                  onClick={() => {
+                    setCourseFilter("all")
+                    setDateFilter("all")
+                  }}
+                  className="mt-4 text-sm text-primary hover:text-primary/80 transition-colors"
+                >
+                  Clear all filters
+                </button>
+              )}
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0 }}
-                className="bg-card border border-border rounded-xl p-6"
+                className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-500/20 rounded-xl p-6 hover:shadow-lg transition-shadow"
               >
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-12 h-12 bg-blue-500/10 rounded-lg flex items-center justify-center">
+                  <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center">
                     <FileQuestion className="w-6 h-6 text-blue-600" />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Total Exams</p>
-                    <p className="text-2xl font-bold">{stats.totalExams}</p>
+                    <p className="text-sm text-muted-foreground font-medium">Total Exams</p>
+                    <p className="text-3xl font-bold text-blue-600">{stats.totalExams}</p>
                   </div>
                 </div>
               </motion.div>
@@ -137,15 +236,15 @@ export default function Analytics() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
-                className="bg-card border border-border rounded-xl p-6"
+                className="bg-gradient-to-br from-green-500/10 to-green-600/5 border border-green-500/20 rounded-xl p-6 hover:shadow-lg transition-shadow"
               >
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-12 h-12 bg-green-500/10 rounded-lg flex items-center justify-center">
+                  <div className="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center">
                     <TrendingUp className="w-6 h-6 text-green-600" />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Average Score</p>
-                    <p className="text-2xl font-bold">{stats.averageScore}%</p>
+                    <p className="text-sm text-muted-foreground font-medium">Average Score</p>
+                    <p className="text-3xl font-bold text-green-600">{stats.averageScore}%</p>
                   </div>
                 </div>
               </motion.div>
@@ -154,15 +253,15 @@ export default function Analytics() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="bg-card border border-border rounded-xl p-6"
+                className="bg-gradient-to-br from-purple-500/10 to-purple-600/5 border border-purple-500/20 rounded-xl p-6 hover:shadow-lg transition-shadow"
               >
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-12 h-12 bg-purple-500/10 rounded-lg flex items-center justify-center">
+                  <div className="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center">
                     <Award className="w-6 h-6 text-purple-600" />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Passed Exams</p>
-                    <p className="text-2xl font-bold">{stats.passedExams}</p>
+                    <p className="text-sm text-muted-foreground font-medium">Passed Exams</p>
+                    <p className="text-3xl font-bold text-purple-600">{stats.passedExams}</p>
                   </div>
                 </div>
               </motion.div>
@@ -171,24 +270,85 @@ export default function Analytics() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
-                className="bg-card border border-border rounded-xl p-6"
+                className="bg-gradient-to-br from-orange-500/10 to-orange-600/5 border border-orange-500/20 rounded-xl p-6 hover:shadow-lg transition-shadow"
               >
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-12 h-12 bg-orange-500/10 rounded-lg flex items-center justify-center">
+                  <div className="w-12 h-12 bg-orange-500/20 rounded-xl flex items-center justify-center">
                     <CheckCircle className="w-6 h-6 text-orange-600" />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Pass Rate</p>
-                    <p className="text-2xl font-bold">{stats.passRate}%</p>
+                    <p className="text-sm text-muted-foreground font-medium">Pass Rate</p>
+                    <p className="text-3xl font-bold text-orange-600">{stats.passRate}%</p>
                   </div>
                 </div>
               </motion.div>
             </div>
 
+            {/* Performance Trends Chart */}
+            {chartData.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                className="bg-card border border-border rounded-xl p-6 mb-8"
+              >
+                <div className="flex items-center gap-2 mb-6">
+                  <TrendingUp className="w-5 h-5 text-primary" />
+                  <h2 className="text-2xl font-bold">Performance Trends</h2>
+                  <span className="text-sm text-muted-foreground ml-auto">Last {chartData.length} exams</span>
+                </div>
+                <div className="w-full h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={chartData}>
+                      <defs>
+                        <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
+                          <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis 
+                        dataKey="date" 
+                        stroke="hsl(var(--muted-foreground))"
+                        fontSize={12}
+                      />
+                      <YAxis 
+                        stroke="hsl(var(--muted-foreground))"
+                        fontSize={12}
+                        domain={[0, 100]}
+                      />
+                      <Tooltip 
+                        contentStyle={{
+                          backgroundColor: 'hsl(var(--card))',
+                          border: '1px solid hsl(var(--border))',
+                          borderRadius: '8px',
+                          padding: '8px 12px'
+                        }}
+                        labelStyle={{ color: 'hsl(var(--foreground))' }}
+                      />
+                      <Area 
+                        type="monotone" 
+                        dataKey="score" 
+                        stroke="#10b981" 
+                        strokeWidth={2}
+                        fill="url(#colorScore)" 
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              </motion.div>
+            )}
+
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2 space-y-4">
                 <h2 className="text-2xl font-bold">Exam History</h2>
-                {examResults.map((result, index) => {
+                {filteredResults.length === 0 ? (
+                  <div className="text-center py-12 bg-card border border-border rounded-xl">
+                    <FileQuestion className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground">No exams match the selected filters.</p>
+                  </div>
+                ) : (
+                  filteredResults.map((result, index) => {
                   const passed = result.score >= (result.passingScore || 70)
                   const submittedDate = result.submittedAt?.toDate?.() || new Date()
                   const hasCQAnswers = result.cqAnswers && result.cqAnswers.length > 0
@@ -313,7 +473,7 @@ export default function Analytics() {
                       )}
                     </motion.div>
                   )
-                })}
+                }))}
               </div>
 
               <div className="space-y-4">

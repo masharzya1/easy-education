@@ -7,6 +7,7 @@ import { db } from "../../lib/firebase"
 import { useExam } from "../../contexts/ExamContext"
 import { toast } from "../../hooks/use-toast"
 import { uploadToImgbb } from "../../lib/imgbb"
+import ConfirmDialog from "../../components/ConfirmDialog"
 
 export default function ManageExamQuestions() {
   const { examId } = useParams()
@@ -22,6 +23,7 @@ export default function ManageExamQuestions() {
   const [bulkQuestionType, setBulkQuestionType] = useState("mcq")
   const [questionTexts, setQuestionTexts] = useState("")
   const [bulkProcessing, setBulkProcessing] = useState(false)
+  const [confirmDialog, setConfirmDialog] = useState({ isOpen: false, title: "", message: "", onConfirm: () => {} })
 
   const [formData, setFormData] = useState({
     type: "mcq",
@@ -203,23 +205,29 @@ export default function ManageExamQuestions() {
   }
 
   const handleDelete = async (questionId) => {
-    if (!confirm("Are you sure you want to delete this question?")) return
-
-    try {
-      await deleteQuestion(questionId)
-      toast({
-        title: "Success",
-        description: "Question deleted successfully",
-      })
-      fetchData()
-    } catch (error) {
-      console.error("Error deleting question:", error)
-      toast({
-        variant: "error",
-        title: "Error",
-        description: "Failed to delete question",
-      })
-    }
+    setConfirmDialog({
+      isOpen: true,
+      title: "Delete Question",
+      message: "Are you sure you want to delete this question? This action cannot be undone.",
+      variant: "destructive",
+      onConfirm: async () => {
+        try {
+          await deleteQuestion(questionId)
+          toast({
+            title: "Success",
+            description: "Question deleted successfully",
+          })
+          fetchData()
+        } catch (error) {
+          console.error("Error deleting question:", error)
+          toast({
+            variant: "error",
+            title: "Error",
+            description: "Failed to delete question",
+          })
+        }
+      }
+    })
   }
 
   const addOption = () => {
@@ -784,6 +792,15 @@ export default function ManageExamQuestions() {
           </motion.div>
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        onClose={() => setConfirmDialog({ ...confirmDialog, isOpen: false })}
+        onConfirm={confirmDialog.onConfirm}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        variant={confirmDialog.variant}
+      />
     </div>
   )
 }

@@ -6,6 +6,7 @@ import { motion } from "framer-motion"
 import { Plus, Edit, Trash2, X } from "lucide-react"
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, query, where } from "firebase/firestore"
 import { db } from "../../lib/firebase"
+import ConfirmDialog from "../../components/ConfirmDialog"
 
 export default function ManageSubjects() {
   const [courses, setCourses] = useState([])
@@ -17,6 +18,7 @@ export default function ManageSubjects() {
   const [selectedCourse, setSelectedCourse] = useState("")
   const [bulkSubjects, setBulkSubjects] = useState([{ title: "", description: "" }])
   const [submitting, setSubmitting] = useState(false)
+  const [confirmDialog, setConfirmDialog] = useState({ isOpen: false, title: "", message: "", onConfirm: () => {} })
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -92,23 +94,44 @@ export default function ManageSubjects() {
 
       await fetchSubjects()
       handleCloseModal()
-      alert(editingSubject ? "Subject updated successfully!" : "Subject created successfully!")
+      toast({
+        title: "Success",
+        description: editingSubject ? "Subject updated successfully!" : "Subject created successfully!",
+      })
     } catch (error) {
       console.error("Error saving subject:", error)
-      alert("Failed to save subject")
+      toast({
+        variant: "error",
+        title: "Error",
+        description: "Failed to save subject",
+      })
     }
   }
 
   const handleDelete = async (id) => {
-    if (!confirm("Are you sure you want to delete this subject?")) return
-
-    try {
-      await deleteDoc(doc(db, "subjects", id))
-      await fetchSubjects()
-    } catch (error) {
-      console.error("Error deleting subject:", error)
-      alert("Failed to delete subject")
-    }
+    setConfirmDialog({
+      isOpen: true,
+      title: "Delete Subject",
+      message: "Are you sure you want to delete this subject? This action cannot be undone.",
+      variant: "destructive",
+      onConfirm: async () => {
+        try {
+          await deleteDoc(doc(db, "subjects", id))
+          await fetchSubjects()
+          toast({
+            title: "Success",
+            description: "Subject deleted successfully",
+          })
+        } catch (error) {
+          console.error("Error deleting subject:", error)
+          toast({
+            variant: "error",
+            title: "Error",
+            description: "Failed to delete subject",
+          })
+        }
+      }
+    })
   }
 
   const handleBulkAdd = (index) => {
@@ -131,13 +154,21 @@ export default function ManageSubjects() {
     e.preventDefault()
     
     if (!selectedCourse) {
-      alert("Please select a batch course first!")
+      toast({
+        variant: "error",
+        title: "Course Required",
+        description: "Please select a batch course first!",
+      })
       return
     }
 
     const validSubjects = bulkSubjects.filter(s => s.title.trim() !== "")
     if (validSubjects.length === 0) {
-      alert("Please add at least one subject with a title!")
+      toast({
+        variant: "error",
+        title: "No Subjects",
+        description: "Please add at least one subject with a title!",
+      })
       return
     }
 
@@ -156,10 +187,17 @@ export default function ManageSubjects() {
       setBulkSubjects([{ title: "", description: "" }])
       setSelectedCourse("")
       setShowBulkForm(false)
-      alert(`Successfully created ${validSubjects.length} subject(s)!`)
+      toast({
+        title: "Success",
+        description: `Successfully created ${validSubjects.length} subject(s)!`,
+      })
     } catch (error) {
       console.error("Error creating subjects:", error)
-      alert("Failed to create subjects. Please try again.")
+      toast({
+        variant: "error",
+        title: "Error",
+        description: "Failed to create subjects. Please try again.",
+      })
     } finally {
       setSubmitting(false)
     }
@@ -422,6 +460,15 @@ export default function ManageSubjects() {
           </motion.div>
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        onClose={() => setConfirmDialog({ ...confirmDialog, isOpen: false })}
+        onConfirm={confirmDialog.onConfirm}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        variant={confirmDialog.variant}
+      />
     </div>
   )
 }

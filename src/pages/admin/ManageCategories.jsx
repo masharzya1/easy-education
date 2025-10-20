@@ -7,6 +7,7 @@ import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, serverTimestamp
 import { db } from "../../lib/firebase"
 import { uploadImageToImgBB } from "../../lib/imgbb"
 import { toast } from "../../hooks/use-toast"
+import ConfirmDialog from "../../components/ConfirmDialog"
 
 export default function ManageCategories() {
   const [categories, setCategories] = useState([])
@@ -14,6 +15,7 @@ export default function ManageCategories() {
   const [showForm, setShowForm] = useState(false)
   const [editingCategory, setEditingCategory] = useState(null)
   const [uploading, setUploading] = useState(false)
+  const [confirmDialog, setConfirmDialog] = useState({ isOpen: false, title: "", message: "", onConfirm: () => {} })
   const [formData, setFormData] = useState({
     title: "",
     imageURL: "",
@@ -108,24 +110,30 @@ export default function ManageCategories() {
   }
 
   const handleDelete = async (id) => {
-    if (!confirm("Are you sure you want to delete this category?")) return
-
-    try {
-      await deleteDoc(doc(db, "categories", id))
-      fetchCategories()
-      toast({
-        variant: "success",
-        title: "Category Deleted",
-        description: "Category deleted successfully!",
-      })
-    } catch (error) {
-      console.error("Error deleting category:", error)
-      toast({
-        variant: "error",
-        title: "Deletion Failed",
-        description: "Failed to delete category",
-      })
-    }
+    setConfirmDialog({
+      isOpen: true,
+      title: "Delete Category",
+      message: "Are you sure you want to delete this category? This action cannot be undone.",
+      variant: "destructive",
+      onConfirm: async () => {
+        try {
+          await deleteDoc(doc(db, "categories", id))
+          fetchCategories()
+          toast({
+            variant: "success",
+            title: "Category Deleted",
+            description: "Category deleted successfully!",
+          })
+        } catch (error) {
+          console.error("Error deleting category:", error)
+          toast({
+            variant: "error",
+            title: "Deletion Failed",
+            description: "Failed to delete category",
+          })
+        }
+      }
+    })
   }
 
   return (
@@ -147,7 +155,6 @@ export default function ManageCategories() {
         </button>
       </div>
 
-      {/* Form */}
       {showForm && (
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -231,7 +238,6 @@ export default function ManageCategories() {
         </motion.div>
       )}
 
-      {/* Categories Grid */}
       {loading && categories.length === 0 ? (
         <div className="text-center py-12">
           <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
@@ -290,6 +296,15 @@ export default function ManageCategories() {
           <p className="text-muted-foreground">No categories yet. Create your first category!</p>
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        onClose={() => setConfirmDialog({ ...confirmDialog, isOpen: false })}
+        onConfirm={confirmDialog.onConfirm}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        variant={confirmDialog.variant}
+      />
     </div>
   )
 }

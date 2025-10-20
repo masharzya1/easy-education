@@ -6,6 +6,7 @@ import { Search, Shield, ShieldOff, Trash2, Ban, BookOpen, X } from "lucide-reac
 import { collection, getDocs, doc, updateDoc, deleteDoc, query, where } from "firebase/firestore"
 import { db } from "../../lib/firebase"
 import { toast } from "../../hooks/use-toast"
+import ConfirmDialog from "../../components/ConfirmDialog"
 
 export default function ManageUsers() {
   const [users, setUsers] = useState([])
@@ -18,6 +19,7 @@ export default function ManageUsers() {
   const [selectedUser, setSelectedUser] = useState(null)
   const [selectedCourse, setSelectedCourse] = useState("")
   const [userEnrollments, setUserEnrollments] = useState({})
+  const [confirmDialog, setConfirmDialog] = useState({ isOpen: false, title: "", message: "", onConfirm: () => {} })
 
   useEffect(() => {
     fetchUsers()
@@ -159,22 +161,28 @@ export default function ManageUsers() {
   }
 
   const handleDeleteUser = async (userId) => {
-    if (!confirm("Are you sure you want to delete this user? This action cannot be undone.")) return
-
-    try {
-      console.log(" Deleting user:", userId)
-      await deleteDoc(doc(db, "users", userId))
-      setUsers(users.filter((u) => u.id !== userId))
-      showSuccess("User deleted successfully!")
-      console.log(" User deleted successfully")
-    } catch (error) {
-      console.error(" Error deleting user:", error)
-      toast({
-        variant: "error",
-        title: "Deletion Failed",
-        description: error.message || "Failed to delete user",
-      })
-    }
+    setConfirmDialog({
+      isOpen: true,
+      title: "Delete User",
+      message: "Are you sure you want to delete this user? This action cannot be undone.",
+      variant: "destructive",
+      onConfirm: async () => {
+        try {
+          console.log(" Deleting user:", userId)
+          await deleteDoc(doc(db, "users", userId))
+          setUsers(users.filter((u) => u.id !== userId))
+          showSuccess("User deleted successfully!")
+          console.log(" User deleted successfully")
+        } catch (error) {
+          console.error(" Error deleting user:", error)
+          toast({
+            variant: "error",
+            title: "Deletion Failed",
+            description: error.message || "Failed to delete user",
+          })
+        }
+      }
+    })
   }
 
   const handleRemoveFromCourse = async (courseId) => {
@@ -187,42 +195,48 @@ export default function ManageUsers() {
       return
     }
 
-    if (!confirm(`Are you sure you want to remove ${selectedUser.name} from this course?`)) return
+    setConfirmDialog({
+      isOpen: true,
+      title: "Remove from Course",
+      message: `Are you sure you want to remove ${selectedUser.name} from this course?`,
+      variant: "destructive",
+      onConfirm: async () => {
+        try {
+          console.log("[v0] Removing user from course:", selectedUser.id, courseId)
 
-    try {
-      console.log("[v0] Removing user from course:", selectedUser.id, courseId)
+          const paymentsQuery = query(
+            collection(db, "payments"),
+            where("userId", "==", selectedUser.id),
+            where("status", "==", "approved"),
+          )
+          const paymentsSnapshot = await getDocs(paymentsQuery)
 
-      const paymentsQuery = query(
-        collection(db, "payments"),
-        where("userId", "==", selectedUser.id),
-        where("status", "==", "approved"),
-      )
-      const paymentsSnapshot = await getDocs(paymentsQuery)
+          for (const paymentDoc of paymentsSnapshot.docs) {
+            const payment = paymentDoc.data()
+            const updatedCourses = payment.courses?.filter((c) => c.id !== courseId) || []
 
-      for (const paymentDoc of paymentsSnapshot.docs) {
-        const payment = paymentDoc.data()
-        const updatedCourses = payment.courses?.filter((c) => c.id !== courseId) || []
+            await updateDoc(doc(db, "payments", paymentDoc.id), {
+              courses: updatedCourses,
+            })
+          }
 
-        await updateDoc(doc(db, "payments", paymentDoc.id), {
-          courses: updatedCourses,
-        })
+          showSuccess("Student removed from course successfully!")
+          await fetchUserEnrollments()
+          
+          if (!userEnrollments[selectedUser.id] || userEnrollments[selectedUser.id].length <= 1) {
+            setShowRemoveModal(false)
+            setSelectedUser(null)
+          }
+        } catch (error) {
+          console.error("[v0] Error removing student from course:", error)
+          toast({
+            variant: "error",
+            title: "Removal Failed",
+            description: error.message || "Failed to remove student from course",
+          })
+        }
       }
-
-      showSuccess("Student removed from course successfully!")
-      await fetchUserEnrollments()
-      
-      if (!userEnrollments[selectedUser.id] || userEnrollments[selectedUser.id].length <= 1) {
-        setShowRemoveModal(false)
-        setSelectedUser(null)
-      }
-    } catch (error) {
-      console.error("[v0] Error removing student from course:", error)
-      toast({
-        variant: "error",
-        title: "Removal Failed",
-        description: error.message || "Failed to remove student from course",
-      })
-    }
+    })
   }
 
   return (
@@ -495,6 +509,15 @@ export default function ManageUsers() {
           </motion.div>
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        onClose={() => setConfirmDialog({ ...confirmDialog, isOpen: false })}
+        onConfirm={confirmDialog.onConfirm}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        variant={confirmDialog.variant}
+      />
     </div>
   )
 }

@@ -243,7 +243,7 @@ export default function MyCourses() {
 
                   {/* Action Button */}
                   <button
-                    onClick={() => navigate(`/course/${course.id}/watch`)}
+                    onClick={() => navigate(course.type === "batch" ? `/course/${course.id}/subjects` : `/course/${course.id}/chapters`)}
                     className="w-full py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-colors font-medium flex items-center justify-center gap-2 mt-2"
                   >
                     <Play className="w-4 h-4" />

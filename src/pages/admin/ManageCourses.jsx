@@ -7,6 +7,7 @@ import { Plus, Search, Edit2, Trash2, X, BookOpen, Upload, Link as LinkIcon } fr
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from "firebase/firestore"
 import { db } from "../../lib/firebase"
 import { uploadToImgbb } from "../../lib/imgbb"
+import ConfirmDialog from "../../components/ConfirmDialog"
 
 export default function ManageCourses() {
   const [courses, setCourses] = useState([])
@@ -16,6 +17,7 @@ export default function ManageCourses() {
   const [showModal, setShowModal] = useState(false)
   const [editingCourse, setEditingCourse] = useState(null)
   const [searchQuery, setSearchQuery] = useState("")
+  const [confirmDialog, setConfirmDialog] = useState({ isOpen: false, title: "", message: "", onConfirm: () => {} })
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -93,7 +95,11 @@ export default function ManageCourses() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!formData.title.trim()) {
-      alert("Course title is required")
+      toast({
+        variant: "error",
+        title: "Title Required",
+        description: "Course title is required",
+      })
       return
     }
 
@@ -126,26 +132,46 @@ export default function ManageCourses() {
 
       await fetchData()
       handleCloseModal()
+      toast({
+        title: "Success",
+        description: editingCourse ? "Course updated successfully" : "Course created successfully",
+      })
     } catch (error) {
       console.error("Error saving course:", error)
-      alert("Error saving course: " + error.message)
+      toast({
+        variant: "error",
+        title: "Error",
+        description: "Error saving course: " + error.message,
+      })
     } finally {
       setSubmitting(false)
     }
   }
 
   const handleDelete = async (courseId) => {
-    if (!confirm("Are you sure you want to delete this course? This action cannot be undone.")) {
-      return
-    }
-
-    try {
-      await deleteDoc(doc(db, "courses", courseId))
-      await fetchData()
-    } catch (error) {
-      console.error("Error deleting course:", error)
-      alert("Error deleting course: " + error.message)
-    }
+    setConfirmDialog({
+      isOpen: true,
+      title: "Delete Course",
+      message: "Are you sure you want to delete this course? This action cannot be undone.",
+      variant: "destructive",
+      onConfirm: async () => {
+        try {
+          await deleteDoc(doc(db, "courses", courseId))
+          await fetchData()
+          toast({
+            title: "Success",
+            description: "Course deleted successfully",
+          })
+        } catch (error) {
+          console.error("Error deleting course:", error)
+          toast({
+            variant: "error",
+            title: "Error",
+            description: "Error deleting course: " + error.message,
+          })
+        }
+      }
+    })
   }
 
   const filteredCourses = courses.filter(
@@ -437,6 +463,15 @@ export default function ManageCourses() {
           </motion.div>
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        onClose={() => setConfirmDialog({ ...confirmDialog, isOpen: false })}
+        onConfirm={confirmDialog.onConfirm}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        variant={confirmDialog.variant}
+      />
     </div>
   )
 }

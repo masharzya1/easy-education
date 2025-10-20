@@ -6,6 +6,7 @@ import { motion } from "framer-motion"
 import { Plus, Edit, Trash2, Tag } from "lucide-react"
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, Timestamp } from "firebase/firestore"
 import { db } from "../../lib/firebase"
+import ConfirmDialog from "../../components/ConfirmDialog"
 
 export default function ManageCoupons() {
   const [coupons, setCoupons] = useState([])
@@ -13,6 +14,7 @@ export default function ManageCoupons() {
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState(null)
+  const [confirmDialog, setConfirmDialog] = useState({ isOpen: false, title: "", message: "", onConfirm: () => {} })
 
   const [formData, setFormData] = useState({
     code: "",
@@ -70,13 +72,19 @@ export default function ManageCoupons() {
 
       if (editingId) {
         await updateDoc(doc(db, "coupons", editingId), couponData)
-        alert("Coupon updated successfully!")
+        toast({
+          title: "Success",
+          description: "Coupon updated successfully!",
+        })
       } else {
         await addDoc(collection(db, "coupons"), {
           ...couponData,
           createdAt: serverTimestamp(),
         })
-        alert("Coupon created successfully!")
+        toast({
+          title: "Success",
+          description: "Coupon created successfully!",
+        })
       }
 
       setShowForm(false)
@@ -94,7 +102,11 @@ export default function ManageCoupons() {
       fetchCoupons()
     } catch (error) {
       console.error("Error saving coupon:", error)
-      alert("Failed to save coupon")
+      toast({
+        variant: "error",
+        title: "Error",
+        description: "Failed to save coupon",
+      })
     }
   }
 
@@ -114,16 +126,29 @@ export default function ManageCoupons() {
   }
 
   const handleDelete = async (id) => {
-    if (!confirm("Are you sure you want to delete this coupon?")) return
-
-    try {
-      await deleteDoc(doc(db, "coupons", id))
-      alert("Coupon deleted successfully!")
-      fetchCoupons()
-    } catch (error) {
-      console.error("Error deleting coupon:", error)
-      alert("Failed to delete coupon")
-    }
+    setConfirmDialog({
+      isOpen: true,
+      title: "Delete Coupon",
+      message: "Are you sure you want to delete this coupon? This action cannot be undone.",
+      variant: "destructive",
+      onConfirm: async () => {
+        try {
+          await deleteDoc(doc(db, "coupons", id))
+          toast({
+            title: "Success",
+            description: "Coupon deleted successfully!",
+          })
+          fetchCoupons()
+        } catch (error) {
+          console.error("Error deleting coupon:", error)
+          toast({
+            variant: "error",
+            title: "Error",
+            description: "Failed to delete coupon",
+          })
+        }
+      }
+    })
   }
 
   const resetForm = () => {
@@ -353,6 +378,15 @@ export default function ManageCoupons() {
           <p className="text-muted-foreground">No coupons yet. Create your first one!</p>
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        onClose={() => setConfirmDialog({ ...confirmDialog, isOpen: false })}
+        onConfirm={confirmDialog.onConfirm}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        variant={confirmDialog.variant}
+      />
     </div>
   )
 }
