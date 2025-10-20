@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
-import { Plus, Edit, Trash2, FileQuestion, BookOpen, GraduationCap, Upload } from "lucide-react"
+import { Plus, Edit, Trash2, FileQuestion, BookOpen, GraduationCap, Upload, Download } from "lucide-react"
 import { collection, getDocs, query, orderBy, doc, getDoc } from "firebase/firestore"
 import { db } from "../../lib/firebase"
 import { useExam } from "../../contexts/ExamContext"
@@ -13,6 +13,9 @@ export default function ManageExams() {
   const [showModal, setShowModal] = useState(false)
   const [editingExam, setEditingExam] = useState(null)
   const [courses, setCourses] = useState([])
+  const [showBulkModal, setShowBulkModal] = useState(false)
+  const [bulkData, setBulkData] = useState("")
+  const [bulkProcessing, setBulkProcessing] = useState(false)
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -141,6 +144,93 @@ export default function ManageExams() {
     }
   }
 
+  const handleBulkUpload = async () => {
+    if (!bulkData.trim()) {
+      toast({
+        variant: "error",
+        title: "Empty Data",
+        description: "Please provide JSON data for bulk upload",
+      })
+      return
+    }
+
+    setBulkProcessing(true)
+    try {
+      const examsArray = JSON.parse(bulkData)
+      
+      if (!Array.isArray(examsArray)) {
+        throw new Error("Data must be an array of exams")
+      }
+
+      let successCount = 0
+      let errorCount = 0
+
+      for (const exam of examsArray) {
+        try {
+          await createExam({
+            title: exam.title || "Untitled Exam",
+            description: exam.description || "",
+            courseId: exam.courseId || "",
+            duration: exam.duration || 60,
+            passingScore: exam.passingScore || 70,
+          })
+          successCount++
+        } catch (err) {
+          console.error("Error creating exam:", err)
+          errorCount++
+        }
+      }
+
+      toast({
+        title: "Bulk Upload Complete",
+        description: `Successfully created ${successCount} exam(s). ${errorCount > 0 ? `Failed: ${errorCount}` : ""}`,
+      })
+
+      setShowBulkModal(false)
+      setBulkData("")
+      fetchData()
+    } catch (error) {
+      console.error("Error parsing bulk data:", error)
+      toast({
+        variant: "error",
+        title: "Invalid JSON",
+        description: "Please check your JSON format and try again",
+      })
+    } finally {
+      setBulkProcessing(false)
+    }
+  }
+
+  const downloadTemplate = () => {
+    const template = [
+      {
+        title: "Math Final Exam",
+        description: "Comprehensive math test covering all chapters",
+        courseId: "YOUR_COURSE_ID_HERE",
+        duration: 90,
+        passingScore: 70
+      },
+      {
+        title: "Science Quiz",
+        description: "Quick quiz on basic science concepts",
+        courseId: "YOUR_COURSE_ID_HERE",
+        duration: 30,
+        passingScore: 60
+      }
+    ]
+    
+    const dataStr = JSON.stringify(template, null, 2)
+    const dataBlob = new Blob([dataStr], { type: "application/json" })
+    const url = URL.createObjectURL(dataBlob)
+    const link = document.createElement("a")
+    link.href = url
+    link.download = "exams_template.json"
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -156,23 +246,32 @@ export default function ManageExams() {
           <h1 className="text-2xl sm:text-3xl font-bold">Manage Exams</h1>
           <p className="text-muted-foreground mt-1">Create and manage exams for courses</p>
         </div>
-        <button
-          onClick={() => {
-            setEditingExam(null)
-            setFormData({
-              title: "",
-              description: "",
-              courseId: "",
-              duration: 60,
-              passingScore: 70,
-            })
-            setShowModal(true)
-          }}
-          className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
-        >
-          <Plus className="w-5 h-5" />
-          Create Exam
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setShowBulkModal(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            <Upload className="w-5 h-5" />
+            <span className="hidden sm:inline">Bulk Upload</span>
+          </button>
+          <button
+            onClick={() => {
+              setEditingExam(null)
+              setFormData({
+                title: "",
+                description: "",
+                courseId: "",
+                duration: 60,
+                passingScore: 70,
+              })
+              setShowModal(true)
+            }}
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+          >
+            <Plus className="w-5 h-5" />
+            <span className="hidden sm:inline">Create Exam</span>
+          </button>
+        </div>
       </div>
 
       {exams.length === 0 ? (
@@ -240,14 +339,14 @@ export default function ManageExams() {
       )}
 
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-2 sm:p-4 overflow-y-auto">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-card border border-border rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto"
+            className="bg-card border border-border rounded-lg p-4 sm:p-6 w-full max-w-md my-4 sm:my-8 max-h-[95vh] sm:max-h-[90vh] overflow-y-auto"
           >
-            <h2 className="text-2xl font-bold mb-4">{editingExam ? "Edit Exam" : "Create New Exam"}</h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4">{editingExam ? "Edit Exam" : "Create New Exam"}</h2>
+            <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
               <div>
                 <label className="block text-sm font-medium mb-2">Exam Title *</label>
                 <input
@@ -288,9 +387,9 @@ export default function ManageExams() {
                 </select>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2">Duration (minutes)</label>
+                  <label className="block text-xs sm:text-sm font-medium mb-2">Duration (minutes)</label>
                   <input
                     type="number"
                     value={formData.duration}
@@ -301,7 +400,7 @@ export default function ManageExams() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-2">Passing Score (%)</label>
+                  <label className="block text-xs sm:text-sm font-medium mb-2">Passing Score (%)</label>
                   <input
                     type="number"
                     value={formData.passingScore}
@@ -332,6 +431,66 @@ export default function ManageExams() {
                 </button>
               </div>
             </form>
+          </motion.div>
+        </div>
+      )}
+
+      {showBulkModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-card border border-border rounded-lg p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto"
+          >
+            <h2 className="text-2xl font-bold mb-4">Bulk Upload Exams</h2>
+            <p className="text-sm text-muted-foreground mb-4">
+              Create multiple exams at once using JSON format. Download the template to see the correct format.
+            </p>
+
+            <button
+              onClick={downloadTemplate}
+              className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors mb-4"
+            >
+              <Download className="w-4 h-4" />
+              Download Template
+            </button>
+
+            <div className="mb-4 bg-yellow-50 dark:bg-yellow-950/30 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+              <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                <strong>Note:</strong> Replace "YOUR_COURSE_ID_HERE" with actual course IDs from your system.
+              </p>
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-2">Paste JSON Data</label>
+              <textarea
+                value={bulkData}
+                onChange={(e) => setBulkData(e.target.value)}
+                className="w-full px-3 py-2 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary font-mono text-sm"
+                rows={15}
+                placeholder='[\n  {\n    "title": "Math Final Exam",\n    "description": "Comprehensive test",\n    "courseId": "course_id_here",\n    "duration": 90,\n    "passingScore": 70\n  }\n]'
+              />
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  setShowBulkModal(false)
+                  setBulkData("")
+                }}
+                className="flex-1 px-4 py-2 bg-muted hover:bg-muted/80 rounded-lg transition-colors"
+                disabled={bulkProcessing}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleBulkUpload}
+                className="flex-1 px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg transition-colors disabled:opacity-50"
+                disabled={bulkProcessing}
+              >
+                {bulkProcessing ? "Processing..." : "Upload Exams"}
+              </button>
+            </div>
           </motion.div>
         </div>
       )}

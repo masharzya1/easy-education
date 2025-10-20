@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { motion } from "framer-motion"
-import { CreditCard, ArrowLeft, Calendar, DollarSign, CheckCircle, Clock, XCircle, BookOpen } from "lucide-react"
+import { CreditCard, ArrowLeft, Calendar, Banknote, CheckCircle, Clock, XCircle, BookOpen } from "lucide-react"
 import { useAuth } from "../contexts/AuthContext"
 import { collection, query, where, getDocs, orderBy } from "firebase/firestore"
 import { db } from "../lib/firebase"
@@ -125,7 +125,7 @@ export default function PaymentHistory() {
                     <div className="bg-muted/50 rounded-lg p-4">
                       <p className="text-xs text-muted-foreground mb-2 uppercase tracking-wide font-semibold">Amount</p>
                       <div className="flex items-center gap-2">
-                        <DollarSign className="w-5 h-5 text-primary" />
+                        <Banknote className="w-5 h-5 text-primary" />
                         <p className="font-semibold">৳{payment.finalAmount?.toFixed(2) || 0}</p>
                       </div>
                     </div>

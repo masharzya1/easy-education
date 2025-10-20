@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
-import { Plus, Edit, Trash2, ArrowLeft, Image as ImageIcon, Type, CheckCircle } from "lucide-react"
+import { Plus, Edit, Trash2, ArrowLeft, Image as ImageIcon, Type, CheckCircle, Upload, Download } from "lucide-react"
 import { useParams, useNavigate } from "react-router-dom"
 import { doc, getDoc } from "firebase/firestore"
 import { db } from "../../lib/firebase"
@@ -18,6 +18,9 @@ export default function ManageExamQuestions() {
   const [editingQuestion, setEditingQuestion] = useState(null)
   const [questionType, setQuestionType] = useState("mcq")
   const [uploadingImage, setUploadingImage] = useState(false)
+  const [showBulkModal, setShowBulkModal] = useState(false)
+  const [bulkData, setBulkData] = useState("")
+  const [bulkProcessing, setBulkProcessing] = useState(false)
 
   const [formData, setFormData] = useState({
     type: "mcq",
@@ -246,6 +249,102 @@ export default function ManageExamQuestions() {
     })
   }
 
+  const handleBulkUpload = async () => {
+    if (!bulkData.trim()) {
+      toast({
+        variant: "error",
+        title: "Empty Data",
+        description: "Please provide JSON data for bulk upload",
+      })
+      return
+    }
+
+    setBulkProcessing(true)
+    try {
+      const questionsArray = JSON.parse(bulkData)
+      
+      if (!Array.isArray(questionsArray)) {
+        throw new Error("Data must be an array of questions")
+      }
+
+      let successCount = 0
+      let errorCount = 0
+
+      for (const q of questionsArray) {
+        try {
+          const questionData = {
+            examId,
+            type: q.type || "mcq",
+            questionText: q.questionText || "",
+            questionImageUrl: q.questionImageUrl || "",
+            marks: q.marks || 1,
+          }
+
+          if (q.type === "mcq" || !q.type) {
+            questionData.options = q.options || ["", "", "", ""]
+            questionData.optionImages = q.optionImages || ["", "", "", ""]
+            questionData.correctAnswer = q.correctAnswer || 0
+          }
+
+          await addQuestion(questionData)
+          successCount++
+        } catch (err) {
+          console.error("Error adding question:", err)
+          errorCount++
+        }
+      }
+
+      toast({
+        title: "Bulk Upload Complete",
+        description: `Successfully added ${successCount} question(s). ${errorCount > 0 ? `Failed: ${errorCount}` : ""}`,
+      })
+
+      setShowBulkModal(false)
+      setBulkData("")
+      fetchData()
+    } catch (error) {
+      console.error("Error parsing bulk data:", error)
+      toast({
+        variant: "error",
+        title: "Invalid JSON",
+        description: "Please check your JSON format and try again",
+      })
+    } finally {
+      setBulkProcessing(false)
+    }
+  }
+
+  const downloadTemplate = () => {
+    const template = [
+      {
+        type: "mcq",
+        questionText: "What is 2+2?",
+        questionImageUrl: "",
+        options: ["3", "4", "5", "6"],
+        optionImages: ["", "", "", ""],
+        correctAnswer: 1,
+        marks: 1
+      },
+      {
+        type: "cq",
+        questionText: "Explain your answer",
+        questionImageUrl: "",
+        marks: 5
+      }
+    ]
+    
+    const dataStr = JSON.stringify(template, null, 2)
+    const dataBlob = new Blob([dataStr], { type: "application/json" })
+    const url = URL.createObjectURL(dataBlob)
+    const link = document.createElement("a")
+    link.href = url
+    link.download = "questions_template.json"
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -271,17 +370,26 @@ export default function ManageExamQuestions() {
             {exam?.courseName} • {questions.length} question{questions.length !== 1 ? "s" : ""}
           </p>
         </div>
-        <button
-          onClick={() => {
-            setEditingQuestion(null)
-            resetForm()
-            setShowModal(true)
-          }}
-          className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
-        >
-          <Plus className="w-5 h-5" />
-          Add Question
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setShowBulkModal(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            <Upload className="w-5 h-5" />
+            <span className="hidden sm:inline">Bulk Upload</span>
+          </button>
+          <button
+            onClick={() => {
+              setEditingQuestion(null)
+              resetForm()
+              setShowModal(true)
+            }}
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+          >
+            <Plus className="w-5 h-5" />
+            <span className="hidden sm:inline">Add Question</span>
+          </button>
+        </div>
       </div>
 
       {questions.length === 0 ? (
@@ -387,32 +495,32 @@ export default function ManageExamQuestions() {
       )}
 
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+        <div className="fixed inset-0 bg-black/50 flex items-start sm:items-center justify-center z-50 p-2 sm:p-4 overflow-y-auto">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-card border border-border rounded-lg p-6 w-full max-w-2xl my-8"
+            className="bg-card border border-border rounded-lg p-4 sm:p-6 w-full max-w-2xl my-2 sm:my-8 max-h-[98vh] sm:max-h-auto overflow-y-auto"
           >
-            <h2 className="text-2xl font-bold mb-4">
+            <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4">
               {editingQuestion ? "Edit Question" : "Add New Question"}
             </h2>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="flex gap-4 mb-4">
+            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+              <div className="flex gap-2 sm:gap-4 mb-3 sm:mb-4">
                 <button
                   type="button"
                   onClick={() => {
                     setQuestionType("mcq")
                     setFormData({ ...formData, type: "mcq" })
                   }}
-                  className={`flex-1 py-3 rounded-lg border-2 transition-all ${
+                  className={`flex-1 py-2 sm:py-3 rounded-lg border-2 transition-all ${
                     questionType === "mcq"
                       ? "border-primary bg-primary/10 text-primary"
                       : "border-border hover:border-primary/50"
                   }`}
                 >
-                  <Type className="w-5 h-5 mx-auto mb-1" />
-                  <span className="block font-medium">MCQ</span>
+                  <Type className="w-4 h-4 sm:w-5 sm:h-5 mx-auto mb-1" />
+                  <span className="block font-medium text-sm sm:text-base">MCQ</span>
                 </button>
                 <button
                   type="button"
@@ -420,14 +528,14 @@ export default function ManageExamQuestions() {
                     setQuestionType("cq")
                     setFormData({ ...formData, type: "cq" })
                   }}
-                  className={`flex-1 py-3 rounded-lg border-2 transition-all ${
+                  className={`flex-1 py-2 sm:py-3 rounded-lg border-2 transition-all ${
                     questionType === "cq"
                       ? "border-primary bg-primary/10 text-primary"
                       : "border-border hover:border-primary/50"
                   }`}
                 >
-                  <Type className="w-5 h-5 mx-auto mb-1" />
-                  <span className="block font-medium">CQ</span>
+                  <Type className="w-4 h-4 sm:w-5 sm:h-5 mx-auto mb-1" />
+                  <span className="block font-medium text-sm sm:text-base">CQ</span>
                 </button>
               </div>
 
@@ -594,6 +702,60 @@ export default function ManageExamQuestions() {
                 </button>
               </div>
             </form>
+          </motion.div>
+        </div>
+      )}
+
+      {showBulkModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-card border border-border rounded-lg p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto"
+          >
+            <h2 className="text-2xl font-bold mb-4">Bulk Upload Questions</h2>
+            <p className="text-sm text-muted-foreground mb-4">
+              Upload multiple questions at once using JSON format. Download the template to see the correct format.
+            </p>
+
+            <button
+              onClick={downloadTemplate}
+              className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors mb-4"
+            >
+              <Download className="w-4 h-4" />
+              Download Template
+            </button>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-2">Paste JSON Data</label>
+              <textarea
+                value={bulkData}
+                onChange={(e) => setBulkData(e.target.value)}
+                className="w-full px-3 py-2 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary font-mono text-sm"
+                rows={15}
+                placeholder='[\n  {\n    "type": "mcq",\n    "questionText": "What is 2+2?",\n    "options": ["3", "4", "5", "6"],\n    "correctAnswer": 1,\n    "marks": 1\n  }\n]'
+              />
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  setShowBulkModal(false)
+                  setBulkData("")
+                }}
+                className="flex-1 px-4 py-2 bg-muted hover:bg-muted/80 rounded-lg transition-colors"
+                disabled={bulkProcessing}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleBulkUpload}
+                className="flex-1 px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg transition-colors disabled:opacity-50"
+                disabled={bulkProcessing}
+              >
+                {bulkProcessing ? "Processing..." : "Upload Questions"}
+              </button>
+            </div>
           </motion.div>
         </div>
       )}

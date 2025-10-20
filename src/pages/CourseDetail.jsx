@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { motion } from "framer-motion"
-import { ShoppingCart, Play, BookOpen, Clock, Users, Tag, DollarSign, Check, AlertCircle } from "lucide-react"
+import { ShoppingCart, Play, BookOpen, Clock, Users, Tag, Check, AlertCircle } from "lucide-react"
 import { doc, getDoc, collection, query, where, getDocs } from "firebase/firestore"
 import { db } from "../lib/firebase"
 import { useAuth } from "../contexts/AuthContext"
@@ -294,8 +294,7 @@ export default function CourseDetail() {
                     <div className="text-4xl font-bold mb-2">
                       {course.price ? (
                         <>
-                          <DollarSign className="inline w-8 h-8" />
-                          {course.price}
+                          ৳{course.price}
                         </>
                       ) : (
                         "Free"

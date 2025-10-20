@@ -42,6 +42,8 @@ export default function CustomVideoPlayer({ url, onNext, onPrevious }) {
   const updateIntervalRef = useRef(null)
   const mouseMoveTimeoutRef = useRef(null)
   const volumeSliderRef = useRef(null)
+  const loadTimeoutRef = useRef(null)
+  const hlsTimeoutRef = useRef(null)
 
   useEffect(() => {
     if (!url) return
@@ -160,17 +162,55 @@ export default function CustomVideoPlayer({ url, onNext, onPrevious }) {
       })
     }
 
+    loadTimeoutRef.current = setTimeout(() => {
+      if (!playerRef.current) {
+        setError("Failed to load video player. Please refresh the page.")
+        setLoading(false)
+      }
+    }, 10000)
+
     if (window.YT && window.YT.Player) {
       loadYouTubePlayer()
+      if (loadTimeoutRef.current) {
+        clearTimeout(loadTimeoutRef.current)
+        loadTimeoutRef.current = null
+      }
     } else {
-      const tag = document.createElement("script")
-      tag.src = "https://www.youtube.com/iframe_api"
-      const firstScriptTag = document.getElementsByTagName("script")[0]
-      firstScriptTag.parentNode.insertBefore(tag, firstScriptTag)
-      window.onYouTubeIframeAPIReady = loadYouTubePlayer
+      try {
+        const tag = document.createElement("script")
+        tag.src = "https://www.youtube.com/iframe_api"
+        tag.onerror = () => {
+          setError("Failed to load YouTube player. Please check your connection.")
+          setLoading(false)
+          if (loadTimeoutRef.current) {
+            clearTimeout(loadTimeoutRef.current)
+            loadTimeoutRef.current = null
+          }
+        }
+        tag.onload = () => {
+          if (loadTimeoutRef.current) {
+            clearTimeout(loadTimeoutRef.current)
+            loadTimeoutRef.current = null
+          }
+        }
+        const firstScriptTag = document.getElementsByTagName("script")[0]
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag)
+        window.onYouTubeIframeAPIReady = loadYouTubePlayer
+      } catch (err) {
+        setError("Failed to initialize video player")
+        setLoading(false)
+        if (loadTimeoutRef.current) {
+          clearTimeout(loadTimeoutRef.current)
+          loadTimeoutRef.current = null
+        }
+      }
     }
 
     return () => {
+      if (loadTimeoutRef.current) {
+        clearTimeout(loadTimeoutRef.current)
+        loadTimeoutRef.current = null
+      }
       if (updateIntervalRef.current) {
         clearInterval(updateIntervalRef.current)
       }
@@ -225,27 +265,54 @@ export default function CustomVideoPlayer({ url, onNext, onPrevious }) {
       } else {
         const script = document.createElement("script")
         script.src = "https://cdn.jsdelivr.net/npm/hls.js@latest"
+        
+        hlsTimeoutRef.current = setTimeout(() => {
+          setError("Failed to load HLS player. Please refresh the page.")
+          setLoading(false)
+        }, 10000)
+
         script.onload = () => {
-          if (window.Hls && window.Hls.isSupported()) {
-            const hls = new window.Hls()
-            hlsRef.current = hls
-            hls.loadSource(url)
-            hls.attachMedia(video)
-            hls.on(window.Hls.Events.MANIFEST_PARSED, () => {
-              setLoading(false)
-              video.play().catch(() => {
-                // Autoplay failed
+          if (hlsTimeoutRef.current) {
+            clearTimeout(hlsTimeoutRef.current)
+            hlsTimeoutRef.current = null
+          }
+          try {
+            if (window.Hls && window.Hls.isSupported()) {
+              const hls = new window.Hls()
+              hlsRef.current = hls
+              hls.loadSource(url)
+              hls.attachMedia(video)
+              hls.on(window.Hls.Events.MANIFEST_PARSED, () => {
+                setLoading(false)
+                video.play().catch(() => {
+                  // Autoplay failed
+                })
               })
-            })
-            hls.on(window.Hls.Events.ERROR, (event, data) => {
-              if (data.fatal) {
-                setError("Failed to load video")
-              }
-            })
-          } else {
-            setError("HLS not supported")
+              hls.on(window.Hls.Events.ERROR, (event, data) => {
+                if (data.fatal) {
+                  setError("Failed to load video")
+                  setLoading(false)
+                }
+              })
+            } else {
+              setError("HLS not supported in this browser")
+              setLoading(false)
+            }
+          } catch (err) {
+            setError("Failed to initialize HLS player")
+            setLoading(false)
           }
         }
+        
+        script.onerror = () => {
+          if (hlsTimeoutRef.current) {
+            clearTimeout(hlsTimeoutRef.current)
+            hlsTimeoutRef.current = null
+          }
+          setError("Failed to load HLS library. Please check your connection.")
+          setLoading(false)
+        }
+        
         document.body.appendChild(script)
       }
     } else {
@@ -257,6 +324,10 @@ export default function CustomVideoPlayer({ url, onNext, onPrevious }) {
     }
 
     return () => {
+      if (hlsTimeoutRef.current) {
+        clearTimeout(hlsTimeoutRef.current)
+        hlsTimeoutRef.current = null
+      }
       if (hlsRef.current) {
         hlsRef.current.destroy()
       }
