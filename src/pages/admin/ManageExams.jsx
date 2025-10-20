@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
-import { Plus, Edit, Trash2, FileQuestion, BookOpen, GraduationCap, Upload, Download } from "lucide-react"
+import { Plus, Edit, Trash2, FileQuestion, BookOpen, GraduationCap, Upload, Download, Archive } from "lucide-react"
 import { collection, getDocs, query, orderBy, doc, getDoc } from "firebase/firestore"
 import { db } from "../../lib/firebase"
 import { useExam } from "../../contexts/ExamContext"
@@ -285,10 +285,17 @@ export default function ManageExams() {
               key={exam.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition-shadow"
+              className="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition-shadow relative"
             >
+              {exam.isArchived && (
+                <div className="absolute top-4 right-4 flex items-center gap-1 text-orange-600 bg-orange-500/10 px-2 py-1 rounded text-xs font-medium">
+                  <Archive className="w-3 h-3" />
+                  <span>Archived</span>
+                </div>
+              )}
+              
               <div className="flex justify-between items-start mb-4">
-                <div className="flex-1">
+                <div className="flex-1 pr-16">
                   <h3 className="font-bold text-lg mb-1">{exam.title}</h3>
                   <p className="text-sm text-muted-foreground">{exam.description}</p>
                 </div>
@@ -303,6 +310,12 @@ export default function ManageExams() {
                   <GraduationCap className="w-4 h-4" />
                   <span>{exam.duration} minutes • Passing: {exam.passingScore}%</span>
                 </div>
+                {exam.isArchived && exam.archivedFrom && (
+                  <div className="flex items-center gap-2 text-muted-foreground text-xs">
+                    <Archive className="w-3 h-3" />
+                    <span>Archived from: {courses.find(c => c.id === exam.archivedFrom)?.title || "Unknown"}</span>
+                  </div>
+                )}
               </div>
 
               <div className="flex gap-2">

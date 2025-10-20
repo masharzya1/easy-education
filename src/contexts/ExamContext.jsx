@@ -41,13 +41,45 @@ export function ExamProvider({ children }) {
     }
   }
 
-  const getExamsByCourse = async (courseId) => {
+  const getExamsByCourse = async (courseId, includeArchived = true) => {
     try {
       const q = query(collection(db, "exams"), where("courseId", "==", courseId))
       const snapshot = await getDocs(q)
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+      const allExams = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+      
+      if (!includeArchived) {
+        return allExams.filter(exam => !exam.isArchived)
+      }
+      
+      return allExams
     } catch (error) {
       console.error("Error fetching exams:", error)
+      return []
+    }
+  }
+
+  const getActiveExamsByCourse = async (courseId) => {
+    try {
+      const q = query(collection(db, "exams"), where("courseId", "==", courseId))
+      const snapshot = await getDocs(q)
+      return snapshot.docs
+        .map(doc => ({ id: doc.id, ...doc.data() }))
+        .filter(exam => !exam.isArchived)
+    } catch (error) {
+      console.error("Error fetching active exams:", error)
+      return []
+    }
+  }
+
+  const getArchivedExamsByCourse = async (courseId) => {
+    try {
+      const q = query(collection(db, "exams"), where("courseId", "==", courseId))
+      const snapshot = await getDocs(q)
+      return snapshot.docs
+        .map(doc => ({ id: doc.id, ...doc.data() }))
+        .filter(exam => exam.isArchived === true)
+    } catch (error) {
+      console.error("Error fetching archived exams:", error)
       return []
     }
   }
@@ -201,6 +233,8 @@ export function ExamProvider({ children }) {
     createExam,
     getExamsByClass,
     getExamsByCourse,
+    getActiveExamsByCourse,
+    getArchivedExamsByCourse,
     getExamById,
     updateExam,
     deleteExam,

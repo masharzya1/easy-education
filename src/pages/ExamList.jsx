@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react"
 import { useParams, useNavigate, Link } from "react-router-dom"
 import { motion } from "framer-motion"
-import { FileQuestion, Clock, Award, ArrowLeft, BookOpen, Lock, CheckCircle } from "lucide-react"
+import { FileQuestion, Clock, Award, ArrowLeft, BookOpen, Lock, CheckCircle, Archive } from "lucide-react"
 import { doc, getDoc, collection, query, where, getDocs } from "firebase/firestore"
 import { db } from "../lib/firebase"
 import { useAuth } from "../contexts/AuthContext"
@@ -11,12 +11,14 @@ export default function ExamList() {
   const { courseId } = useParams()
   const navigate = useNavigate()
   const { currentUser, isAdmin } = useAuth()
-  const { getExamsByCourse, getExamResult } = useExam()
+  const { getActiveExamsByCourse, getArchivedExamsByCourse, getExamResult } = useExam()
   const [course, setCourse] = useState(null)
-  const [exams, setExams] = useState([])
+  const [activeExams, setActiveExams] = useState([])
+  const [archivedExams, setArchivedExams] = useState([])
   const [examResults, setExamResults] = useState({})
   const [loading, setLoading] = useState(true)
   const [hasAccess, setHasAccess] = useState(false)
+  const [activeTab, setActiveTab] = useState("active")
 
   useEffect(() => {
     fetchData()
@@ -48,12 +50,16 @@ export default function ExamList() {
         }
       }
 
-      const examsData = await getExamsByCourse(courseId)
-      setExams(examsData)
+      const activeExamsData = await getActiveExamsByCourse(courseId)
+      setActiveExams(activeExamsData)
+
+      const archivedExamsData = await getArchivedExamsByCourse(courseId)
+      setArchivedExams(archivedExamsData)
 
       if (currentUser) {
+        const allExams = [...activeExamsData, ...archivedExamsData]
         const results = {}
-        for (const exam of examsData) {
+        for (const exam of allExams) {
           const result = await getExamResult(currentUser.uid, exam.id)
           if (result) {
             results[exam.id] = result
@@ -96,6 +102,8 @@ export default function ExamList() {
     )
   }
 
+  const currentExams = activeTab === "active" ? activeExams : archivedExams
+
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-6">
@@ -111,14 +119,70 @@ export default function ExamList() {
           <p className="text-muted-foreground">View and take exams for this course</p>
         </div>
 
-        {exams.length === 0 ? (
+        <div className="mb-6 flex gap-2 border-b border-border">
+          <button
+            onClick={() => setActiveTab("active")}
+            className={`px-6 py-3 font-medium transition-all relative ${
+              activeTab === "active"
+                ? "text-primary"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <FileQuestion className="w-4 h-4" />
+              Active Exams
+              {activeExams.length > 0 && (
+                <span className="bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full">
+                  {activeExams.length}
+                </span>
+              )}
+            </div>
+            {activeTab === "active" && (
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+            )}
+          </button>
+          
+          <button
+            onClick={() => setActiveTab("archived")}
+            className={`px-6 py-3 font-medium transition-all relative ${
+              activeTab === "archived"
+                ? "text-primary"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <Archive className="w-4 h-4" />
+              Archived Exams
+              {archivedExams.length > 0 && (
+                <span className="bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full">
+                  {archivedExams.length}
+                </span>
+              )}
+            </div>
+            {activeTab === "archived" && (
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+            )}
+          </button>
+        </div>
+
+        {currentExams.length === 0 ? (
           <div className="text-center py-12 bg-card border border-border rounded-xl">
-            <FileQuestion className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground">No exams available for this course yet.</p>
+            <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+              {activeTab === "active" ? (
+                <FileQuestion className="w-10 h-10 text-muted-foreground" />
+              ) : (
+                <Archive className="w-10 h-10 text-muted-foreground" />
+              )}
+            </div>
+            <p className="text-muted-foreground">
+              {activeTab === "active"
+                ? "No active exams available for this course yet."
+                : "No archived exams for this course."}
+            </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {exams.map((exam, index) => {
+            {currentExams.map((exam, index) => {
               const result = examResults[exam.id]
               const hasAttempted = !!result
 
@@ -130,12 +194,20 @@ export default function ExamList() {
                   transition={{ delay: index * 0.1 }}
                   className="group relative bg-card border border-border rounded-xl p-6 hover:border-primary/50 hover:shadow-lg transition-all duration-300"
                 >
-                  {hasAttempted && (
-                    <div className="absolute top-4 right-4 flex items-center gap-1 text-green-600 bg-green-500/10 px-2 py-1 rounded text-sm">
-                      <CheckCircle className="w-4 h-4" />
-                      <span>Completed</span>
-                    </div>
-                  )}
+                  <div className="absolute top-4 right-4 flex flex-col items-end gap-2">
+                    {exam.isArchived && (
+                      <div className="flex items-center gap-1 text-orange-600 bg-orange-500/10 px-2 py-1 rounded text-sm">
+                        <Archive className="w-4 h-4" />
+                        <span>Archived</span>
+                      </div>
+                    )}
+                    {hasAttempted && (
+                      <div className="flex items-center gap-1 text-green-600 bg-green-500/10 px-2 py-1 rounded text-sm">
+                        <CheckCircle className="w-4 h-4" />
+                        <span>Completed</span>
+                      </div>
+                    )}
+                  </div>
 
                   <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
                     <FileQuestion className="w-6 h-6 text-primary" />
