@@ -8,6 +8,7 @@ import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, where } 
 import { db } from "../../lib/firebase"
 import { uploadToImgbb } from "../../lib/imgbb"
 import { useExam } from "../../contexts/ExamContext"
+import ConfirmDialog from "../../components/ConfirmDialog"
 
 export default function ManageClasses() {
   const [courses, setCourses] = useState([])
@@ -46,6 +47,7 @@ export default function ManageClasses() {
   const [archiveChapter, setArchiveChapter] = useState("")
   const [archiveSubmitting, setArchiveSubmitting] = useState(false)
   const [teachers, setTeachers] = useState([])
+  const [confirmDialog, setConfirmDialog] = useState({ isOpen: false, title: "", message: "", onConfirm: () => {} })
 
   const { getExamsByCourse } = useExam()
 
@@ -249,25 +251,47 @@ export default function ManageClasses() {
 
       await fetchClasses()
       handleCloseModal()
-      alert(editingClass ? "Class updated successfully!" : "Class created successfully!")
+      toast({
+        title: "Success",
+        description: editingClass ? "Class updated successfully!" : "Class created successfully!"
+      })
     } catch (error) {
       console.error("Error saving class:", error)
-      alert("Failed to save class. " + (error.message || "Please try again."))
+      toast({
+        variant: "error",
+        title: "Error",
+        description: "Failed to save class. " + (error.message || "Please try again.")
+      })
     } finally {
       setSubmitting(false)
     }
   }
 
   const handleDelete = async (classId) => {
-    if (!confirm("Are you sure you want to delete this class?")) return
-
-    try {
-      await deleteDoc(doc(db, "classes", classId))
-      await fetchClasses()
-    } catch (error) {
-      console.error("Error deleting class:", error)
-      alert("Failed to delete class")
-    }
+    setConfirmDialog({
+      isOpen: true,
+      title: "Delete Class",
+      message: "Are you sure you want to delete this class? This action cannot be undone.",
+      variant: "danger",
+      confirmText: "Delete",
+      onConfirm: async () => {
+        try {
+          await deleteDoc(doc(db, "classes", classId))
+          await fetchClasses()
+          toast({
+            title: "Success",
+            description: "Class deleted successfully"
+          })
+        } catch (error) {
+          console.error("Error deleting class:", error)
+          toast({
+            variant: "error",
+            title: "Error",
+            description: "Failed to delete class"
+          })
+        }
+      }
+    })
   }
 
   const fetchArchiveClasses = async (courseId) => {
@@ -322,12 +346,20 @@ export default function ManageClasses() {
 
   const handleArchiveSubmit = async () => {
     if (selectedArchiveClasses.length === 0 && selectedArchiveExams.length === 0) {
-      alert("Please select at least one class or exam to archive")
+      toast({
+        variant: "error",
+        title: "Selection Required",
+        description: "Please select at least one class or exam to archive"
+      })
       return
     }
 
     if (selectedCourseData?.type !== "batch") {
-      alert("Archive feature is only available for batch type courses!")
+      toast({
+        variant: "error",
+        title: "Invalid Course Type",
+        description: "Archive feature is only available for batch type courses!"
+      })
       return
     }
 
@@ -380,10 +412,17 @@ export default function ManageClasses() {
       setShowArchiveModal(false)
       setSelectedArchiveClasses([])
       setSelectedArchiveExams([])
-      alert(`Successfully archived ${archivedCount} item(s)!`)
+      toast({
+        title: "Success",
+        description: `Successfully archived ${archivedCount} item(s)!`
+      })
     } catch (error) {
       console.error("Error archiving:", error)
-      alert("Failed to archive. Please try again.")
+      toast({
+        variant: "error",
+        title: "Error",
+        description: "Failed to archive. Please try again."
+      })
     } finally {
       setArchiveSubmitting(false)
     }
@@ -421,14 +460,26 @@ export default function ManageClasses() {
 
   const fixAllVideoURLs = async () => {
     if (!selectedCourse) {
-      alert("Please select a course first!")
+      toast({
+        variant: "error",
+        title: "Course Required",
+        description: "Please select a course first!"
+      })
       return
     }
 
-    const confirmFix = confirm(
-      "This will add videoURL field to all classes in this course that are missing it. Continue?"
-    )
-    if (!confirmFix) return
+    setConfirmDialog({
+      isOpen: true,
+      title: "Fix Video URLs",
+      message: "This will add videoURL field to all classes in this course that are missing it. Continue?",
+      confirmText: "Fix URLs",
+      onConfirm: async () => {
+        await performFixVideoURLs()
+      }
+    })
+  }
+
+  const performFixVideoURLs = async () => {
 
     try {
       setSubmitting(true)
@@ -443,10 +494,17 @@ export default function ManageClasses() {
       }
 
       await fetchClasses()
-      alert(`Successfully updated ${updatedCount} class(es) with videoURL field!`)
+      toast({
+        title: "Success",
+        description: `Successfully updated ${updatedCount} class(es) with videoURL field!`
+      })
     } catch (error) {
       console.error("Error fixing video URLs:", error)
-      alert("Failed to fix video URLs. Please try again.")
+      toast({
+        variant: "error",
+        title: "Error",
+        description: "Failed to fix video URLs. Please try again."
+      })
     } finally {
       setSubmitting(false)
     }
@@ -949,14 +1007,55 @@ export default function ManageClasses() {
                     </div>
                   </div>
 
+                  {archiveExams.length > 0 && (
+                    <div className="border border-border rounded p-2 mt-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="text-xs font-medium">
+                          Select Exams to Archive ({selectedArchiveExams.length} selected)
+                        </label>
+                        <button
+                          type="button"
+                          onClick={toggleAllArchiveExams}
+                          className="px-2 py-1 text-xs bg-muted hover:bg-muted/80 rounded transition-colors"
+                        >
+                          {selectedArchiveExams.length === archiveExams.length && archiveExams.length > 0
+                            ? "Deselect All"
+                            : "Select All"}
+                        </button>
+                      </div>
+
+                      <div className="max-h-64 overflow-y-auto space-y-1">
+                        {archiveExams.map((exam) => (
+                          <label
+                            key={exam.id}
+                            className="flex items-center gap-2 p-2 hover:bg-muted/50 rounded cursor-pointer"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={selectedArchiveExams.includes(exam.id)}
+                              onChange={() => toggleArchiveExam(exam.id)}
+                              className="w-4 h-4 rounded border-border text-primary focus:ring-2 focus:ring-primary"
+                            />
+                            <div className="flex-1 text-xs">
+                              <div className="font-medium">{exam.title}</div>
+                              <div className="text-muted-foreground">
+                                Duration: {exam.duration} min • Passing: {exam.passingScore}%
+                              </div>
+                            </div>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   <div className="flex gap-2 pt-2">
                     <button
                       type="button"
                       onClick={handleArchiveSubmit}
-                      disabled={archiveSubmitting || selectedArchiveClasses.length === 0}
+                      disabled={archiveSubmitting || (selectedArchiveClasses.length === 0 && selectedArchiveExams.length === 0)}
                       className="flex-1 py-2 text-sm bg-primary hover:bg-primary/90 text-primary-foreground rounded transition-colors disabled:opacity-50"
                     >
-                      {archiveSubmitting ? "Transferring..." : `Transfer ${selectedArchiveClasses.length} Class(es)`}
+                      {archiveSubmitting ? "Transferring..." : `Transfer ${selectedArchiveClasses.length + selectedArchiveExams.length} Item(s)`}
                     </button>
                     <button
                       type="button"
@@ -978,6 +1077,17 @@ export default function ManageClasses() {
           </motion.div>
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        onClose={() => setConfirmDialog({ ...confirmDialog, isOpen: false })}
+        onConfirm={confirmDialog.onConfirm}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        confirmText={confirmDialog.confirmText || "Confirm"}
+        cancelText={confirmDialog.cancelText || "Cancel"}
+        variant={confirmDialog.variant || "default"}
+      />
     </div>
   )
 }

@@ -6,6 +6,7 @@ import { useAuth } from "../contexts/AuthContext"
 import { useExam } from "../contexts/ExamContext"
 import { toast } from "../hooks/use-toast"
 import { uploadToImgbb } from "../lib/imgbb"
+import ConfirmDialog from "../components/ConfirmDialog"
 
 export default function ExamView() {
   const { examId } = useParams()
@@ -22,6 +23,7 @@ export default function ExamView() {
   const [submitting, setSubmitting] = useState(false)
   const [timeLeft, setTimeLeft] = useState(0)
   const [hasStarted, setHasStarted] = useState(false)
+  const [confirmDialog, setConfirmDialog] = useState({ isOpen: false, title: "", message: "", onConfirm: () => {} })
 
   useEffect(() => {
     if (!currentUser) {
@@ -174,12 +176,21 @@ export default function ExamView() {
     const mcqCount = questions.filter(q => q.type === "mcq").length
 
     if (answeredCount < mcqCount) {
-      const proceed = confirm(
-        `You have only answered ${answeredCount} out of ${mcqCount} MCQ questions. Do you want to submit anyway?`
-      )
-      if (!proceed) return
+      setConfirmDialog({
+        isOpen: true,
+        title: "Incomplete Answers",
+        message: `You have only answered ${answeredCount} out of ${mcqCount} MCQ questions. Do you want to submit anyway?`,
+        variant: "default",
+        confirmText: "Submit Anyway",
+        onConfirm: () => performSubmit()
+      })
+      return
     }
 
+    await performSubmit()
+  }
+
+  const performSubmit = async () => {
     setSubmitting(true)
 
     try {
@@ -484,9 +495,14 @@ export default function ExamView() {
           <div className="max-w-4xl mx-auto flex gap-3">
             <button
               onClick={() => {
-                if (confirm("Are you sure you want to exit? Your progress will be lost.")) {
-                  navigate(-1)
-                }
+                setConfirmDialog({
+                  isOpen: true,
+                  title: "Exit Exam",
+                  message: "Are you sure you want to exit? Your progress will be lost.",
+                  variant: "danger",
+                  confirmText: "Exit",
+                  onConfirm: () => navigate(-1)
+                })
               }}
               className="px-6 py-3 bg-muted hover:bg-muted/80 rounded-lg transition-colors font-medium"
               disabled={submitting}
@@ -504,6 +520,17 @@ export default function ExamView() {
           </div>
         </div>
       </div>
+
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        onClose={() => setConfirmDialog({ ...confirmDialog, isOpen: false })}
+        onConfirm={confirmDialog.onConfirm}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        confirmText={confirmDialog.confirmText || "Confirm"}
+        cancelText={confirmDialog.cancelText || "Cancel"}
+        variant={confirmDialog.variant || "default"}
+      />
     </div>
   )
 }

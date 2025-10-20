@@ -6,6 +6,7 @@ import { db } from "../../lib/firebase"
 import { useExam } from "../../contexts/ExamContext"
 import { toast } from "../../hooks/use-toast"
 import { Link } from "react-router-dom"
+import ConfirmDialog from "../../components/ConfirmDialog"
 
 export default function ManageExams() {
   const [exams, setExams] = useState([])
@@ -17,6 +18,7 @@ export default function ManageExams() {
   const [bulkCourseId, setBulkCourseId] = useState("")
   const [examNames, setExamNames] = useState("")
   const [bulkProcessing, setBulkProcessing] = useState(false)
+  const [confirmDialog, setConfirmDialog] = useState({ isOpen: false, title: "", message: "", onConfirm: () => {} })
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -126,23 +128,30 @@ export default function ManageExams() {
   }
 
   const handleDelete = async (examId) => {
-    if (!confirm("Are you sure you want to delete this exam? This will also delete all questions.")) return
-
-    try {
-      await deleteExam(examId)
-      toast({
-        title: "Success",
-        description: "Exam deleted successfully",
-      })
-      fetchData()
-    } catch (error) {
-      console.error("Error deleting exam:", error)
-      toast({
-        variant: "error",
-        title: "Error",
-        description: "Failed to delete exam",
-      })
-    }
+    setConfirmDialog({
+      isOpen: true,
+      title: "Delete Exam",
+      message: "Are you sure you want to delete this exam? This will also delete all questions. This action cannot be undone.",
+      variant: "danger",
+      confirmText: "Delete",
+      onConfirm: async () => {
+        try {
+          await deleteExam(examId)
+          toast({
+            title: "Success",
+            description: "Exam deleted successfully",
+          })
+          fetchData()
+        } catch (error) {
+          console.error("Error deleting exam:", error)
+          toast({
+            variant: "error",
+            title: "Error",
+            description: "Failed to delete exam",
+          })
+        }
+      }
+    })
   }
 
   const handleBulkCreate = async () => {
@@ -516,6 +525,17 @@ export default function ManageExams() {
           </motion.div>
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        onClose={() => setConfirmDialog({ ...confirmDialog, isOpen: false })}
+        onConfirm={confirmDialog.onConfirm}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        confirmText={confirmDialog.confirmText || "Confirm"}
+        cancelText={confirmDialog.cancelText || "Cancel"}
+        variant={confirmDialog.variant || "default"}
+      />
     </div>
   )
 }

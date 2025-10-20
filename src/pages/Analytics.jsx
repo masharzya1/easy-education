@@ -245,33 +245,70 @@ export default function Analytics() {
                         </div>
                       </div>
 
-                      {selectedResult?.id === result.id && result.wrongAnswers && result.wrongAnswers.length > 0 && (
+                      {selectedResult?.id === result.id && (
                         <motion.div
                           initial={{ opacity: 0, height: 0 }}
                           animate={{ opacity: 1, height: "auto" }}
-                          className="mt-4 pt-4 border-t border-border"
+                          className="mt-4 pt-4 border-t border-border space-y-4"
                         >
-                          <h4 className="font-semibold mb-3 flex items-center gap-2">
-                            <XCircle className="w-5 h-5 text-red-600" />
-                            Mistakes ({result.wrongAnswers.length})
-                          </h4>
-                          <div className="space-y-3">
-                            {result.wrongAnswers.map((mistake, idx) => (
-                              <div key={idx} className="bg-red-500/5 border border-red-500/20 rounded-lg p-3">
-                                <p className="font-medium mb-2">{mistake.questionText}</p>
-                                <div className="space-y-1 text-sm">
-                                  <div className="flex items-center gap-2">
-                                    <XCircle className="w-4 h-4 text-red-600" />
-                                    <span className="text-red-600">Your answer: {mistake.options?.[mistake.userAnswer] || "Not answered"}</span>
+                          {result.wrongAnswers && result.wrongAnswers.length > 0 && (
+                            <div>
+                              <h4 className="font-semibold mb-3 flex items-center gap-2">
+                                <XCircle className="w-5 h-5 text-red-600" />
+                                Mistakes ({result.wrongAnswers.length})
+                              </h4>
+                              <div className="space-y-3">
+                                {result.wrongAnswers.map((mistake, idx) => (
+                                  <div key={idx} className="bg-red-500/5 border border-red-500/20 rounded-lg p-3">
+                                    <p className="font-medium mb-2">{mistake.questionText}</p>
+                                    <div className="space-y-1 text-sm">
+                                      <div className="flex items-center gap-2">
+                                        <XCircle className="w-4 h-4 text-red-600" />
+                                        <span className="text-red-600">Your answer: {mistake.options?.[mistake.userAnswer] || "Not answered"}</span>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        <CheckCircle className="w-4 h-4 text-green-600" />
+                                        <span className="text-green-600">Correct answer: {mistake.options?.[mistake.correctAnswer] || "N/A"}</span>
+                                      </div>
+                                    </div>
                                   </div>
-                                  <div className="flex items-center gap-2">
-                                    <CheckCircle className="w-4 h-4 text-green-600" />
-                                    <span className="text-green-600">Correct answer: {mistake.options?.[mistake.correctAnswer] || "N/A"}</span>
-                                  </div>
-                                </div>
+                                ))}
                               </div>
-                            ))}
-                          </div>
+                            </div>
+                          )}
+
+                          {result.cqAnswers && result.cqAnswers.length > 0 && result.cqGraded && (
+                            <div>
+                              <h4 className="font-semibold mb-3 flex items-center gap-2">
+                                <CheckCircle className="w-5 h-5 text-green-600" />
+                                Creative Questions ({result.cqAnswers.length})
+                              </h4>
+                              <div className="space-y-3">
+                                {result.cqAnswers.map((cq, idx) => (
+                                  <div key={idx} className="bg-blue-500/5 border border-blue-500/20 rounded-lg p-3">
+                                    <div className="flex justify-between items-start mb-2">
+                                      <p className="font-medium flex-1">Q{idx + 1}. {cq.questionText}</p>
+                                      <div className="text-sm font-bold text-green-600">
+                                        {cq.obtainedMarks || 0} / {cq.marks}
+                                      </div>
+                                    </div>
+                                    {cq.textAnswer && (
+                                      <div className="text-sm text-muted-foreground mt-2 p-2 bg-background rounded">
+                                        <strong>Your Answer:</strong> {cq.textAnswer}
+                                      </div>
+                                    )}
+                                    {cq.images && cq.images.length > 0 && (
+                                      <div className="mt-2 grid grid-cols-2 gap-2">
+                                        {cq.images.map((img, imgIdx) => (
+                                          <img key={imgIdx} src={img} alt={`Answer ${imgIdx + 1}`} className="rounded border border-border w-full h-24 object-cover" />
+                                        ))}
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         </motion.div>
                       )}
                     </motion.div>
