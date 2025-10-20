@@ -71,6 +71,8 @@ npm run build
 - Dark/Light theme support
 - Progressive Web App (PWA) capabilities
 - Rankings and user profiles
+- **Exam System** - MCQ and CQ questions with text or image options
+- **Student Assessments** - Exams appear after students complete video classes
 
 ## Admin Features
 Accessible via `/admin` route for authorized users:
@@ -82,6 +84,8 @@ Accessible via `/admin` route for authorized users:
 - Announcements and news
 - Website settings
 - User rankings
+- **Manage Exams** - Create exams for specific classes with time limits and pass marks
+- **Manage Questions** - Add MCQ and CQ (Creative Question) with text or image options via imgbb
 
 ## Recent Changes
 - 2025-10-19: Initial project import to Replit
@@ -93,13 +97,14 @@ Accessible via `/admin` route for authorized users:
 - **NEW**: Added visible PWA install button in header that appears when app is installable
 - All dependencies installed and project fully functional
 
-### PWA Enhancements (2025-10-19)
+### PWA Enhancements (2025-10-19 to 2025-10-20)
   - Added Firebase Cloud Messaging for push notifications
   - Created PWA install prompt modal component with beforeinstallprompt handler
   - Updated manifest.json with gcm_sender_id for FCM compatibility
   - Created firebase-messaging-sw.js service worker for background notifications
   - Added notification permission handling and FCM token management
-  - **IMPROVED**: PWA install prompt now shows after 3 seconds (was 30 seconds)
+  - **IMPROVED**: PWA install button now shows after 1 second (was 3 seconds)
+  - **NEW**: PWA install button persists in header if app is not installed
   - **IMPROVED**: Mobile-optimized bottom sheet design with drag handle
   - Compact, Replit-style modal for better mobile UX
 
@@ -133,6 +138,19 @@ Accessible via `/admin` route for authorized users:
   - **IMPROVED**: Smart filtering handles both array and string values for subjects/chapters
   - **IMPROVED**: Archive classes properly display in course navigation flow
   - **IMPROVED**: Consistent navigation breadcrumbs throughout archive and regular course flows
+
+### Exam System (2025-10-20)
+  - **NEW**: Complete exam management system with ExamContext for state management
+  - **NEW**: Admin can create exams tied to specific classes with time limits and pass marks
+  - **NEW**: Admin can add Multiple Choice Questions (MCQ) with 4 options (A, B, C, D)
+  - **NEW**: Admin can add Creative Questions (CQ) with custom text-based questions
+  - **NEW**: Image upload support for both questions and answer options via imgbb API
+  - **NEW**: Students see exam cards after completing video classes in CourseWatch page
+  - **NEW**: Student exam interface with timer, question navigation, and answer submission
+  - **NEW**: Exam results stored in Firebase Firestore with timestamp and score tracking
+  - **NEW**: Admin routes for exam management: `/admin/exams` and `/admin/exam-questions`
+  - **IMPROVED**: Responsive exam card design with visual indicators for locked/available exams
+  - **IMPROVED**: Real-time exam timer with auto-submit when time expires
 
 ### Bug Fixes (2025-10-19)
   - Fixed batch course chapters not displaying after subject selection in CourseSubjects.jsx
@@ -171,5 +189,5 @@ Accessible via `/admin` route for authorized users:
 - The app is now a full Progressive Web App with install prompt and offline capabilities
 - Admin routes require proper authentication to access
 - Push notifications work in Chrome, Edge, Firefox, and Safari (macOS & iOS 16.4+)
-- PWA install prompt appears 3 seconds after first visit on non-installed devices
+- PWA install button appears 1 second after first visit and persists if app not installed
 - All admin dashboard pages use responsive, compact layouts for mobile compatibility
