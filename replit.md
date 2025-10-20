@@ -89,6 +89,7 @@ Accessible via `/admin` route for authorized users:
 - **Manage Exams** - Create course-level exams with time limits, pass marks, and modern UI
 - **Manage Questions** - Add MCQ and CQ (Creative Question) with text or image options via imgbb
 - **Bulk Question Import** - Import multiple questions at once for faster exam setup
+- **Bulk Exam Creation** - Create multiple exams at once using JSON format with template download
 
 ## Recent Changes
 - 2025-10-19: Initial project import to Replit
@@ -169,6 +170,30 @@ Accessible via `/admin` route for authorized users:
   - **NEW**: Double-click right side of video to skip forward 10 seconds
   - **IMPROVED**: Single-click play/pause with delayed action to prevent conflicts
   - **FIXED**: Double-click no longer triggers twice (was skipping 20 seconds)
+  - **FIXED**: Added proper error handling and timeouts for YouTube API and HLS.js script loading
+  - **FIXED**: Proper cleanup of timeout handlers to prevent "state update on unmounted component" errors
+
+### Bangla Language & Currency Support (2025-10-20)
+  - **NEW**: Integrated Hind Siliguri font for proper Bangla text rendering throughout the app
+  - **NEW**: Added font configuration in index.html, tailwind.config.js, and src/index.css
+  - **NEW**: Replaced all dollar sign ($) currency symbols with Bangladeshi Taka (৳) symbol
+  - **IMPROVED**: Updated PaymentHistory and CourseDetail pages with Taka currency display
+  - **IMPROVED**: Replaced DollarSign icons with Banknote icons for better currency representation
+
+### Bulk Upload Features (2025-10-20)
+  - **NEW**: Bulk exam creation via JSON upload in ManageExams.jsx
+  - **NEW**: Bulk question import via JSON upload in ManageExamQuestions.jsx
+  - **NEW**: Template download feature for both exams and questions with proper schema
+  - **NEW**: Comprehensive error handling and validation for bulk uploads
+  - **NEW**: Success/error feedback with toast notifications for bulk operations
+  - **IMPROVED**: Maintains existing single-item CRUD functionality alongside bulk features
+
+### Mobile Responsiveness (2025-10-20)
+  - **IMPROVED**: Exam creation modal now fully responsive on mobile devices
+  - **IMPROVED**: Question creation modal optimized for small screens
+  - **IMPROVED**: Responsive padding, margins, and font sizes using Tailwind sm: breakpoints
+  - **IMPROVED**: Better modal scrolling and overflow handling on mobile
+  - **IMPROVED**: Compact button and icon sizing for mobile usability
 
 ### Bug Fixes (2025-10-19)
   - Fixed batch course chapters not displaying after subject selection in CourseSubjects.jsx
