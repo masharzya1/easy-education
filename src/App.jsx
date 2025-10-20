@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom"
 import { AuthProvider } from "./contexts/AuthContext"
 import { CartProvider } from "./contexts/CartContext"
+import { ExamProvider } from "./contexts/ExamContext"
 import { Toaster } from "./components/ui/toaster"
 import Header from "./components/Header"
 import Footer from "./components/Footer"
@@ -28,6 +29,7 @@ import Checkout from "./pages/Checkout"
 import CheckoutComplete from "./pages/CheckoutComplete"
 import PaymentHistory from "./pages/PaymentHistory"
 import MyCourses from "./pages/MyCourses"
+import ExamView from "./pages/ExamView"
 
 console.log("[v0] App.jsx loaded")
 
@@ -38,10 +40,11 @@ function App() {
     <Router>
       <AuthProvider>
         <CartProvider>
-          <div className="flex flex-col min-h-screen bg-background text-foreground">
-            <Header />
-            <main className="flex-1">
-              <Routes>
+          <ExamProvider>
+            <div className="flex flex-col min-h-screen bg-background text-foreground">
+              <Header />
+              <main className="flex-1">
+                <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/courses" element={<Courses />} />
@@ -94,6 +97,14 @@ function App() {
                   }
                 />
                 <Route
+                  path="/exam/:examId"
+                  element={
+                    <ProtectedRoute>
+                      <ExamView />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
                   path="/admin/*"
                   element={
                     <ProtectedRoute adminOnly>
@@ -109,6 +120,7 @@ function App() {
             <Toaster />
             <Footer />
           </div>
+          </ExamProvider>
         </CartProvider>
       </AuthProvider>
     </Router>

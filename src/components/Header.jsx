@@ -60,7 +60,6 @@ export default function Header() {
     const handleBeforeInstallPrompt = (e) => {
       e.preventDefault()
       setDeferredPrompt(e)
-      setShowInstallButton(true)
     }
 
     const checkIfInstalled = () => {
@@ -70,6 +69,10 @@ export default function Header() {
     }
 
     if (!checkIfInstalled()) {
+      setTimeout(() => {
+        setShowInstallButton(true)
+      }, 1000)
+      
       window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
     }
 
@@ -90,6 +93,7 @@ export default function Header() {
 
   const handleInstallClick = async () => {
     if (!deferredPrompt) {
+      alert('To install this app:\n\nOn iPhone/iPad:\n1. Tap the Share button\n2. Select "Add to Home Screen"\n\nOn Android:\n1. Tap the menu (⋮)\n2. Select "Add to Home Screen" or "Install App"')
       return
     }
 

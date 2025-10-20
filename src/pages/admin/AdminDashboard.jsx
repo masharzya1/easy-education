@@ -18,6 +18,7 @@ import {
   BookMarked,
   Menu,
   X,
+  FileQuestion,
 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import AdminOverview from "./AdminOverview"
@@ -33,6 +34,8 @@ import ManageCategories from "./ManageCategories"
 import ManageTeachers from "./ManageTeachers"
 import ManageSubjects from "./ManageSubjects"
 import ManageChapters from "./ManageChapters"
+import ManageExams from "./ManageExams"
+import ManageExamQuestions from "./ManageExamQuestions"
 
 export default function AdminDashboard() {
   const location = useLocation()
@@ -44,6 +47,7 @@ export default function AdminDashboard() {
     { name: "Users", path: "/admin/users", icon: Users },
     { name: "Courses", path: "/admin/courses", icon: BookOpen },
     { name: "Classes", path: "/admin/classes", icon: Video },
+    { name: "Exams", path: "/admin/exams", icon: FileQuestion },
     { name: "Subjects", path: "/admin/subjects", icon: BookMarked },
     { name: "Chapters", path: "/admin/chapters", icon: BookMarked },
     { name: "Categories", path: "/admin/categories", icon: Grid },
@@ -119,6 +123,8 @@ export default function AdminDashboard() {
               <Route path="users" element={<ManageUsers />} />
               <Route path="courses" element={<ManageCourses />} />
               <Route path="classes" element={<ManageClasses />} />
+              <Route path="exams" element={<ManageExams />} />
+              <Route path="exams/:examId/questions" element={<ManageExamQuestions />} />
               <Route path="subjects" element={<ManageSubjects />} />
               <Route path="chapters" element={<ManageChapters />} />
               <Route path="categories" element={<ManageCategories />} />

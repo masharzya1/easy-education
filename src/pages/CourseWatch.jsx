@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useParams, useNavigate, Link } from "react-router-dom"
 import { motion } from "framer-motion"
-import { ThumbsUp, ThumbsDown, Play, BookOpen, GraduationCap, User, Award, Clock, Lock } from "lucide-react"
+import { ThumbsUp, ThumbsDown, Play, BookOpen, GraduationCap, User, Award, Clock, Lock, FileQuestion } from "lucide-react"
 import {
   doc,
   getDoc,
@@ -20,7 +20,9 @@ import {
 } from "firebase/firestore"
 import { db } from "../lib/firebase"
 import { useAuth } from "../contexts/AuthContext"
+import { useExam } from "../contexts/ExamContext"
 import CustomVideoPlayer from "../components/CustomVideoPlayer"
+import ExamCard from "../components/ExamCard"
 
 export default function CourseWatch() {
   const { courseId } = useParams()
@@ -36,6 +38,9 @@ export default function CourseWatch() {
   const [loading, setLoading] = useState(true)
   const [hasAccess, setHasAccess] = useState(false)
   const [toast, setToast] = useState(null)
+  const [exams, setExams] = useState([])
+  
+  const { getExamsByClass } = useExam()
 
   useEffect(() => {
     fetchCourseData()
@@ -44,8 +49,19 @@ export default function CourseWatch() {
   useEffect(() => {
     if (currentClass && currentUser) {
       checkUserReaction()
+      fetchExamsForClass()
     }
   }, [currentClass, currentUser])
+  
+  const fetchExamsForClass = async () => {
+    if (!currentClass) return
+    try {
+      const examsData = await getExamsByClass(currentClass.id)
+      setExams(examsData)
+    } catch (error) {
+      console.error("Error fetching exams:", error)
+    }
+  }
 
   const fetchCourseData = async () => {
     try {
@@ -487,6 +503,20 @@ export default function CourseWatch() {
                 </div>
               )}
             </div>
+
+            {exams.length > 0 && (
+              <div className="bg-card border border-border rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-lg">
+                <h2 className="text-lg sm:text-xl font-bold mb-4 flex items-center gap-2">
+                  <FileQuestion className="w-5 h-5 text-primary" />
+                  Exams for this class
+                </h2>
+                <div className="space-y-4">
+                  {exams.map((exam) => (
+                    <ExamCard key={exam.id} exam={exam} classId={currentClass?.id} />
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="lg:col-span-1">
