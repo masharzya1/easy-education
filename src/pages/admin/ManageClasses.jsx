@@ -1007,12 +1007,12 @@ export default function ManageClasses() {
                     </div>
                   </div>
 
-                  {archiveExams.length > 0 && (
-                    <div className="border border-border rounded p-2 mt-3">
-                      <div className="flex items-center justify-between mb-2">
-                        <label className="text-xs font-medium">
-                          Select Exams to Archive ({selectedArchiveExams.length} selected)
-                        </label>
+                  <div className="border border-border rounded p-2 mt-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="text-xs font-medium">
+                        Select Exams to Archive ({selectedArchiveExams.length} selected)
+                      </label>
+                      {archiveExams.length > 0 && (
                         <button
                           type="button"
                           onClick={toggleAllArchiveExams}
@@ -1022,10 +1022,12 @@ export default function ManageClasses() {
                             ? "Deselect All"
                             : "Select All"}
                         </button>
-                      </div>
+                      )}
+                    </div>
 
-                      <div className="max-h-64 overflow-y-auto space-y-1">
-                        {archiveExams.map((exam) => (
+                    <div className="max-h-64 overflow-y-auto space-y-1">
+                      {archiveExams.length > 0 ? (
+                        archiveExams.map((exam) => (
                           <label
                             key={exam.id}
                             className="flex items-center gap-2 p-2 hover:bg-muted/50 rounded cursor-pointer"
@@ -1043,10 +1045,14 @@ export default function ManageClasses() {
                               </div>
                             </div>
                           </label>
-                        ))}
-                      </div>
+                        ))
+                      ) : (
+                        <div className="text-center py-4 text-muted-foreground text-xs">
+                          No exams found in this course
+                        </div>
+                      )}
                     </div>
-                  )}
+                  </div>
 
                   <div className="flex gap-2 pt-2">
                     <button
