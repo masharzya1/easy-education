@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react"
 import { useNavigate, Link } from "react-router-dom"
 import { motion } from "framer-motion"
-import { TrendingUp, Award, FileQuestion, CheckCircle, XCircle, Clock, BookOpen, ArrowLeft } from "lucide-react"
+import { TrendingUp, Award, FileQuestion, CheckCircle, XCircle, Clock, BookOpen, ArrowLeft, AlertCircle } from "lucide-react"
 import { doc, getDoc } from "firebase/firestore"
 import { db } from "../lib/firebase"
 import { useAuth } from "../contexts/AuthContext"
@@ -191,6 +191,8 @@ export default function Analytics() {
                 {examResults.map((result, index) => {
                   const passed = result.score >= (result.passingScore || 70)
                   const submittedDate = result.submittedAt?.toDate?.() || new Date()
+                  const hasCQAnswers = result.cqAnswers && result.cqAnswers.length > 0
+                  const cqPending = hasCQAnswers && !result.cqGraded
 
                   return (
                     <motion.div
@@ -204,16 +206,28 @@ export default function Analytics() {
                       <div className="flex justify-between items-start mb-4">
                         <div className="flex-1">
                           <h3 className="text-xl font-bold mb-1">{result.examTitle || "Untitled Exam"}</h3>
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
                             <BookOpen className="w-4 h-4" />
                             <span>{result.courseName}</span>
                           </div>
+                          {cqPending && (
+                            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-yellow-500/10 border border-yellow-500/30 rounded-full text-yellow-700 dark:text-yellow-400 text-xs font-medium">
+                              <AlertCircle className="w-3.5 h-3.5" />
+                              <span>অপেক্ষমাণ / CQ Grading Pending</span>
+                            </div>
+                          )}
+                          {hasCQAnswers && result.cqGraded && (
+                            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-500/10 border border-blue-500/30 rounded-full text-blue-700 dark:text-blue-400 text-xs font-medium">
+                              <CheckCircle className="w-3.5 h-3.5" />
+                              <span>CQ Graded: {result.cqScore?.toFixed(1) || 0}%</span>
+                            </div>
+                          )}
                         </div>
                         <div className={`px-4 py-2 rounded-lg ${
                           passed ? "bg-green-500/10 text-green-600" : "bg-red-500/10 text-red-600"
                         }`}>
                           <div className="text-2xl font-bold">{result.score}%</div>
-                          <div className="text-xs">{passed ? "Passed" : "Failed"}</div>
+                          <div className="text-xs">{cqPending ? "MCQ Only" : passed ? "Passed" : "Failed"}</div>
                         </div>
                       </div>
 

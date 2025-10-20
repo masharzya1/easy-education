@@ -333,15 +333,25 @@ export default function ExamView() {
                     (option || question.optionImages?.[optIndex]) && (
                       <motion.label
                         key={optIndex}
-                        whileHover={{ scale: 1.01 }}
-                        whileTap={{ scale: 0.99 }}
-                        className={`group relative flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 ${
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: optIndex * 0.05 }}
+                        whileHover={{ scale: 1.02, x: 4 }}
+                        whileTap={{ scale: 0.98 }}
+                        className={`group relative flex items-start gap-4 p-5 rounded-2xl border-2 cursor-pointer transition-all duration-300 overflow-hidden ${
                           answers[question.id] === optIndex
-                            ? "border-primary bg-gradient-to-br from-primary/10 to-primary/5 shadow-md"
-                            : "border-border hover:border-primary/50 hover:bg-accent/5"
+                            ? "border-primary bg-gradient-to-br from-primary/15 via-primary/10 to-primary/5 shadow-lg shadow-primary/20"
+                            : "border-border hover:border-primary/60 hover:bg-gradient-to-br hover:from-accent/10 hover:to-background hover:shadow-md"
                         }`}
                       >
-                        <div className="relative flex items-center justify-center">
+                        {answers[question.id] === optIndex && (
+                          <motion.div
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent"
+                          />
+                        )}
+                        <div className="relative flex items-center justify-center z-10">
                           <input
                             type="radio"
                             name={`question-${question.id}`}
@@ -350,32 +360,49 @@ export default function ExamView() {
                             onChange={() => handleAnswerChange(question.id, optIndex)}
                             className="peer sr-only"
                           />
-                          <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
+                          <div className={`relative w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
                             answers[question.id] === optIndex
-                              ? "border-primary bg-primary"
-                              : "border-muted-foreground group-hover:border-primary/50"
+                              ? "border-primary bg-gradient-to-br from-primary to-primary/80 shadow-md shadow-primary/30"
+                              : "border-muted-foreground group-hover:border-primary/60 group-hover:bg-primary/5"
                           }`}>
                             {answers[question.id] === optIndex && (
-                              <CheckCircle2 className="w-3 h-3 text-primary-foreground" />
+                              <motion.div
+                                initial={{ scale: 0, rotate: -180 }}
+                                animate={{ scale: 1, rotate: 0 }}
+                                transition={{ type: "spring", stiffness: 200 }}
+                              >
+                                <CheckCircle2 className="w-4 h-4 text-primary-foreground" />
+                              </motion.div>
                             )}
                           </div>
                         </div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className={`font-bold text-sm px-2 py-0.5 rounded ${
+                        <div className="flex-1 z-10">
+                          <div className="flex items-center gap-3 mb-1">
+                            <span className={`font-bold text-sm px-3 py-1 rounded-lg transition-all duration-300 ${
                               answers[question.id] === optIndex
-                                ? "bg-primary text-primary-foreground"
-                                : "bg-muted text-muted-foreground"
+                                ? "bg-gradient-to-br from-primary to-primary/90 text-primary-foreground shadow-sm"
+                                : "bg-gradient-to-br from-muted to-muted/80 text-muted-foreground group-hover:from-primary/20 group-hover:to-primary/10"
                             }`}>
                               {String.fromCharCode(65 + optIndex)}
                             </span>
-                            {option && <span className="text-base">{option}</span>}
+                            {option && (
+                              <span className={`text-base font-medium transition-colors ${
+                                answers[question.id] === optIndex ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"
+                              }`}>
+                                {option}
+                              </span>
+                            )}
                           </div>
                           {question.optionImages?.[optIndex] && (
-                            <img
+                            <motion.img
+                              whileHover={{ scale: 1.02 }}
                               src={question.optionImages[optIndex]}
                               alt={`Option ${String.fromCharCode(65 + optIndex)}`}
-                              className="max-w-sm rounded-lg mt-2 border border-border"
+                              className={`max-w-sm rounded-xl mt-3 border-2 transition-all duration-300 ${
+                                answers[question.id] === optIndex
+                                  ? "border-primary shadow-md"
+                                  : "border-border group-hover:border-primary/40"
+                              }`}
                             />
                           )}
                         </div>
