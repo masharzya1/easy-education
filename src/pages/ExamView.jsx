@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { motion } from "framer-motion"
-import { ArrowLeft, Clock, Send, AlertCircle, Image as ImageIcon } from "lucide-react"
+import { ArrowLeft, Clock, Send, AlertCircle, Image as ImageIcon, Upload, X, CheckCircle2 } from "lucide-react"
 import { useAuth } from "../contexts/AuthContext"
 import { useExam } from "../contexts/ExamContext"
 import { toast } from "../hooks/use-toast"
+import { uploadToImgbb } from "../lib/imgbb"
 
 export default function ExamView() {
   const { examId } = useParams()
@@ -15,6 +16,8 @@ export default function ExamView() {
   const [exam, setExam] = useState(null)
   const [questions, setQuestions] = useState([])
   const [answers, setAnswers] = useState({})
+  const [cqImages, setCqImages] = useState({})
+  const [uploadingImages, setUploadingImages] = useState({})
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [timeLeft, setTimeLeft] = useState(0)
@@ -107,6 +110,47 @@ export default function ExamView() {
     })
   }
 
+  const handleImageUpload = async (questionId, files) => {
+    if (!files || files.length === 0) return
+
+    setUploadingImages(prev => ({ ...prev, [questionId]: true }))
+
+    try {
+      const uploadedUrls = []
+      
+      for (const file of Array.from(files)) {
+        const url = await uploadToImgbb(file)
+        uploadedUrls.push(url)
+      }
+
+      setCqImages(prev => ({
+        ...prev,
+        [questionId]: [...(prev[questionId] || []), ...uploadedUrls]
+      }))
+
+      toast({
+        title: "Success",
+        description: `${uploadedUrls.length} image(s) uploaded successfully`,
+      })
+    } catch (error) {
+      console.error("Error uploading images:", error)
+      toast({
+        variant: "error",
+        title: "Upload Failed",
+        description: error.message || "Failed to upload images",
+      })
+    } finally {
+      setUploadingImages(prev => ({ ...prev, [questionId]: false }))
+    }
+  }
+
+  const removeImage = (questionId, imageIndex) => {
+    setCqImages(prev => ({
+      ...prev,
+      [questionId]: prev[questionId].filter((_, idx) => idx !== imageIndex)
+    }))
+  }
+
   const calculateScore = () => {
     let totalMarks = 0
     let earnedMarks = 0
@@ -140,7 +184,7 @@ export default function ExamView() {
 
     try {
       const score = calculateScore()
-      await submitExamResult(currentUser.uid, examId, answers, score, questions)
+      await submitExamResult(currentUser.uid, examId, answers, score, questions, cqImages)
 
       toast({
         title: "Exam Submitted!",
@@ -284,51 +328,125 @@ export default function ExamView() {
               </div>
 
               {question.type === "mcq" ? (
-                <div className="space-y-2 ml-11">
+                <div className="space-y-3 ml-11">
                   {question.options?.map((option, optIndex) => (
                     (option || question.optionImages?.[optIndex]) && (
-                      <label
+                      <motion.label
                         key={optIndex}
-                        className={`flex items-start gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                        whileHover={{ scale: 1.01 }}
+                        whileTap={{ scale: 0.99 }}
+                        className={`group relative flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 ${
                           answers[question.id] === optIndex
-                            ? "border-primary bg-primary/10"
-                            : "border-border hover:border-primary/50"
+                            ? "border-primary bg-gradient-to-br from-primary/10 to-primary/5 shadow-md"
+                            : "border-border hover:border-primary/50 hover:bg-accent/5"
                         }`}
                       >
-                        <input
-                          type="radio"
-                          name={`question-${question.id}`}
-                          value={optIndex}
-                          checked={answers[question.id] === optIndex}
-                          onChange={() => handleAnswerChange(question.id, optIndex)}
-                          className="mt-1 w-4 h-4"
-                        />
+                        <div className="relative flex items-center justify-center">
+                          <input
+                            type="radio"
+                            name={`question-${question.id}`}
+                            value={optIndex}
+                            checked={answers[question.id] === optIndex}
+                            onChange={() => handleAnswerChange(question.id, optIndex)}
+                            className="peer sr-only"
+                          />
+                          <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
+                            answers[question.id] === optIndex
+                              ? "border-primary bg-primary"
+                              : "border-muted-foreground group-hover:border-primary/50"
+                          }`}>
+                            {answers[question.id] === optIndex && (
+                              <CheckCircle2 className="w-3 h-3 text-primary-foreground" />
+                            )}
+                          </div>
+                        </div>
                         <div className="flex-1">
-                          <span className="font-medium mr-2">
-                            {String.fromCharCode(65 + optIndex)}.
-                          </span>
-                          {option && <span>{option}</span>}
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className={`font-bold text-sm px-2 py-0.5 rounded ${
+                              answers[question.id] === optIndex
+                                ? "bg-primary text-primary-foreground"
+                                : "bg-muted text-muted-foreground"
+                            }`}>
+                              {String.fromCharCode(65 + optIndex)}
+                            </span>
+                            {option && <span className="text-base">{option}</span>}
+                          </div>
                           {question.optionImages?.[optIndex] && (
                             <img
                               src={question.optionImages[optIndex]}
-                              alt={`Option ${optIndex + 1}`}
-                              className="max-w-sm rounded-lg mt-2"
+                              alt={`Option ${String.fromCharCode(65 + optIndex)}`}
+                              className="max-w-sm rounded-lg mt-2 border border-border"
                             />
                           )}
                         </div>
-                      </label>
+                      </motion.label>
                     )
                   ))}
                 </div>
               ) : (
-                <div className="ml-11">
+                <div className="ml-11 space-y-4">
                   <textarea
                     value={answers[question.id] || ""}
                     onChange={(e) => handleAnswerChange(question.id, e.target.value)}
-                    className="w-full px-3 py-2 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                    rows={4}
-                    placeholder="Write your answer here... (This will be manually graded)"
+                    className="w-full px-4 py-3 bg-input border-2 border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+                    rows={5}
+                    placeholder="লিখিত উত্তর লিখুন... / Write your answer here..."
                   />
+                  
+                  <div className="border-2 border-dashed border-border rounded-xl p-4 bg-accent/5">
+                    <div className="flex items-start gap-3 mb-3">
+                      <Upload className="w-5 h-5 text-primary mt-1" />
+                      <div className="flex-1">
+                        <h4 className="font-medium mb-1">উত্তর পত্রের ছবি আপলোড করুন / Upload Answer Images</h4>
+                        <p className="text-sm text-muted-foreground mb-3">
+                          একাধিক ছবি নির্বাচন করতে পারবেন (প্রতিটি সর্বোচ্চ 32MB)
+                        </p>
+                        <label className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 cursor-pointer transition-colors">
+                          <ImageIcon className="w-4 h-4" />
+                          <span>ছবি নির্বাচন করুন / Choose Images</span>
+                          <input
+                            type="file"
+                            multiple
+                            accept="image/*"
+                            onChange={(e) => handleImageUpload(question.id, e.target.files)}
+                            className="hidden"
+                            disabled={uploadingImages[question.id]}
+                          />
+                        </label>
+                      </div>
+                    </div>
+
+                    {uploadingImages[question.id] && (
+                      <div className="flex items-center gap-2 text-primary mb-3">
+                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-primary border-t-transparent" />
+                        <span className="text-sm">আপলোড হচ্ছে... / Uploading...</span>
+                      </div>
+                    )}
+
+                    {cqImages[question.id] && cqImages[question.id].length > 0 && (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-3">
+                        {cqImages[question.id].map((imageUrl, idx) => (
+                          <div key={idx} className="relative group">
+                            <img
+                              src={imageUrl}
+                              alt={`Answer ${idx + 1}`}
+                              className="w-full h-32 object-cover rounded-lg border-2 border-border"
+                            />
+                            <button
+                              onClick={() => removeImage(question.id, idx)}
+                              className="absolute top-1 right-1 p-1.5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                              type="button"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                            <div className="absolute bottom-1 left-1 px-2 py-0.5 bg-black/70 text-white text-xs rounded">
+                              ছবি {idx + 1}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </motion.div>

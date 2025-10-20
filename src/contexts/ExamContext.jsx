@@ -167,7 +167,7 @@ export function ExamProvider({ children }) {
     }
   }
 
-  const submitExamResult = async (userId, examId, answers, score, questions) => {
+  const submitExamResult = async (userId, examId, answers, score, questions, cqImages = {}) => {
     try {
       const wrongAnswers = questions.filter((q, index) => {
         const userAnswer = answers[q.id]
@@ -180,12 +180,21 @@ export function ExamProvider({ children }) {
         options: q.options
       }))
 
+      const cqAnswers = questions.filter(q => q.type === "cq" || q.type === "creative").map(q => ({
+        questionId: q.id,
+        questionText: q.questionText,
+        textAnswer: answers[q.id] || "",
+        images: cqImages[q.id] || [],
+        marks: q.marks || 0
+      }))
+
       await addDoc(collection(db, "examResults"), {
         userId,
         examId,
         answers,
         score,
         wrongAnswers,
+        cqAnswers,
         totalQuestions: questions.length,
         submittedAt: serverTimestamp(),
       })
