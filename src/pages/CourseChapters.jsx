@@ -280,11 +280,7 @@ export default function CourseChapters() {
           )}
         </div>
 
-        {isArchive && subjects.length === 0 && (
-          <div className="text-center py-12 text-muted-foreground">
-            <p>No archived subjects available yet.</p>
-          </div>
-        )}
+      
         
         {!isArchive && chapters.length === 0 && (
           <div className="text-center py-12 text-muted-foreground">
