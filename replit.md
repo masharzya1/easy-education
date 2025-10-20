@@ -71,8 +71,10 @@ npm run build
 - Dark/Light theme support
 - Progressive Web App (PWA) capabilities
 - Rankings and user profiles
-- **Exam System** - MCQ and CQ questions with text or image options
-- **Student Assessments** - Exams appear after students complete video classes
+- **Course-Level Exam System** - MCQ and CQ questions with text or image options
+- **Student Assessments** - Course-wide exams accessible from course subjects page and during video watching
+- **Exam Analytics** - Track exam history, scores, and identify mistakes for improvement
+- **Enhanced Video Player** - 10-second skip controls with buttons and double-click gestures
 
 ## Admin Features
 Accessible via `/admin` route for authorized users:
@@ -84,8 +86,9 @@ Accessible via `/admin` route for authorized users:
 - Announcements and news
 - Website settings
 - User rankings
-- **Manage Exams** - Create exams for specific classes with time limits and pass marks
+- **Manage Exams** - Create course-level exams with time limits, pass marks, and modern UI
 - **Manage Questions** - Add MCQ and CQ (Creative Question) with text or image options via imgbb
+- **Bulk Question Import** - Import multiple questions at once for faster exam setup
 
 ## Recent Changes
 - 2025-10-19: Initial project import to Replit
@@ -139,18 +142,33 @@ Accessible via `/admin` route for authorized users:
   - **IMPROVED**: Archive classes properly display in course navigation flow
   - **IMPROVED**: Consistent navigation breadcrumbs throughout archive and regular course flows
 
-### Exam System (2025-10-20)
-  - **NEW**: Complete exam management system with ExamContext for state management
-  - **NEW**: Admin can create exams tied to specific classes with time limits and pass marks
+### Course-Level Exam System (2025-10-20)
+  - **NEW**: Complete course-level exam management system with ExamContext for state management
+  - **NEW**: Admin can create exams at course level (not class-specific) with time limits and pass marks
   - **NEW**: Admin can add Multiple Choice Questions (MCQ) with 4 options (A, B, C, D)
   - **NEW**: Admin can add Creative Questions (CQ) with custom text-based questions
   - **NEW**: Image upload support for both questions and answer options via imgbb API
-  - **NEW**: Students see exam cards after completing video classes in CourseWatch page
+  - **NEW**: Exam card on CourseSubjects page showing number of available exams for the course
+  - **NEW**: Exams accessible during video watching in CourseWatch page (displays up to 3 exams)
+  - **NEW**: ExamList page (`/course/:courseId/exams`) showing all course exams with completion status
   - **NEW**: Student exam interface with timer, question navigation, and answer submission
-  - **NEW**: Exam results stored in Firebase Firestore with timestamp and score tracking
+  - **NEW**: Exam results stored in Firestore with wrong answers tracked for analytics
+  - **NEW**: Analytics page (`/analytics`) showing exam history, scores, and mistakes for improvement
+  - **NEW**: Pass/fail status displayed after exam completion based on passing score
   - **NEW**: Admin routes for exam management: `/admin/exams` and `/admin/exam-questions`
+  - **IMPROVED**: Modern exam management UI with bulk question import capability
   - **IMPROVED**: Responsive exam card design with visual indicators for locked/available exams
   - **IMPROVED**: Real-time exam timer with auto-submit when time expires
+  - **FIXED**: Analytics stats now properly update using useMemo hook
+  - **FIXED**: ExamView null check added to prevent crashes when exam data is loading
+
+### Video Player Enhancements (2025-10-20)
+  - **NEW**: 10-second skip forward button with SkipForward icon
+  - **NEW**: 10-second skip backward button with SkipBack icon
+  - **NEW**: Double-click left side of video to skip backward 10 seconds
+  - **NEW**: Double-click right side of video to skip forward 10 seconds
+  - **IMPROVED**: Single-click play/pause with delayed action to prevent conflicts
+  - **FIXED**: Double-click no longer triggers twice (was skipping 20 seconds)
 
 ### Bug Fixes (2025-10-19)
   - Fixed batch course chapters not displaying after subject selection in CourseSubjects.jsx
