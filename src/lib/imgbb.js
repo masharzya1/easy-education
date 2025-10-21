@@ -8,7 +8,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'https://easy-education.vercel.a
 /**
  * Upload file to server (which uploads to ImgBB)
  */
-export async function uploadImageToImgBB(file) {
+export default async function uploadImageToImgBB(file) {
   if (!file) {
     throw new Error("No file provided for upload")
   }
@@ -114,6 +114,3 @@ function fileToBase64(file) {
     reader.onerror = (error) => reject(error)
   })
 }
-
-// Export alias
-export { uploadImageToImgBB as uploadImageToImgBB }
