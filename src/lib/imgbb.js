@@ -31,7 +31,7 @@ export async function uploadToImgbb(file) {
     formData.append("image", file)
 
     // Call server API route
-    const response = await fetch("/api/upload-image", {
+    const response = await fetch("/src/pages/api/upload-image", {
       method: "POST",
       body: formData,
     })
