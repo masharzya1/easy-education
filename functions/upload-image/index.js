@@ -2,7 +2,6 @@ import fetch from "node-fetch"
 import FormData from "form-data"
 
 export default async function handler(req, res) {
-  // Only allow POST requests
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" })
   }
@@ -10,12 +9,10 @@ export default async function handler(req, res) {
   try {
     console.log("[v0] Image upload request received")
 
-    // Get the image from request
     let imageBuffer
     let fileName = "image.jpg"
 
     if (req.headers["content-type"]?.includes("application/json")) {
-      // Handle base64 image
       const { image } = req.body
       if (!image) {
         return res.status(400).json({ error: "No image data provided" })
@@ -23,7 +20,6 @@ export default async function handler(req, res) {
       imageBuffer = Buffer.from(image, "base64")
       fileName = "image.jpg"
     } else if (req.headers["content-type"]?.includes("multipart/form-data")) {
-      // Handle file upload
       const files = req.files
       if (!files || !files.image) {
         return res.status(400).json({ error: "No image file provided" })
@@ -34,13 +30,11 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Invalid content type" })
     }
 
-    // Validate image size (32MB limit)
     const maxSize = 32 * 1024 * 1024
     if (imageBuffer.length > maxSize) {
       return res.status(400).json({ error: "Image size exceeds 32MB limit" })
     }
 
-    // Upload to imgbb
     const imgbbApiKey = process.env.IMGBB_API_KEY
     if (!imgbbApiKey) {
       console.error("[v0] IMGBB_API_KEY not configured")
@@ -55,13 +49,17 @@ export default async function handler(req, res) {
     const response = await fetch("https://api.imgbb.com/1/upload", {
       method: "POST",
       body: formData,
+      headers: formData.getHeaders(),
     })
 
+    const responseText = await response.text()
+    console.log("[v0] imgbb response status:", response.status)
+    console.log("[v0] imgbb response text:", responseText)
+
     if (!response.ok) {
-      const errorText = await response.text()
-      console.error("[v0] imgbb error response:", errorText)
+      console.error("[v0] imgbb error response:", responseText)
       try {
-        const errorData = JSON.parse(errorText)
+        const errorData = JSON.parse(responseText)
         return res.status(response.status).json({
           error: errorData.error?.message || "Failed to upload image to imgbb",
         })
@@ -74,9 +72,10 @@ export default async function handler(req, res) {
 
     let data
     try {
-      data = await response.json()
+      data = JSON.parse(responseText)
     } catch (parseError) {
       console.error("[v0] Failed to parse imgbb response:", parseError)
+      console.error("[v0] Response text was:", responseText)
       return res.status(500).json({ error: "Invalid response format from image service" })
     }
 

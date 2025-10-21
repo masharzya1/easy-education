@@ -57,8 +57,12 @@ export default function CourseClasses() {
 
         const isClassArchived = (cls) => {
           if (cls.isArchived === true) return true
-          const subjectIsArchive = Array.isArray(cls.subject) ? cls.subject.includes("archive") : cls.subject === "archive"
-          const chapterIsArchive = Array.isArray(cls.chapter) ? cls.chapter.includes("archive") : cls.chapter === "archive"
+          const subjectIsArchive = Array.isArray(cls.subject)
+            ? cls.subject.includes("archive")
+            : cls.subject === "archive"
+          const chapterIsArchive = Array.isArray(cls.chapter)
+            ? cls.chapter.includes("archive")
+            : cls.chapter === "archive"
           return subjectIsArchive || chapterIsArchive
         }
 
@@ -152,8 +156,8 @@ export default function CourseClasses() {
           <div className="text-muted-foreground">
             {isArchive && (
               <div className="flex items-center gap-2 mb-1">
-                <Archive className="w-4 h-4 text-orange-500" />
-                <span className="text-orange-600 font-medium">Archive</span>
+                <Archive className="w-4 h-4 text-primary" />
+                <span className="font-medium">Archive</span>
               </div>
             )}
             <div>
@@ -171,30 +175,14 @@ export default function CourseClasses() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
               onClick={() => navigate(`/course/${courseId}/watch/${cls.id}`)}
-              className={`group relative bg-card border rounded-xl overflow-hidden hover:shadow-lg transition-all duration-300 text-left ${
-                isArchive 
-                  ? "border-orange-500/20 hover:border-orange-500/40" 
-                  : "border-border hover:border-primary/50"
-              }`}
+              className="group relative bg-card border border-border rounded-xl overflow-hidden hover:border-primary/50 hover:shadow-lg transition-all duration-300 text-left"
             >
-              <div className={`absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-100 transition-opacity ${
-                isArchive 
-                  ? "from-orange-500/5 to-amber-500/5" 
-                  : "from-primary/5 to-secondary/5"
-              }`} />
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-secondary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
               <div className="relative p-6">
-                <div className={`w-12 h-12 rounded-lg flex items-center justify-center mb-4 transition-colors ${
-                  isArchive 
-                    ? "bg-orange-500/10 group-hover:bg-orange-500/20" 
-                    : "bg-primary/10 group-hover:bg-primary/20"
-                }`}>
-                  <Play className={`w-6 h-6 fill-current ${isArchive ? "text-orange-500" : "text-primary"}`} />
+                <div className="w-12 h-12 rounded-lg flex items-center justify-center mb-4 transition-colors bg-primary/10 group-hover:bg-primary/20">
+                  <Play className="w-6 h-6 fill-current text-primary" />
                 </div>
-                <h3 className={`text-lg font-bold mb-3 line-clamp-2 transition-colors ${
-                  isArchive 
-                    ? "text-orange-600 group-hover:text-orange-500" 
-                    : "group-hover:text-primary"
-                }`}>
+                <h3 className="text-lg font-bold mb-3 line-clamp-2 transition-colors group-hover:text-primary">
                   {cls.title}
                 </h3>
 

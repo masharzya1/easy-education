@@ -52,6 +52,9 @@ export default function ExamView() {
         return
       }
 
+      const questionsData = await getQuestionsByExam(examId)
+      console.log("[v0] Fetched questions for exam:", examId, "Count:", questionsData.length)
+
       const existingResult = await getExamResult(currentUser.uid, examId)
 
       if (existingResult && examData.isArchived) {
@@ -69,12 +72,12 @@ export default function ExamView() {
         return
       }
 
-      const questionsData = await getQuestionsByExam(examId)
       if (questionsData.length === 0) {
+        console.warn("[v0] No questions found for exam:", examId)
         toast({
           variant: "error",
           title: "No Questions",
-          description: "This exam has no questions yet",
+          description: "This exam has no questions yet. Please contact your instructor.",
         })
         navigate(-1)
         return
@@ -86,11 +89,11 @@ export default function ExamView() {
         setTimeLeft(examData.duration * 60)
       }
     } catch (error) {
-      console.error("Error fetching exam:", error)
+      console.error("[v0] Error fetching exam:", error)
       toast({
         variant: "error",
         title: "Error",
-        description: "Failed to load exam",
+        description: "Failed to load exam: " + error.message,
       })
       navigate(-1)
     } finally {

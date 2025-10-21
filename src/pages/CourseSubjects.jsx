@@ -58,8 +58,12 @@ export default function CourseSubjects() {
 
         const isClassArchived = (cls) => {
           if (cls.isArchived === true) return true
-          const subjectIsArchive = Array.isArray(cls.subject) ? cls.subject.includes("archive") : cls.subject === "archive"
-          const chapterIsArchive = Array.isArray(cls.chapter) ? cls.chapter.includes("archive") : cls.chapter === "archive"
+          const subjectIsArchive = Array.isArray(cls.subject)
+            ? cls.subject.includes("archive")
+            : cls.subject === "archive"
+          const chapterIsArchive = Array.isArray(cls.chapter)
+            ? cls.chapter.includes("archive")
+            : cls.chapter === "archive"
           return subjectIsArchive || chapterIsArchive
         }
 
@@ -68,7 +72,7 @@ export default function CourseSubjects() {
           .filter((cls) => !isClassArchived(cls) && cls.subject)
           .forEach((cls) => {
             if (Array.isArray(cls.subject)) {
-              cls.subject.forEach(s => {
+              cls.subject.forEach((s) => {
                 if (s && s !== "archive") regularSubjects.push(s)
               })
             } else if (cls.subject !== "archive") {
@@ -141,15 +145,17 @@ export default function CourseSubjects() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0 }}
               onClick={() => navigate(`/course/${courseId}/exams`)}
-              className="group relative bg-gradient-to-br from-primary/10 to-secondary/10 border border-primary/30 rounded-xl p-6 hover:border-primary/50 hover:shadow-lg transition-all duration-300 text-left"
+              className="group relative bg-card border border-border rounded-xl p-6 hover:border-primary/50 hover:shadow-lg transition-all duration-300 text-left"
             >
               <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-secondary/5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity" />
               <div className="relative">
                 <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
                   <FileQuestion className="w-6 h-6 text-primary" />
                 </div>
-                <h3 className="text-xl font-bold mb-2 text-primary group-hover:text-primary/80 transition-colors">Exams</h3>
-                <p className="text-sm text-muted-foreground">{exams.length} exam{exams.length !== 1 ? "s" : ""} available</p>
+                <h3 className="text-xl font-bold mb-2 group-hover:text-primary transition-colors">Exams</h3>
+                <p className="text-sm text-muted-foreground">
+                  {exams.length} exam{exams.length !== 1 ? "s" : ""} available
+                </p>
               </div>
             </motion.button>
           )}
@@ -184,14 +190,14 @@ export default function CourseSubjects() {
               onClick={() => {
                 navigate(`/course/${courseId}/subjects/archive/chapters`)
               }}
-              className="group relative bg-gradient-to-br from-orange-500/10 to-amber-500/10 border border-orange-500/30 rounded-xl p-6 hover:border-orange-500/50 hover:shadow-lg transition-all duration-300 text-left"
+              className="group relative bg-card border border-border rounded-xl p-6 hover:border-primary/50 hover:shadow-lg transition-all duration-300 text-left"
             >
-              <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-amber-500/5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-secondary/5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity" />
               <div className="relative">
-                <div className="w-12 h-12 bg-orange-500/10 rounded-lg flex items-center justify-center mb-4 group-hover:bg-orange-500/20 transition-colors">
-                  <Archive className="w-6 h-6 text-orange-500" />
+                <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
+                  <Archive className="w-6 h-6 text-primary" />
                 </div>
-                <h3 className="text-xl font-bold mb-2 text-orange-600 group-hover:text-orange-500 transition-colors">Archive</h3>
+                <h3 className="text-xl font-bold mb-2 group-hover:text-primary transition-colors">Archive</h3>
                 <p className="text-sm text-muted-foreground">Archived classes from previous batches</p>
               </div>
             </motion.button>
