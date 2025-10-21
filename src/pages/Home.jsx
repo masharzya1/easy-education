@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { motion } from "framer-motion"
-import { Search, TrendingUp, Clock, Users, ArrowRight, ShoppingCart, Trash2, Check, Zap, BookOpen, Award, Infinity, Sparkles, GraduationCap, Star } from "lucide-react"
+import { Search, TrendingUp, Clock, Users, ArrowRight, ShoppingCart, Trash2, Check, Zap, BookOpen, Award, Infinity } from "lucide-react"
 import { collection, query, orderBy, limit, getDocs, where } from "firebase/firestore"
 import { db } from "../lib/firebase"
 import { useCart } from "../contexts/CartContext"
@@ -184,251 +184,95 @@ export default function Home() {
 
   return (
     <div className="min-h-screen">
-      <section className="relative bg-gradient-to-br from-background via-primary/5 to-secondary/10 py-28 md:py-40 px-4 overflow-hidden">
-        {/* Animated gradient blobs */}
-        <div className="absolute inset-0 overflow-hidden">
-          <motion.div
-            animate={{
-              x: [0, 100, 0],
-              y: [0, -50, 0],
-              scale: [1, 1.2, 1],
-            }}
-            transition={{
-              duration: 20,
-              repeat: Infinity,
-              ease: "easeInOut"
-            }}
-            className="absolute top-0 -right-20 w-96 h-96 bg-gradient-to-br from-purple-500/30 to-pink-500/30 rounded-full blur-3xl"
-          />
-          <motion.div
-            animate={{
-              x: [0, -80, 0],
-              y: [0, 100, 0],
-              scale: [1, 1.3, 1],
-            }}
-            transition={{
-              duration: 25,
-              repeat: Infinity,
-              ease: "easeInOut"
-            }}
-            className="absolute -bottom-20 -left-20 w-[500px] h-[500px] bg-gradient-to-tr from-blue-500/30 to-cyan-500/30 rounded-full blur-3xl"
-          />
-          <motion.div
-            animate={{
-              x: [0, -60, 0],
-              y: [0, -80, 0],
-              scale: [1, 1.15, 1],
-            }}
-            transition={{
-              duration: 18,
-              repeat: Infinity,
-              ease: "easeInOut"
-            }}
-            className="absolute top-1/3 right-1/4 w-72 h-72 bg-gradient-to-br from-orange-500/20 to-yellow-500/20 rounded-full blur-3xl"
-          />
-        </div>
+      <section className="relative bg-background py-20 md:py-32 lg:py-40 px-4 overflow-hidden">
+        {/* Subtle grid background */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:24px_24px]"></div>
 
-        {/* Floating decorative icons */}
-        <motion.div
-          animate={{
-            y: [0, -20, 0],
-            rotate: [0, 10, 0]
-          }}
-          transition={{
-            duration: 6,
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
-          className="absolute top-20 left-10 md:left-20 opacity-20"
-        >
-          <BookOpen className="w-16 h-16 text-primary" />
-        </motion.div>
-        <motion.div
-          animate={{
-            y: [0, 20, 0],
-            rotate: [0, -10, 0]
-          }}
-          transition={{
-            duration: 7,
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
-          className="absolute top-40 right-10 md:right-32 opacity-20"
-        >
-          <GraduationCap className="w-20 h-20 text-secondary" />
-        </motion.div>
-        <motion.div
-          animate={{
-            y: [0, -15, 0],
-            rotate: [0, 15, 0]
-          }}
-          transition={{
-            duration: 8,
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
-          className="absolute bottom-32 left-16 md:left-40 opacity-20"
-        >
-          <Award className="w-14 h-14 text-primary" />
-        </motion.div>
-        <motion.div
-          animate={{
-            y: [0, 25, 0],
-            scale: [1, 1.1, 1]
-          }}
-          transition={{
-            duration: 5,
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
-          className="absolute bottom-20 right-20 md:right-40 opacity-20"
-        >
-          <Sparkles className="w-12 h-12 text-secondary" />
-        </motion.div>
+        {/* Minimal gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/50 to-background pointer-events-none"></div>
 
         <div className="container mx-auto relative z-10">
-          <div className="max-w-5xl mx-auto text-center">
+          <div className="max-w-4xl mx-auto text-center">
             <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5 }}
-              className="mb-6"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+              className="mb-8"
             >
-              <span className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary/20 to-secondary/20 backdrop-blur-sm rounded-full text-sm font-medium border border-primary/20">
-                <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent font-semibold">
-                  #1 Premium Education Platform
-                </span>
+              <span className="inline-flex items-center gap-2 px-3 py-1 bg-muted/50 border border-border rounded-full text-xs font-medium text-muted-foreground">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                Trusted by 10,000+ Students
               </span>
             </motion.div>
 
             <motion.h1
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="text-5xl md:text-7xl lg:text-8xl font-bold mb-6 text-balance leading-[1.1] tracking-tight"
+              transition={{ delay: 0.1, duration: 0.4 }}
+              className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight tracking-tight"
             >
-              Transform Your Future with{" "}
+              Develop the skills to{" "}
               <span className="relative inline-block">
-                <span className="bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 bg-clip-text text-transparent animate-gradient">
-                  World-Class Learning
+                <span className="bg-gradient-to-r from-foreground via-foreground to-foreground/80 bg-clip-text text-transparent">
+                  drive your career
                 </span>
-                <motion.span
-                  initial={{ scaleX: 0 }}
-                  animate={{ scaleX: 1 }}
-                  transition={{ delay: 0.5, duration: 0.8 }}
-                  className="absolute -bottom-2 left-0 right-0 h-1 bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 rounded-full origin-left"
-                />
               </span>
             </motion.h1>
 
             <motion.p
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="text-lg md:text-2xl text-muted-foreground mb-12 max-w-3xl mx-auto text-pretty leading-relaxed font-medium"
+              transition={{ delay: 0.2, duration: 0.4 }}
+              className="text-base md:text-lg text-muted-foreground mb-12 max-w-2xl mx-auto leading-relaxed"
             >
-              Access premium educational courses from expert instructors. Learn at your own pace with lifetime access to cutting-edge content.
+              Learn from expert instructors with hands-on courses designed to help you master new skills and advance your education.
             </motion.p>
 
-            <motion.form
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              onSubmit={handleSearch}
-              className="max-w-3xl mx-auto mb-10"
-            >
-              <div className="relative group">
-                <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-purple-500/20 to-secondary/20 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-500 opacity-70 group-hover:opacity-100"></div>
-                <div className="relative flex items-center bg-card/80 backdrop-blur-xl border-2 border-border rounded-2xl overflow-hidden shadow-2xl hover:border-primary/60 hover:shadow-primary/10 transition-all duration-300 group-hover:scale-[1.02]">
-                  <Search className="absolute left-6 w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors" />
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search for courses, subjects, or topics..."
-                    className="w-full pl-16 pr-36 py-6 bg-transparent focus:outline-none text-base md:text-lg placeholder:text-muted-foreground/60"
-                  />
-                  <button
-                    type="submit"
-                    className="absolute right-2 px-8 py-4 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground rounded-xl transition-all font-semibold flex items-center gap-2 group/btn shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
-                  >
-                    Search
-                    <ArrowRight className="w-5 h-5 group-hover/btn:translate-x-1 transition-transform" />
-                  </button>
-                </div>
-              </div>
-            </motion.form>
-
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-              className="flex flex-wrap items-center justify-center gap-4 mb-12"
+              transition={{ delay: 0.3, duration: 0.4 }}
+              className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-12"
             >
               <Link
                 to="/courses"
-                className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-secondary to-secondary/80 hover:from-secondary/90 hover:to-secondary/70 text-secondary-foreground rounded-xl transition-all font-semibold shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 group"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-foreground text-background rounded-lg hover:bg-foreground/90 transition-all font-medium text-sm group"
               >
-                <Sparkles className="w-5 h-5" />
-                Explore Courses
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                Start Learning
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </Link>
+              <form onSubmit={handleSearch} className="relative w-full sm:w-auto">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search courses..."
+                  className="w-full sm:w-64 pl-10 pr-4 py-2.5 bg-muted/50 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring text-sm placeholder:text-muted-foreground/60"
+                />
+              </form>
             </motion.div>
 
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 0.5 }}
-              className="flex flex-wrap items-center justify-center gap-6 md:gap-8"
+              transition={{ delay: 0.4, duration: 0.4 }}
+              className="flex flex-wrap items-center justify-center gap-4 text-xs text-muted-foreground"
             >
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.6 }}
-                whileHover={{ scale: 1.05, y: -2 }}
-                className="flex items-center gap-3 px-5 py-3 bg-card/60 backdrop-blur-sm rounded-xl border border-border/50 hover:border-primary/50 transition-all cursor-default shadow-md"
-              >
-                <div className="p-2 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-lg">
-                  <BookOpen className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                </div>
-                <div className="text-left">
-                  <div className="text-sm font-semibold">1000+ Courses</div>
-                  <div className="text-xs text-muted-foreground">Premium content</div>
-                </div>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.7 }}
-                whileHover={{ scale: 1.05, y: -2 }}
-                className="flex items-center gap-3 px-5 py-3 bg-card/60 backdrop-blur-sm rounded-xl border border-border/50 hover:border-primary/50 transition-all cursor-default shadow-md"
-              >
-                <div className="p-2 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-lg">
-                  <Award className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-                </div>
-                <div className="text-left">
-                  <div className="text-sm font-semibold">Expert Instructors</div>
-                  <div className="text-xs text-muted-foreground">Industry leaders</div>
-                </div>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.8 }}
-                whileHover={{ scale: 1.05, y: -2 }}
-                className="flex items-center gap-3 px-5 py-3 bg-card/60 backdrop-blur-sm rounded-xl border border-border/50 hover:border-primary/50 transition-all cursor-default shadow-md"
-              >
-                <div className="p-2 bg-gradient-to-br from-orange-500/20 to-yellow-500/20 rounded-lg">
-                  <Infinity className="w-5 h-5 text-orange-600 dark:text-orange-400" />
-                </div>
-                <div className="text-left">
-                  <div className="text-sm font-semibold">Lifetime Access</div>
-                  <div className="text-xs text-muted-foreground">Learn anytime</div>
-                </div>
-              </motion.div>
+              <div className="flex items-center gap-1.5">
+                <BookOpen className="w-3.5 h-3.5" />
+                <span>1000+ Courses</span>
+              </div>
+              <div className="w-1 h-1 rounded-full bg-border"></div>
+              <div className="flex items-center gap-1.5">
+                <Award className="w-3.5 h-3.5" />
+                <span>Expert Instructors</span>
+              </div>
+              <div className="w-1 h-1 rounded-full bg-border"></div>
+              <div className="flex items-center gap-1.5">
+                <Infinity className="w-3.5 h-3.5" />
+                <span>Lifetime Access</span>
+              </div>
             </motion.div>
           </div>
         </div>

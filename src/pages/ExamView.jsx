@@ -24,6 +24,8 @@ export default function ExamView() {
   const [timeLeft, setTimeLeft] = useState(0)
   const [hasStarted, setHasStarted] = useState(false)
   const [confirmDialog, setConfirmDialog] = useState({ isOpen: false, title: "", message: "", onConfirm: () => {} })
+  const [reviewMode, setReviewMode] = useState(false)
+  const [userResult, setUserResult] = useState(null)
 
   useEffect(() => {
     if (!currentUser) {
@@ -36,16 +38,6 @@ export default function ExamView() {
   const fetchExamData = async () => {
     try {
       setLoading(true)
-      
-      const existingResult = await getExamResult(currentUser.uid, examId)
-      if (existingResult) {
-        toast({
-          title: "Already Attempted",
-          description: "You have already completed this exam",
-        })
-        navigate(-1)
-        return
-      }
 
       const examData = await getExamById(examId)
       if (!examData) {
@@ -53,6 +45,23 @@ export default function ExamView() {
           variant: "error",
           title: "Error",
           description: "Exam not found",
+        })
+        navigate(-1)
+        return
+      }
+
+      const existingResult = await getExamResult(currentUser.uid, examId)
+
+      if (existingResult && examData.isArchived) {
+        setReviewMode(true)
+        setUserResult(existingResult)
+        setHasStarted(true)
+        const answersMap = existingResult.answers || {}
+        setAnswers(answersMap)
+      } else if (existingResult && !examData.isArchived) {
+        toast({
+          title: "Already Attempted",
+          description: "You have already completed this exam",
         })
         navigate(-1)
         return
@@ -71,7 +80,9 @@ export default function ExamView() {
 
       setExam(examData)
       setQuestions(questionsData)
-      setTimeLeft(examData.duration * 60)
+      if (!reviewMode) {
+        setTimeLeft(examData.duration * 60)
+      }
     } catch (error) {
       console.error("Error fetching exam:", error)
       toast({
@@ -240,7 +251,7 @@ export default function ExamView() {
     )
   }
 
-  if (!hasStarted) {
+  if (!hasStarted && !reviewMode) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
         <motion.div
@@ -298,13 +309,20 @@ export default function ExamView() {
       <div className="max-w-4xl mx-auto">
         <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border pb-4 mb-6">
           <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold">{exam.title}</h1>
-            <div className={`flex items-center gap-2 px-4 py-2 rounded-lg ${
-              timeLeft < 300 ? "bg-red-500/10 text-red-600" : "bg-primary/10 text-primary"
-            }`}>
-              <Clock className="w-5 h-5" />
-              <span className="font-mono font-bold text-lg">{formatTime(timeLeft)}</span>
+            <div>
+              <h1 className="text-2xl font-bold">{exam.title}</h1>
+              {reviewMode && (
+                <p className="text-sm text-muted-foreground mt-1">Review Mode - Your Score: {userResult?.score || 0}%</p>
+              )}
             </div>
+            {!reviewMode && (
+              <div className={`flex items-center gap-2 px-4 py-2 rounded-lg ${
+                timeLeft < 300 ? "bg-red-500/10 text-red-600" : "bg-primary/10 text-primary"
+              }`}>
+                <Clock className="w-5 h-5" />
+                <span className="font-mono font-bold text-lg">{formatTime(timeLeft)}</span>
+              </div>
+            )}
           </div>
         </div>
 
@@ -340,19 +358,38 @@ export default function ExamView() {
 
               {question.type === "mcq" ? (
                 <div className="space-y-3 ml-11">
-                  {question.options?.map((option, optIndex) => (
-                    (option || question.optionImages?.[optIndex]) && (
+                  {question.options?.map((option, optIndex) => {
+                    const isUserAnswer = answers[question.id] === optIndex
+                    const isCorrectAnswer = question.correctAnswer === optIndex
+                    const showCorrectness = reviewMode
+
+                    let borderColor = "border-border"
+                    let bgColor = ""
+
+                    if (showCorrectness) {
+                      if (isCorrectAnswer) {
+                        borderColor = "border-green-500"
+                        bgColor = "bg-green-500/10"
+                      }
+                      if (isUserAnswer && !isCorrectAnswer) {
+                        borderColor = "border-red-500"
+                        bgColor = "bg-red-500/10"
+                      }
+                    } else if (isUserAnswer) {
+                      borderColor = "border-primary"
+                      bgColor = "bg-gradient-to-br from-primary/15 via-primary/10 to-primary/5 shadow-lg shadow-primary/20"
+                    }
+
+                    return (option || question.optionImages?.[optIndex]) && (
                       <motion.label
                         key={optIndex}
                         initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: optIndex * 0.05 }}
-                        whileHover={{ scale: 1.02, x: 4 }}
-                        whileTap={{ scale: 0.98 }}
-                        className={`group relative flex items-start gap-4 p-5 rounded-2xl border-2 cursor-pointer transition-all duration-300 overflow-hidden ${
-                          answers[question.id] === optIndex
-                            ? "border-primary bg-gradient-to-br from-primary/15 via-primary/10 to-primary/5 shadow-lg shadow-primary/20"
-                            : "border-border hover:border-primary/60 hover:bg-gradient-to-br hover:from-accent/10 hover:to-background hover:shadow-md"
+                        whileHover={!reviewMode ? { scale: 1.02, x: 4 } : {}}
+                        whileTap={!reviewMode ? { scale: 0.98 } : {}}
+                        className={`group relative flex items-start gap-4 p-5 rounded-2xl border-2 transition-all duration-300 overflow-hidden ${borderColor} ${bgColor} ${
+                          reviewMode ? "cursor-default" : "cursor-pointer hover:border-primary/60 hover:bg-gradient-to-br hover:from-accent/10 hover:to-background hover:shadow-md"
                         }`}
                       >
                         {answers[question.id] === optIndex && (
@@ -368,21 +405,26 @@ export default function ExamView() {
                             name={`question-${question.id}`}
                             value={optIndex}
                             checked={answers[question.id] === optIndex}
-                            onChange={() => handleAnswerChange(question.id, optIndex)}
+                            onChange={() => !reviewMode && handleAnswerChange(question.id, optIndex)}
                             className="peer sr-only"
+                            disabled={reviewMode}
                           />
                           <div className={`relative w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
-                            answers[question.id] === optIndex
+                            showCorrectness && isCorrectAnswer
+                              ? "border-green-600 bg-green-600"
+                              : showCorrectness && isUserAnswer && !isCorrectAnswer
+                              ? "border-red-600 bg-red-600"
+                              : answers[question.id] === optIndex
                               ? "border-primary bg-gradient-to-br from-primary to-primary/80 shadow-md shadow-primary/30"
                               : "border-muted-foreground group-hover:border-primary/60 group-hover:bg-primary/5"
                           }`}>
-                            {answers[question.id] === optIndex && (
+                            {(answers[question.id] === optIndex || (showCorrectness && isCorrectAnswer)) && (
                               <motion.div
                                 initial={{ scale: 0, rotate: -180 }}
                                 animate={{ scale: 1, rotate: 0 }}
                                 transition={{ type: "spring", stiffness: 200 }}
                               >
-                                <CheckCircle2 className="w-4 h-4 text-primary-foreground" />
+                                <CheckCircle2 className="w-4 h-4 text-white" />
                               </motion.div>
                             )}
                           </div>
@@ -419,7 +461,7 @@ export default function ExamView() {
                         </div>
                       </motion.label>
                     )
-                  ))}
+                  })}
                 </div>
               ) : (
                 <div className="ml-11 space-y-4">
@@ -491,34 +533,49 @@ export default function ExamView() {
           ))}
         </div>
 
-        <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t border-border p-4">
-          <div className="max-w-4xl mx-auto flex gap-3">
-            <button
-              onClick={() => {
-                setConfirmDialog({
-                  isOpen: true,
-                  title: "Exit Exam",
-                  message: "Are you sure you want to exit? Your progress will be lost.",
-                  variant: "danger",
-                  confirmText: "Exit",
-                  onConfirm: () => navigate(-1)
-                })
-              }}
-              className="px-6 py-3 bg-muted hover:bg-muted/80 rounded-lg transition-colors font-medium"
-              disabled={submitting}
-            >
-              Exit
-            </button>
-            <button
-              onClick={handleSubmit}
-              disabled={submitting}
-              className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg transition-colors font-medium disabled:opacity-50"
-            >
-              <Send className="w-5 h-5" />
-              {submitting ? "Submitting..." : "Submit Exam"}
-            </button>
+        {!reviewMode && (
+          <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t border-border p-4">
+            <div className="max-w-4xl mx-auto flex gap-3">
+              <button
+                onClick={() => {
+                  setConfirmDialog({
+                    isOpen: true,
+                    title: "Exit Exam",
+                    message: "Are you sure you want to exit? Your progress will be lost.",
+                    variant: "danger",
+                    confirmText: "Exit",
+                    onConfirm: () => navigate(-1)
+                  })
+                }}
+                className="px-6 py-3 bg-muted hover:bg-muted/80 rounded-lg transition-colors font-medium"
+                disabled={submitting}
+              >
+                Exit
+              </button>
+              <button
+                onClick={handleSubmit}
+                disabled={submitting}
+                className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg transition-colors font-medium disabled:opacity-50"
+              >
+                <Send className="w-5 h-5" />
+                {submitting ? "Submitting..." : "Submit Exam"}
+              </button>
+            </div>
           </div>
-        </div>
+        )}
+
+        {reviewMode && (
+          <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t border-border p-4">
+            <div className="max-w-4xl mx-auto">
+              <button
+                onClick={() => navigate(-1)}
+                className="w-full px-6 py-3 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg transition-colors font-medium"
+              >
+                Back to Exams
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       <ConfirmDialog

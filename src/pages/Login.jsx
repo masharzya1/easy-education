@@ -46,12 +46,22 @@ export default function Login() {
         }
       }, 200)
     } catch (err) {
+      console.error(" Google login error:", err)
       if (err.message === "BANNED_USER") {
         setError("Your account has been banned. Please contact support.")
+      } else if (err.code === "auth/popup-closed-by-user") {
+        setError("Sign-in popup was closed. Please try again.")
+      } else if (err.code === "auth/popup-blocked") {
+        setError("Sign-in popup was blocked by your browser. Please allow popups and try again.")
+      } else if (err.code === "auth/cancelled-popup-request") {
+        setError("Another sign-in popup is already open.")
+      } else if (err.code === "auth/network-request-failed") {
+        setError("Network error. Please check your internet connection.")
+      } else if (err.code === "auth/internal-error") {
+        setError("Google Sign-in is not configured properly. Please contact support.")
       } else {
-        setError("Failed to sign in with Google.")
+        setError(`Failed to sign in with Google: ${err.message || "Unknown error"}`)
       }
-      console.error(" Google login error:", err)
       setLoading(false)
     }
   }

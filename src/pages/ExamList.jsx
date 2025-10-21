@@ -230,19 +230,29 @@ export default function ExamList() {
                   </div>
 
                   {hasAttempted ? (
-                    <div className="bg-primary/10 border border-primary/30 rounded-lg p-3 mb-4">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm font-medium">Your Score:</span>
-                        <span className={`text-xl font-bold ${
-                          result.score >= exam.passingScore ? "text-green-600" : "text-red-600"
-                        }`}>
-                          {result.score}%
-                        </span>
+                    <div className="space-y-3">
+                      <div className="bg-primary/10 border border-primary/30 rounded-lg p-3">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium">Your Score:</span>
+                          <span className={`text-xl font-bold ${
+                            result.score >= exam.passingScore ? "text-green-600" : "text-red-600"
+                          }`}>
+                            {result.score}%
+                          </span>
+                        </div>
+                        {result.score >= exam.passingScore ? (
+                          <p className="text-sm text-green-600 mt-1">🎉 Passed!</p>
+                        ) : (
+                          <p className="text-sm text-red-600 mt-1">Keep practicing!</p>
+                        )}
                       </div>
-                      {result.score >= exam.passingScore ? (
-                        <p className="text-sm text-green-600 mt-1">🎉 Passed!</p>
-                      ) : (
-                        <p className="text-sm text-red-600 mt-1">Keep practicing!</p>
+                      {exam.isArchived && (
+                        <Link
+                          to={`/exam/${exam.id}`}
+                          className="block w-full px-4 py-2 bg-secondary text-secondary-foreground rounded-lg hover:bg-secondary/90 transition-colors text-center font-medium"
+                        >
+                          View Questions & Answers
+                        </Link>
                       )}
                     </div>
                   ) : (
