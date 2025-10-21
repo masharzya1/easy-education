@@ -1,91 +1,68 @@
 /**
- * Vercel Serverless Function for Image Upload
- * API Key থাকবে server-side এ (secure)
+ * Vercel Serverless Function: /api/upload-image
+ * এই ফাইলটি ImgBB তে আপলোড করার জন্য API Key গোপন রাখে এবং Base64 ডেটা হ্যান্ডেল করে।
+ * ⚠️ নিশ্চিত করুন যে IMGBB_API_KEY ভেরিয়েবলটি Vercel-এ সেট করা আছে।
  */
 
+// ImgBB API Key এনভায়রনমেন্ট ভেরিয়েবল থেকে নেওয়া হলো
+const IMGBB_API_KEY = process.env.IMGBB_API_KEY;
+
 export default async function handler(req, res) {
-  // CORS headers
-  res.setHeader('Access-Control-Allow-Credentials', true)
-  res.setHeader('Access-Control-Allow-Origin', '*')
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT')
-  res.setHeader(
-    'Access-Control-Allow-Headers',
-    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
-  )
-  
-  // Handle OPTIONS request
-  if (req.method === 'OPTIONS') {
-    res.status(200).end()
-    return
-  }
-  
-  // Only allow POST
+  // ১. শুধুমাত্র POST অনুরোধ গ্রহণ করা হবে।
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' })
+    return res.status(405).json({ success: false, error: 'Method Not Allowed' });
   }
+  
+  // ২. API Key যাচাইকরণ
+  if (!IMGBB_API_KEY) {
+    return res.status(500).json({ success: false, error: 'ImgBB API Key is not configured on the server.' });
+  }
+  
+  // ৩. ক্লায়েন্ট থেকে আসা JSON বডি থেকে Base64 string বের করা হলো।
+  // যেহেতু ক্লায়েন্ট (src/lib/imgbb.js) JSON.stringify({ image: base64Data }) পাঠাচ্ছে, 
+  // তাই এটি req.body.image থেকে অ্যাক্সেস করা যাবে।
+  const { image: base64Data } = req.body;
+  
+  if (!base64Data || typeof base64Data !== 'string') {
+    return res.status(400).json({ success: false, error: "Missing or invalid 'image' data (Base64 string expected in JSON body)." });
+  }
+  
+  // ৪. ImgBB-এর জন্য ডেটা ফরম্যাট করা: 
+  // ImgBB API-কে অবশ্যই 'application/x-www-form-urlencoded' ফরম্যাটে 'image' প্যারামিটারটি পাঠাতে হবে।
+  const body = new URLSearchParams();
+  body.append('image', base64Data); // Base64 স্ট্রিং এখানে image প্যারামিটারে যুক্ত হলো।
+  
+  const url = `https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`;
   
   try {
-    const IMGBB_API_KEY = process.env.IMGBB_API_KEY
+    // ৫. ImgBB API কল
+    const imgbbResponse = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: body.toString(),
+    });
     
-    if (!IMGBB_API_KEY) {
-      console.error('❌ IMGBB_API_KEY not found in environment variables')
-      return res.status(500).json({ error: 'Server configuration error' })
+    const imgbbData = await imgbbResponse.json();
+    
+    if (!imgbbResponse.ok || !imgbbData.success) {
+      // ImgBB এরর হ্যান্ডলিং: ImgBB থেকে আসা এররটি ক্লায়েন্টকে ফেরত পাঠানো হলো।
+      console.error('ImgBB Error Response:', imgbbData);
+      const errorMessage = imgbbData.error?.message || 'Failed to upload image to ImgBB.';
+      return res.status(400).json({ success: false, error: errorMessage });
     }
     
-    // Get form data
-    const formData = new FormData()
-    
-    // Check if image is base64 or file
-    if (req.body.image) {
-      // Base64 upload
-      formData.append('image', req.body.image)
-    } else if (req.files && req.files.image) {
-      // File upload (if using multipart)
-      formData.append('image', req.files.image.data)
-    } else {
-      return res.status(400).json({ error: 'No image provided' })
-    }
-    
-    console.log('📤 Uploading to ImgBB...')
-    
-    // Upload to ImgBB
-    const response = await fetch(
-      `https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`,
-      {
-        method: 'POST',
-        body: formData,
-      }
-    )
-    
-    if (!response.ok) {
-      const errorData = await response.json()
-      console.error('❌ ImgBB error:', errorData)
-      return res.status(response.status).json({
-        error: errorData.error?.message || 'Upload failed'
-      })
-    }
-    
-    const data = await response.json()
-    
-    if (!data.success || !data.data?.url) {
-      console.error('❌ Invalid ImgBB response:', data)
-      return res.status(500).json({ error: 'Invalid response from ImgBB' })
-    }
-    
-    console.log('✅ Upload successful:', data.data.url)
-    
-    // Return image URL
+    // ৬. সফল রেসপন্স
     return res.status(200).json({
       success: true,
-      url: data.data.url,
-      delete_url: data.data.delete_url,
-    })
+      url: imgbbData.data.url,
+      delete_url: imgbbData.data.delete_url
+    });
     
   } catch (error) {
-    console.error('❌ Server error:', error)
-    return res.status(500).json({
-      error: 'Internal server error',
-      message: error.message
-    })
+    // ৭. সার্ভার এরর হ্যান্ডলিং (নেটওয়ার্ক বা ফেইলিওর)
+    console.error('Server error during ImgBB call:', error);
+    return res.status(500).json({ success: false, error: `Internal Server Error: ${error.message}` });
   }
 }
