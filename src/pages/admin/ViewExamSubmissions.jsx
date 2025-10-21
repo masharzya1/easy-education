@@ -1,7 +1,20 @@
+"use client"
+
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
-import { FileQuestion, User, Calendar, Image as ImageIcon, CheckCircle, Award, ChevronDown, ChevronUp, Save, Edit2 } from "lucide-react"
-import { collection, getDocs, query, orderBy, doc, getDoc, where, updateDoc } from "firebase/firestore"
+import {
+  FileQuestion,
+  User,
+  Calendar,
+  ImageIcon,
+  CheckCircle,
+  Award,
+  ChevronDown,
+  ChevronUp,
+  Save,
+  Edit2,
+} from "lucide-react"
+import { collection, getDocs, query, orderBy, doc, getDoc, updateDoc } from "firebase/firestore"
 import { db } from "../../lib/firebase"
 import { toast } from "../../hooks/use-toast"
 
@@ -22,25 +35,22 @@ export default function ViewExamSubmissions() {
   const fetchData = async () => {
     try {
       setLoading(true)
-      
+
       // Fetch all exams
       const examsSnapshot = await getDocs(collection(db, "exams"))
-      const examsData = examsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+      const examsData = examsSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
       setExams(examsData)
 
       // Fetch all submissions
-      const submissionsQuery = query(
-        collection(db, "examResults"),
-        orderBy("submittedAt", "desc")
-      )
+      const submissionsQuery = query(collection(db, "examResults"), orderBy("submittedAt", "desc"))
       const submissionsSnapshot = await getDocs(submissionsQuery)
-      
+
       const submissionsData = []
       const userIds = new Set()
 
       for (const submissionDoc of submissionsSnapshot.docs) {
         const submission = { id: submissionDoc.id, ...submissionDoc.data() }
-        
+
         // Only include submissions with CQ answers
         if (submission.cqAnswers && submission.cqAnswers.length > 0) {
           submissionsData.push(submission)
@@ -59,7 +69,6 @@ export default function ViewExamSubmissions() {
         }
       }
       setUsers(usersData)
-
     } catch (error) {
       console.error("Error fetching data:", error)
       toast({
@@ -73,61 +82,65 @@ export default function ViewExamSubmissions() {
   }
 
   const toggleExpanded = (submissionId) => {
-    setExpandedSubmissions(prev => ({
+    setExpandedSubmissions((prev) => ({
       ...prev,
-      [submissionId]: !prev[submissionId]
+      [submissionId]: !prev[submissionId],
     }))
   }
 
   const handleGradeChange = (submissionId, questionIndex, value) => {
-    setEditingGrades(prev => ({
+    setEditingGrades((prev) => ({
       ...prev,
       [submissionId]: {
         ...prev[submissionId],
-        [questionIndex]: value
-      }
+        [questionIndex]: value,
+      },
     }))
   }
 
   const saveGrades = async (submissionId) => {
-    const submission = submissions.find(s => s.id === submissionId)
+    const submission = submissions.find((s) => s.id === submissionId)
     if (!submission) return
 
-    setSavingGrades(prev => ({ ...prev, [submissionId]: true }))
+    setSavingGrades((prev) => ({ ...prev, [submissionId]: true }))
 
     try {
       const updatedCqAnswers = submission.cqAnswers.map((cqAnswer, index) => ({
         ...cqAnswer,
-        obtainedMarks: editingGrades[submissionId]?.[index] !== undefined
-          ? parseFloat(editingGrades[submissionId][index]) || 0
-          : cqAnswer.obtainedMarks || 0
+        obtainedMarks:
+          editingGrades[submissionId]?.[index] !== undefined
+            ? Number.parseFloat(editingGrades[submissionId][index]) || 0
+            : cqAnswer.obtainedMarks || 0,
       }))
 
       // Calculate total CQ marks
       const totalCqMarks = updatedCqAnswers.reduce((sum, cq) => sum + (cq.marks || 0), 0)
       const obtainedCqMarks = updatedCqAnswers.reduce((sum, cq) => sum + (cq.obtainedMarks || 0), 0)
-      
-      // Calculate new total score (MCQ score + CQ score)
+
       const mcqScore = submission.score || 0
       const cqPercentage = totalCqMarks > 0 ? (obtainedCqMarks / totalCqMarks) * 100 : 0
-      
-      // Update submission with graded CQ answers
+      const totalScore = (mcqScore + cqPercentage) / 2
+
+      // Update submission with graded CQ answers and new total score
       await updateDoc(doc(db, "examResults", submissionId), {
         cqAnswers: updatedCqAnswers,
         cqGraded: true,
         cqScore: cqPercentage,
-        gradedAt: new Date().toISOString()
+        totalScore: totalScore,
+        gradedAt: new Date().toISOString(),
       })
 
       // Update local state
-      setSubmissions(prev => prev.map(s => 
-        s.id === submissionId 
-          ? { ...s, cqAnswers: updatedCqAnswers, cqGraded: true, cqScore: cqPercentage }
-          : s
-      ))
+      setSubmissions((prev) =>
+        prev.map((s) =>
+          s.id === submissionId
+            ? { ...s, cqAnswers: updatedCqAnswers, cqGraded: true, cqScore: cqPercentage, totalScore: totalScore }
+            : s,
+        ),
+      )
 
       // Clear editing state for this submission
-      setEditingGrades(prev => {
+      setEditingGrades((prev) => {
         const newState = { ...prev }
         delete newState[submissionId]
         return newState
@@ -145,16 +158,14 @@ export default function ViewExamSubmissions() {
         description: "Failed to save grades",
       })
     } finally {
-      setSavingGrades(prev => ({ ...prev, [submissionId]: false }))
+      setSavingGrades((prev) => ({ ...prev, [submissionId]: false }))
     }
   }
 
-  const filteredSubmissions = selectedExam
-    ? submissions.filter(s => s.examId === selectedExam)
-    : submissions
+  const filteredSubmissions = selectedExam ? submissions.filter((s) => s.examId === selectedExam) : submissions
 
   const getExamTitle = (examId) => {
-    const exam = exams.find(e => e.id === examId)
+    const exam = exams.find((e) => e.id === examId)
     return exam?.title || "Unknown Exam"
   }
 
@@ -166,7 +177,7 @@ export default function ViewExamSubmissions() {
       month: "short",
       day: "numeric",
       hour: "2-digit",
-      minute: "2-digit"
+      minute: "2-digit",
     })
   }
 
@@ -194,11 +205,13 @@ export default function ViewExamSubmissions() {
             className="w-full px-3 py-2 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
           >
             <option value="">All Exams ({submissions.length} submissions)</option>
-            {exams.filter(exam => submissions.some(s => s.examId === exam.id)).map(exam => (
-              <option key={exam.id} value={exam.id}>
-                {exam.title} ({submissions.filter(s => s.examId === exam.id).length})
-              </option>
-            ))}
+            {exams
+              .filter((exam) => submissions.some((s) => s.examId === exam.id))
+              .map((exam) => (
+                <option key={exam.id} value={exam.id}>
+                  {exam.title} ({submissions.filter((s) => s.examId === exam.id).length})
+                </option>
+              ))}
           </select>
         </div>
       </div>
@@ -271,7 +284,7 @@ export default function ViewExamSubmissions() {
                           </div>
                         </div>
                       )}
-                      
+
                       {!submission.cqGraded && (
                         <div className="flex items-center gap-2 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
                           <Award className="w-5 h-5 text-yellow-600" />
@@ -292,9 +305,7 @@ export default function ViewExamSubmissions() {
                               <div className="flex items-center gap-3 text-sm">
                                 <span className="text-muted-foreground">Total Marks: {cqAnswer.marks}</span>
                                 {cqAnswer.obtainedMarks !== undefined && (
-                                  <span className="text-green-600 font-medium">
-                                    Obtained: {cqAnswer.obtainedMarks}
-                                  </span>
+                                  <span className="text-green-600 font-medium">Obtained: {cqAnswer.obtainedMarks}</span>
                                 )}
                               </div>
                             </div>
@@ -325,7 +336,7 @@ export default function ViewExamSubmissions() {
                                     className="group relative block"
                                   >
                                     <img
-                                      src={imageUrl}
+                                      src={imageUrl || "/placeholder.svg"}
                                       alt={`Answer image ${imgIdx + 1}`}
                                       className="w-full h-48 object-cover rounded-lg border-2 border-border group-hover:border-primary transition-all"
                                     />

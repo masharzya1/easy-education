@@ -148,11 +148,14 @@ export function ExamProvider({ children }) {
 
   const getQuestionsByExam = async (examId) => {
     try {
+      console.log("[v0] Fetching questions for exam:", examId)
       const q = query(collection(db, "examQuestions"), where("examId", "==", examId))
       const snapshot = await getDocs(q)
-      return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
+      const questions = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
+      console.log("[v0] Found", questions.length, "questions for exam", examId)
+      return questions
     } catch (error) {
-      console.error("Error fetching questions:", error)
+      console.error("[v0] Error fetching questions:", error)
       return []
     }
   }
@@ -223,6 +226,9 @@ export function ExamProvider({ children }) {
         cqAnswers,
         totalQuestions: questions.length,
         submittedAt: serverTimestamp(),
+        cqGraded: false,
+        cqScore: 0,
+        totalScore: score, // Initial total score is MCQ score, will be updated when CQ is graded
       })
 
       console.log("[v0] Exam result submitted successfully:", result.id)

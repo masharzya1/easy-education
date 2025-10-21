@@ -6,7 +6,6 @@ import {
   Users,
   BookOpen,
   Video,
-  Newspaper,
   BarChart3,
   LayoutDashboard,
   Megaphone,

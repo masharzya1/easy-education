@@ -58,14 +58,27 @@ export default async function handler(req, res) {
     })
 
     if (!response.ok) {
-      const errorData = await response.json()
-      console.error("[v0] imgbb error:", errorData)
-      return res.status(response.status).json({
-        error: errorData.error?.message || "Failed to upload image to imgbb",
-      })
+      const errorText = await response.text()
+      console.error("[v0] imgbb error response:", errorText)
+      try {
+        const errorData = JSON.parse(errorText)
+        return res.status(response.status).json({
+          error: errorData.error?.message || "Failed to upload image to imgbb",
+        })
+      } catch {
+        return res.status(response.status).json({
+          error: "Failed to upload image to imgbb",
+        })
+      }
     }
 
-    const data = await response.json()
+    let data
+    try {
+      data = await response.json()
+    } catch (parseError) {
+      console.error("[v0] Failed to parse imgbb response:", parseError)
+      return res.status(500).json({ error: "Invalid response format from image service" })
+    }
 
     if (!data.success || !data.data?.url) {
       console.error("[v0] Invalid imgbb response:", data)

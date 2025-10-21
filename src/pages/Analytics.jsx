@@ -1,12 +1,25 @@
+"use client"
+
 import { useState, useEffect, useMemo } from "react"
 import { useNavigate, Link } from "react-router-dom"
 import { motion } from "framer-motion"
-import { TrendingUp, Award, FileQuestion, CheckCircle, XCircle, Clock, BookOpen, ArrowLeft, AlertCircle, Filter, Calendar } from "lucide-react"
+import {
+  TrendingUp,
+  Award,
+  FileQuestion,
+  CheckCircle,
+  XCircle,
+  Clock,
+  BookOpen,
+  ArrowLeft,
+  AlertCircle,
+  Filter,
+} from "lucide-react"
 import { doc, getDoc } from "firebase/firestore"
 import { db } from "../lib/firebase"
 import { useAuth } from "../contexts/AuthContext"
 import { useExam } from "../contexts/ExamContext"
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from "recharts"
+import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from "recharts"
 
 export default function Analytics() {
   const navigate = useNavigate()
@@ -30,7 +43,7 @@ export default function Analytics() {
     try {
       setLoading(true)
       const results = await getUserExamResults(currentUser.uid)
-      
+
       const enrichedResults = await Promise.all(
         results.map(async (result) => {
           const examDoc = await getDoc(doc(db, "exams", result.examId))
@@ -42,11 +55,11 @@ export default function Analytics() {
               examTitle: examData.title,
               examDuration: examData.duration,
               passingScore: examData.passingScore,
-              courseName: courseDoc.exists() ? courseDoc.data().title : "Unknown Course"
+              courseName: courseDoc.exists() ? courseDoc.data().title : "Unknown Course",
             }
           }
           return result
-        })
+        }),
       )
 
       enrichedResults.sort((a, b) => {
@@ -65,7 +78,7 @@ export default function Analytics() {
 
   const uniqueCourses = useMemo(() => {
     const courses = new Set()
-    examResults.forEach(result => {
+    examResults.forEach((result) => {
       if (result.courseName) courses.add(result.courseName)
     })
     return Array.from(courses)
@@ -75,15 +88,15 @@ export default function Analytics() {
     let filtered = [...examResults]
 
     if (courseFilter !== "all") {
-      filtered = filtered.filter(result => result.courseName === courseFilter)
+      filtered = filtered.filter((result) => result.courseName === courseFilter)
     }
 
     if (dateFilter !== "all") {
       const now = new Date()
-      filtered = filtered.filter(result => {
+      filtered = filtered.filter((result) => {
         const examDate = result.submittedAt?.toDate?.() || new Date()
         const daysDiff = Math.floor((now - examDate) / (1000 * 60 * 60 * 24))
-        
+
         switch (dateFilter) {
           case "week":
             return daysDiff <= 7
@@ -106,26 +119,29 @@ export default function Analytics() {
     }
 
     const totalExams = filteredResults.length
-    const totalScore = filteredResults.reduce((sum, result) => sum + (result.score || 0), 0)
+    const totalScore = filteredResults.reduce((sum, result) => sum + (result.totalScore || result.score || 0), 0)
     const averageScore = totalScore / totalExams
-    const passedExams = filteredResults.filter(result => result.score >= (result.passingScore || 70)).length
+    const passedExams = filteredResults.filter((result) => {
+      const finalScore = result.totalScore || result.score || 0
+      return finalScore >= (result.passingScore || 70)
+    }).length
     const passRate = (passedExams / totalExams) * 100
 
-    return { 
-      totalExams, 
-      averageScore: Math.round(averageScore), 
-      passedExams, 
-      passRate: Math.round(passRate) 
+    return {
+      totalExams,
+      averageScore: Math.round(averageScore),
+      passedExams,
+      passRate: Math.round(passRate),
     }
   }, [filteredResults])
 
   const chartData = useMemo(() => {
     return filteredResults
-      .map(result => ({
+      .map((result) => ({
         date: result.submittedAt?.toDate?.().toLocaleDateString() || "N/A",
         score: result.score || 0,
         exam: result.examTitle?.substring(0, 20) || "Exam",
-        timestamp: result.submittedAt?.seconds || 0
+        timestamp: result.submittedAt?.seconds || 0,
       }))
       .sort((a, b) => a.timestamp - b.timestamp)
       .slice(-10)
@@ -182,8 +198,10 @@ export default function Analytics() {
                     className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                   >
                     <option value="all">All Courses</option>
-                    {uniqueCourses.map(course => (
-                      <option key={course} value={course}>{course}</option>
+                    {uniqueCourses.map((course) => (
+                      <option key={course} value={course}>
+                        {course}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -302,37 +320,23 @@ export default function Analytics() {
                     <AreaChart data={chartData}>
                       <defs>
                         <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
-                          <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                          <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+                          <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                      <XAxis 
-                        dataKey="date" 
-                        stroke="hsl(var(--muted-foreground))"
-                        fontSize={12}
-                      />
-                      <YAxis 
-                        stroke="hsl(var(--muted-foreground))"
-                        fontSize={12}
-                        domain={[0, 100]}
-                      />
-                      <Tooltip 
+                      <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                      <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} domain={[0, 100]} />
+                      <Tooltip
                         contentStyle={{
-                          backgroundColor: 'hsl(var(--card))',
-                          border: '1px solid hsl(var(--border))',
-                          borderRadius: '8px',
-                          padding: '8px 12px'
+                          backgroundColor: "hsl(var(--card))",
+                          border: "1px solid hsl(var(--border))",
+                          borderRadius: "8px",
+                          padding: "8px 12px",
                         }}
-                        labelStyle={{ color: 'hsl(var(--foreground))' }}
+                        labelStyle={{ color: "hsl(var(--foreground))" }}
                       />
-                      <Area 
-                        type="monotone" 
-                        dataKey="score" 
-                        stroke="#10b981" 
-                        strokeWidth={2}
-                        fill="url(#colorScore)" 
-                      />
+                      <Area type="monotone" dataKey="score" stroke="#10b981" strokeWidth={2} fill="url(#colorScore)" />
                     </AreaChart>
                   </ResponsiveContainer>
                 </div>
@@ -349,131 +353,148 @@ export default function Analytics() {
                   </div>
                 ) : (
                   filteredResults.map((result, index) => {
-                  const passed = result.score >= (result.passingScore || 70)
-                  const submittedDate = result.submittedAt?.toDate?.() || new Date()
-                  const hasCQAnswers = result.cqAnswers && result.cqAnswers.length > 0
-                  const cqPending = hasCQAnswers && !result.cqGraded
+                    const passed = result.score >= (result.passingScore || 70)
+                    const submittedDate = result.submittedAt?.toDate?.() || new Date()
+                    const hasCQAnswers = result.cqAnswers && result.cqAnswers.length > 0
+                    const cqPending = hasCQAnswers && !result.cqGraded
 
-                  return (
-                    <motion.div
-                      key={result.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.05 }}
-                      className="bg-card border border-border rounded-xl p-6 hover:shadow-lg transition-all cursor-pointer"
-                      onClick={() => setSelectedResult(result)}
-                    >
-                      <div className="flex justify-between items-start mb-4">
-                        <div className="flex-1">
-                          <h3 className="text-xl font-bold mb-1">{result.examTitle || "Untitled Exam"}</h3>
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-                            <BookOpen className="w-4 h-4" />
-                            <span>{result.courseName}</span>
+                    return (
+                      <motion.div
+                        key={result.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.05 }}
+                        className="bg-card border border-border rounded-xl p-6 hover:shadow-lg transition-all cursor-pointer"
+                        onClick={() => setSelectedResult(result)}
+                      >
+                        <div className="flex justify-between items-start mb-4">
+                          <div className="flex-1">
+                            <h3 className="text-xl font-bold mb-1">{result.examTitle || "Untitled Exam"}</h3>
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+                              <BookOpen className="w-4 h-4" />
+                              <span>{result.courseName}</span>
+                            </div>
+                            {cqPending && (
+                              <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-yellow-500/10 border border-yellow-500/30 rounded-full text-yellow-700 dark:text-yellow-400 text-xs font-medium">
+                                <AlertCircle className="w-3.5 h-3.5" />
+                                <span>অপেক্ষমাণ / CQ Grading Pending</span>
+                              </div>
+                            )}
+                            {hasCQAnswers && result.cqGraded && (
+                              <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-500/10 border border-blue-500/30 rounded-full text-blue-700 dark:text-blue-400 text-xs font-medium">
+                                <CheckCircle className="w-3.5 h-3.5" />
+                                <span>CQ Graded: {result.cqScore?.toFixed(1) || 0}%</span>
+                              </div>
+                            )}
                           </div>
-                          {cqPending && (
-                            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-yellow-500/10 border border-yellow-500/30 rounded-full text-yellow-700 dark:text-yellow-400 text-xs font-medium">
-                              <AlertCircle className="w-3.5 h-3.5" />
-                              <span>অপেক্ষমাণ / CQ Grading Pending</span>
+                          <div
+                            className={`px-4 py-2 rounded-lg ${
+                              passed ? "bg-green-500/10 text-green-600" : "bg-red-500/10 text-red-600"
+                            }`}
+                          >
+                            <div className="text-2xl font-bold">
+                              {result.totalScore !== undefined ? result.totalScore.toFixed(1) : result.score}%
                             </div>
-                          )}
-                          {hasCQAnswers && result.cqGraded && (
-                            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-500/10 border border-blue-500/30 rounded-full text-blue-700 dark:text-blue-400 text-xs font-medium">
-                              <CheckCircle className="w-3.5 h-3.5" />
-                              <span>CQ Graded: {result.cqScore?.toFixed(1) || 0}%</span>
-                            </div>
-                          )}
+                            <div className="text-xs">{cqPending ? "MCQ Only" : passed ? "Passed" : "Failed"}</div>
+                          </div>
                         </div>
-                        <div className={`px-4 py-2 rounded-lg ${
-                          passed ? "bg-green-500/10 text-green-600" : "bg-red-500/10 text-red-600"
-                        }`}>
-                          <div className="text-2xl font-bold">{result.score}%</div>
-                          <div className="text-xs">{cqPending ? "MCQ Only" : passed ? "Passed" : "Failed"}</div>
-                        </div>
-                      </div>
 
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <Clock className="w-4 h-4" />
-                          <span>{result.examDuration || "N/A"} mins</span>
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                          <div className="flex items-center gap-1">
+                            <Clock className="w-4 h-4" />
+                            <span>{result.examDuration || "N/A"} mins</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <CheckCircle className="w-4 h-4" />
+                            <span>
+                              {result.totalQuestions - (result.wrongAnswers?.length || 0)} / {result.totalQuestions}{" "}
+                              correct
+                            </span>
+                          </div>
+                          <div className="ml-auto">{submittedDate.toLocaleDateString()}</div>
                         </div>
-                        <div className="flex items-center gap-1">
-                          <CheckCircle className="w-4 h-4" />
-                          <span>{result.totalQuestions - (result.wrongAnswers?.length || 0)} / {result.totalQuestions} correct</span>
-                        </div>
-                        <div className="ml-auto">
-                          {submittedDate.toLocaleDateString()}
-                        </div>
-                      </div>
 
-                      {selectedResult?.id === result.id && (
-                        <motion.div
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: "auto" }}
-                          className="mt-4 pt-4 border-t border-border space-y-4"
-                        >
-                          {result.wrongAnswers && result.wrongAnswers.length > 0 && (
-                            <div>
-                              <h4 className="font-semibold mb-3 flex items-center gap-2">
-                                <XCircle className="w-5 h-5 text-red-600" />
-                                Mistakes ({result.wrongAnswers.length})
-                              </h4>
-                              <div className="space-y-3">
-                                {result.wrongAnswers.map((mistake, idx) => (
-                                  <div key={idx} className="bg-red-500/5 border border-red-500/20 rounded-lg p-3">
-                                    <p className="font-medium mb-2">{mistake.questionText}</p>
-                                    <div className="space-y-1 text-sm">
-                                      <div className="flex items-center gap-2">
-                                        <XCircle className="w-4 h-4 text-red-600" />
-                                        <span className="text-red-600">Your answer: {mistake.options?.[mistake.userAnswer] || "Not answered"}</span>
-                                      </div>
-                                      <div className="flex items-center gap-2">
-                                        <CheckCircle className="w-4 h-4 text-green-600" />
-                                        <span className="text-green-600">Correct answer: {mistake.options?.[mistake.correctAnswer] || "N/A"}</span>
+                        {selectedResult?.id === result.id && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: "auto" }}
+                            className="mt-4 pt-4 border-t border-border space-y-4"
+                          >
+                            {result.wrongAnswers && result.wrongAnswers.length > 0 && (
+                              <div>
+                                <h4 className="font-semibold mb-3 flex items-center gap-2">
+                                  <XCircle className="w-5 h-5 text-red-600" />
+                                  Mistakes ({result.wrongAnswers.length})
+                                </h4>
+                                <div className="space-y-3">
+                                  {result.wrongAnswers.map((mistake, idx) => (
+                                    <div key={idx} className="bg-red-500/5 border border-red-500/20 rounded-lg p-3">
+                                      <p className="font-medium mb-2">{mistake.questionText}</p>
+                                      <div className="space-y-1 text-sm">
+                                        <div className="flex items-center gap-2">
+                                          <XCircle className="w-4 h-4 text-red-600" />
+                                          <span className="text-red-600">
+                                            Your answer: {mistake.options?.[mistake.userAnswer] || "Not answered"}
+                                          </span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                          <CheckCircle className="w-4 h-4 text-green-600" />
+                                          <span className="text-green-600">
+                                            Correct answer: {mistake.options?.[mistake.correctAnswer] || "N/A"}
+                                          </span>
+                                        </div>
                                       </div>
                                     </div>
-                                  </div>
-                                ))}
+                                  ))}
+                                </div>
                               </div>
-                            </div>
-                          )}
+                            )}
 
-                          {result.cqAnswers && result.cqAnswers.length > 0 && result.cqGraded && (
-                            <div>
-                              <h4 className="font-semibold mb-3 flex items-center gap-2">
-                                <CheckCircle className="w-5 h-5 text-green-600" />
-                                Creative Questions ({result.cqAnswers.length})
-                              </h4>
-                              <div className="space-y-3">
-                                {result.cqAnswers.map((cq, idx) => (
-                                  <div key={idx} className="bg-blue-500/5 border border-blue-500/20 rounded-lg p-3">
-                                    <div className="flex justify-between items-start mb-2">
-                                      <p className="font-medium flex-1">Q{idx + 1}. {cq.questionText}</p>
-                                      <div className="text-sm font-bold text-green-600">
-                                        {cq.obtainedMarks || 0} / {cq.marks}
+                            {result.cqAnswers && result.cqAnswers.length > 0 && result.cqGraded && (
+                              <div>
+                                <h4 className="font-semibold mb-3 flex items-center gap-2">
+                                  <CheckCircle className="w-5 h-5 text-green-600" />
+                                  Creative Questions ({result.cqAnswers.length})
+                                </h4>
+                                <div className="space-y-3">
+                                  {result.cqAnswers.map((cq, idx) => (
+                                    <div key={idx} className="bg-blue-500/5 border border-blue-500/20 rounded-lg p-3">
+                                      <div className="flex justify-between items-start mb-2">
+                                        <p className="font-medium flex-1">
+                                          Q{idx + 1}. {cq.questionText}
+                                        </p>
+                                        <div className="text-sm font-bold text-green-600">
+                                          {cq.obtainedMarks || 0} / {cq.marks}
+                                        </div>
                                       </div>
+                                      {cq.textAnswer && (
+                                        <div className="text-sm text-muted-foreground mt-2 p-2 bg-background rounded">
+                                          <strong>Your Answer:</strong> {cq.textAnswer}
+                                        </div>
+                                      )}
+                                      {cq.images && cq.images.length > 0 && (
+                                        <div className="mt-2 grid grid-cols-2 gap-2">
+                                          {cq.images.map((img, imgIdx) => (
+                                            <img
+                                              key={imgIdx}
+                                              src={img || "/placeholder.svg"}
+                                              alt={`Answer ${imgIdx + 1}`}
+                                              className="rounded border border-border w-full h-24 object-cover"
+                                            />
+                                          ))}
+                                        </div>
+                                      )}
                                     </div>
-                                    {cq.textAnswer && (
-                                      <div className="text-sm text-muted-foreground mt-2 p-2 bg-background rounded">
-                                        <strong>Your Answer:</strong> {cq.textAnswer}
-                                      </div>
-                                    )}
-                                    {cq.images && cq.images.length > 0 && (
-                                      <div className="mt-2 grid grid-cols-2 gap-2">
-                                        {cq.images.map((img, imgIdx) => (
-                                          <img key={imgIdx} src={img} alt={`Answer ${imgIdx + 1}`} className="rounded border border-border w-full h-24 object-cover" />
-                                        ))}
-                                      </div>
-                                    )}
-                                  </div>
-                                ))}
+                                  ))}
+                                </div>
                               </div>
-                            </div>
-                          )}
-                        </motion.div>
-                      )}
-                    </motion.div>
-                  )
-                }))}
+                            )}
+                          </motion.div>
+                        )}
+                      </motion.div>
+                    )
+                  })
+                )}
               </div>
 
               <div className="space-y-4">

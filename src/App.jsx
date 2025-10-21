@@ -31,6 +31,7 @@ import PaymentHistory from "./pages/PaymentHistory"
 import MyCourses from "./pages/MyCourses"
 import ExamView from "./pages/ExamView"
 import ExamList from "./pages/ExamList"
+import ExamLeaderboard from "./pages/ExamLeaderboard"
 import Analytics from "./pages/Analytics"
 
 console.log("[v0] App.jsx loaded")
@@ -47,97 +48,105 @@ function App() {
               <Header />
               <main className="flex-1">
                 <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/courses" element={<Courses />} />
-                <Route path="/course/:courseId" element={<CourseDetail />} />
-                <Route path="/course/:courseId/chapters" element={<CourseChapters />} />
-                <Route path="/course/:courseId/subjects" element={<CourseSubjects />} />
-                <Route path="/course/:courseId/subjects/:subject/chapters" element={<CourseChapters />} />
-                <Route path="/course/:courseId/archive/:subject/chapters" element={<CourseChapters />} />
-                <Route path="/course/:courseId/archive/:subject/:chapter/classes" element={<CourseClasses />} />
-                <Route path="/course/:courseId/classes/:chapter" element={<CourseClasses />} />
-                <Route path="/course/:courseId/classes/:subject/:chapter" element={<CourseClasses />} />
-                <Route path="/course/:courseId/watch/:classId" element={<CourseWatch />} />
-                {/* End hierarchical routes */}
-                <Route path="/course/:courseId/watch" element={<CourseWatch />} />
-                <Route path="/checkout" element={<Checkout />} />
-                <Route path="/checkout-complete" element={<CheckoutComplete />} />
-                <Route
-                  path="/payment-history"
-                  element={
-                    <ProtectedRoute>
-                      <PaymentHistory />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route path="/announcements" element={<Announcements />} />
-                <Route path="/announcements/:id" element={<AnnouncementDetail />} />
-                <Route path="/community" element={<Community />} />
-                <Route
-                  path="/profile"
-                  element={
-                    <ProtectedRoute>
-                      <Profile />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/dashboard"
-                  element={
-                    <ProtectedRoute>
-                      <Dashboard />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/my-courses"
-                  element={
-                    <ProtectedRoute>
-                      <MyCourses />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/course/:courseId/exams"
-                  element={
-                    <ProtectedRoute>
-                      <ExamList />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/exam/:examId"
-                  element={
-                    <ProtectedRoute>
-                      <ExamView />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/analytics"
-                  element={
-                    <ProtectedRoute>
-                      <Analytics />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/admin/*"
-                  element={
-                    <ProtectedRoute adminOnly>
-                      <AdminDashboard />
-                    </ProtectedRoute>
-                  }
-                />
-              </Routes>
-            </main>
-            <CartDrawer />
-            <FloatingCartButton />
-            <PWAInstallPrompt />
-            <Toaster />
-            <Footer />
-          </div>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/courses" element={<Courses />} />
+                  <Route path="/course/:courseId" element={<CourseDetail />} />
+                  <Route path="/course/:courseId/chapters" element={<CourseChapters />} />
+                  <Route path="/course/:courseId/subjects" element={<CourseSubjects />} />
+                  <Route path="/course/:courseId/subjects/:subject/chapters" element={<CourseChapters />} />
+                  <Route path="/course/:courseId/archive/:subject/chapters" element={<CourseChapters />} />
+                  <Route path="/course/:courseId/archive/:subject/:chapter/classes" element={<CourseClasses />} />
+                  <Route path="/course/:courseId/classes/:chapter" element={<CourseClasses />} />
+                  <Route path="/course/:courseId/classes/:subject/:chapter" element={<CourseClasses />} />
+                  <Route path="/course/:courseId/watch/:classId" element={<CourseWatch />} />
+                  {/* End hierarchical routes */}
+                  <Route path="/course/:courseId/watch" element={<CourseWatch />} />
+                  <Route path="/checkout" element={<Checkout />} />
+                  <Route path="/checkout-complete" element={<CheckoutComplete />} />
+                  <Route
+                    path="/payment-history"
+                    element={
+                      <ProtectedRoute>
+                        <PaymentHistory />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route path="/announcements" element={<Announcements />} />
+                  <Route path="/announcements/:id" element={<AnnouncementDetail />} />
+                  <Route path="/community" element={<Community />} />
+                  <Route
+                    path="/profile"
+                    element={
+                      <ProtectedRoute>
+                        <Profile />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/dashboard"
+                    element={
+                      <ProtectedRoute>
+                        <Dashboard />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/my-courses"
+                    element={
+                      <ProtectedRoute>
+                        <MyCourses />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/course/:courseId/exams"
+                    element={
+                      <ProtectedRoute>
+                        <ExamList />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/exam/:examId"
+                    element={
+                      <ProtectedRoute>
+                        <ExamView />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/exam/:examId/leaderboard"
+                    element={
+                      <ProtectedRoute>
+                        <ExamLeaderboard />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/analytics"
+                    element={
+                      <ProtectedRoute>
+                        <Analytics />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin/*"
+                    element={
+                      <ProtectedRoute adminOnly>
+                        <AdminDashboard />
+                      </ProtectedRoute>
+                    }
+                  />
+                </Routes>
+              </main>
+              <CartDrawer />
+              <FloatingCartButton />
+              <PWAInstallPrompt />
+              <Toaster />
+              <Footer />
+            </div>
           </ExamProvider>
         </CartProvider>
       </AuthProvider>
