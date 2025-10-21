@@ -1,66 +1,58 @@
 /**
- * একটি ইমেজ ফাইলকে Base64-এ রূপান্তর করে সার্ভার API-এর মাধ্যমে ImgBB-তে আপলোড করে।
- * ... (অন্যান্য সহায়ক ফাংশন একই থাকবে)
+ * এই ইউটিলিটি ফাইলটি সরাসরি ImgBB API-কে কল করে।
+ * ⚠️ সতর্কতা: API Key ক্লায়েন্ট-সাইড কোডে থাকবে, যা নিরাপত্তা ঝুঁকি বাড়ায়।
+ * তবে যেহেতু ডিবাগার ফাইলটি কাজ করেছে, এই পদ্ধতিই আপনার জন্য কাজ করবে।
  */
 
-function convertFileToBase64(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => {
-      const base64String = reader.result.split(',')[1];
-      resolve(base64String);
-    };
-    reader.onerror = (error) => reject(error);
-  });
-}
+// ⚠️ এখানে আপনার আসল IMGBB API Key বসান
+const IMGBB_API_KEY = "YOUR_IMGBB_API_KEY_HERE";
 
+/**
+ * একটি ফাইল নেয়, ImgBB তে আপলোড করে এবং URL ফেরত দেয়।
+ * @param {File} file - আপলোড করার জন্য ফাইল অবজেক্ট।
+ * @returns {Promise<string>} - আপলোড করা ছবির URL।
+ */
 export async function uploadImageToImgBB(file) {
-  // ... (file validation logic same) ...
   if (!file) {
     throw new Error("আপলোডের জন্য কোনো ফাইল দেওয়া হয়নি।");
   }
   
-  if (!file.type.startsWith("image/") || file.size > 32 * 1024 * 1024) {
-    throw new Error("ছবিটি অবশ্যই ইমেজ ফরম্যাট এবং ৩২MB এর কম হতে হবে।");
-  }
+  // Vercel-এ ফাইল আপলোড সফল করতে FormData ব্যবহার করা হচ্ছে
+  const formData = new FormData();
+  // ImgBB API-এর জন্য 'image' ফিল্ডে ফাইলটি যোগ করা হলো
+  formData.append("image", file);
+  
+  // ImgBB API-এর সম্পূর্ণ URL তৈরি করা হলো
+  const url = `https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`;
   
   try {
-    const base64Image = await convertFileToBase64(file);
-    
-    const response = await fetch("/api/upload-image", {
+    const response = await fetch(url, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ image: base64Image }),
+      // FormData ব্যবহার করার সময় Content-Type সেট করার প্রয়োজন নেই।
+      body: formData,
     });
     
-    // 💡 গুরুত্বপূর্ণ সংশোধন: আগে স্ট্যাটাস চেক করুন
     if (!response.ok) {
-      // যদি স্ট্যাটাস 4xx বা 5xx হয়, তাহলে JSON পার্স করার চেষ্টা করুন
-      let errorBody;
+      let errorDetails = `HTTP ${response.status}.`;
       try {
-        errorBody = await response.json();
-        // সার্ভার যদি JSON Error পাঠায়, সেটিকে ব্যবহার করুন
-        throw new Error(errorBody.error || `সার্ভার ত্রুটি: HTTP ${response.status}`);
+        const errorData = await response.json();
+        errorDetails = errorData.error?.message || JSON.stringify(errorData);
       } catch (e) {
-        // যদি সার্ভার JSON না পাঠায় (যেমন Vercel HTML Error), তবে এই ব্লক কাজ করবে
-        console.error("Non-JSON Server Response Received:", await response.text());
-        throw new Error(`ছবি আপলোড ব্যর্থ: সার্ভার থেকে অপ্রত্যাশিত সাড়া (HTTP ${response.status})। আপনার IMGBB কী Vercel-এ সেট করা আছে কি?`);
+        // যদি ImgBB JSON এরর না পাঠায়
+        console.error("Non-JSON error from ImgBB:", await response.text());
       }
+      throw new Error(`আপলোড ব্যর্থ হয়েছে: ${errorDetails}`);
     }
     
-    // যদি response.ok হয়, তবে আমরা ধরে নেব এটি একটি JSON
     const data = await response.json();
     
-    if (!data.url) {
-      throw new Error("ImgBB থেকে সঠিক URL পাওয়া যায়নি।");
+    if (!data.success || !data.data?.url) {
+      throw new Error("ImgBB থেকে সঠিক URL পাওয়া যায়নি।");
     }
     
-    return data.url;
+    return data.data.url;
   } catch (error) {
-    console.error("Error in Client-Side Upload Utility:", error);
+    console.error("Error during direct ImgBB upload:", error);
     throw new Error(`ছবি আপলোড ব্যর্থ: ${error.message}`);
   }
 }
