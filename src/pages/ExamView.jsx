@@ -1,7 +1,9 @@
+"use client"
+
 import { useState, useEffect } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { motion } from "framer-motion"
-import { ArrowLeft, Clock, Send, AlertCircle, Image as ImageIcon, Upload, X, CheckCircle2 } from "lucide-react"
+import { Clock, Send, AlertCircle, ImageIcon, Upload, X, CheckCircle2 } from "lucide-react"
 import { useAuth } from "../contexts/AuthContext"
 import { useExam } from "../contexts/ExamContext"
 import { toast } from "../hooks/use-toast"
@@ -126,19 +128,19 @@ export default function ExamView() {
   const handleImageUpload = async (questionId, files) => {
     if (!files || files.length === 0) return
 
-    setUploadingImages(prev => ({ ...prev, [questionId]: true }))
+    setUploadingImages((prev) => ({ ...prev, [questionId]: true }))
 
     try {
       const uploadedUrls = []
-      
+
       for (const file of Array.from(files)) {
         const url = await uploadToImgbb(file)
         uploadedUrls.push(url)
       }
 
-      setCqImages(prev => ({
+      setCqImages((prev) => ({
         ...prev,
-        [questionId]: [...(prev[questionId] || []), ...uploadedUrls]
+        [questionId]: [...(prev[questionId] || []), ...uploadedUrls],
       }))
 
       toast({
@@ -153,14 +155,14 @@ export default function ExamView() {
         description: error.message || "Failed to upload images",
       })
     } finally {
-      setUploadingImages(prev => ({ ...prev, [questionId]: false }))
+      setUploadingImages((prev) => ({ ...prev, [questionId]: false }))
     }
   }
 
   const removeImage = (questionId, imageIndex) => {
-    setCqImages(prev => ({
+    setCqImages((prev) => ({
       ...prev,
-      [questionId]: prev[questionId].filter((_, idx) => idx !== imageIndex)
+      [questionId]: prev[questionId].filter((_, idx) => idx !== imageIndex),
     }))
   }
 
@@ -184,7 +186,7 @@ export default function ExamView() {
     if (!hasStarted) return
 
     const answeredCount = Object.keys(answers).length
-    const mcqCount = questions.filter(q => q.type === "mcq").length
+    const mcqCount = questions.filter((q) => q.type === "mcq").length
 
     if (answeredCount < mcqCount) {
       setConfirmDialog({
@@ -193,7 +195,7 @@ export default function ExamView() {
         message: `You have only answered ${answeredCount} out of ${mcqCount} MCQ questions. Do you want to submit anyway?`,
         variant: "default",
         confirmText: "Submit Anyway",
-        onConfirm: () => performSubmit()
+        onConfirm: () => performSubmit(),
       })
       return
     }
@@ -206,20 +208,39 @@ export default function ExamView() {
 
     try {
       const score = calculateScore()
+      if (!currentUser?.uid) {
+        throw new Error("User not authenticated")
+      }
+      if (!examId) {
+        throw new Error("Exam ID is missing")
+      }
+      if (questions.length === 0) {
+        throw new Error("No questions found in exam")
+      }
+
+      console.log("[v0] Starting exam submission...", {
+        userId: currentUser.uid,
+        examId,
+        score,
+        questionsCount: questions.length,
+        answersCount: Object.keys(answers).length,
+        cqImagesCount: Object.keys(cqImages).length,
+      })
+
       await submitExamResult(currentUser.uid, examId, answers, score, questions, cqImages)
 
       toast({
         title: "Exam Submitted!",
-        description: `You scored ${score}%${score >= exam.passingScore ? ' - Passed! 🎉' : ''}`,
+        description: `You scored ${score}%${score >= exam.passingScore ? " - Passed! 🎉" : ""}`,
       })
 
       setTimeout(() => navigate(-1), 2000)
     } catch (error) {
-      console.error("Error submitting exam:", error)
+      console.error("[v0] Error submitting exam:", error)
       toast({
         variant: "error",
-        title: "Error",
-        description: "Failed to submit exam",
+        title: "Submission Failed",
+        description: error.message || "Failed to submit exam. Please try again.",
       })
     } finally {
       setSubmitting(false)
@@ -260,9 +281,7 @@ export default function ExamView() {
           className="bg-card border border-border rounded-lg p-8 max-w-2xl w-full"
         >
           <h1 className="text-3xl font-bold mb-4">{exam.title}</h1>
-          {exam.description && (
-            <p className="text-muted-foreground mb-6">{exam.description}</p>
-          )}
+          {exam.description && <p className="text-muted-foreground mb-6">{exam.description}</p>}
 
           <div className="space-y-3 mb-6">
             <div className="flex items-center gap-2 text-muted-foreground">
@@ -281,7 +300,8 @@ export default function ExamView() {
 
           <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4 mb-6">
             <p className="text-sm text-yellow-700 dark:text-yellow-400">
-              <strong>Important:</strong> Once you start the exam, the timer will begin. You can only attempt this exam once.
+              <strong>Important:</strong> Once you start the exam, the timer will begin. You can only attempt this exam
+              once.
             </p>
           </div>
 
@@ -312,13 +332,17 @@ export default function ExamView() {
             <div>
               <h1 className="text-2xl font-bold">{exam.title}</h1>
               {reviewMode && (
-                <p className="text-sm text-muted-foreground mt-1">Review Mode - Your Score: {userResult?.score || 0}%</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Review Mode - Your Score: {userResult?.score || 0}%
+                </p>
               )}
             </div>
             {!reviewMode && (
-              <div className={`flex items-center gap-2 px-4 py-2 rounded-lg ${
-                timeLeft < 300 ? "bg-red-500/10 text-red-600" : "bg-primary/10 text-primary"
-              }`}>
+              <div
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg ${
+                  timeLeft < 300 ? "bg-red-500/10 text-red-600" : "bg-primary/10 text-primary"
+                }`}
+              >
                 <Clock className="w-5 h-5" />
                 <span className="font-mono font-bold text-lg">{formatTime(timeLeft)}</span>
               </div>
@@ -340,12 +364,10 @@ export default function ExamView() {
                   {index + 1}
                 </span>
                 <div className="flex-1">
-                  {question.questionText && (
-                    <p className="text-base mb-2">{question.questionText}</p>
-                  )}
+                  {question.questionText && <p className="text-base mb-2">{question.questionText}</p>}
                   {question.questionImageUrl && (
                     <img
-                      src={question.questionImageUrl}
+                      src={question.questionImageUrl || "/placeholder.svg"}
                       alt="Question"
                       className="max-w-full rounded-lg mb-3"
                     />
@@ -377,89 +399,102 @@ export default function ExamView() {
                       }
                     } else if (isUserAnswer) {
                       borderColor = "border-primary"
-                      bgColor = "bg-gradient-to-br from-primary/15 via-primary/10 to-primary/5 shadow-lg shadow-primary/20"
+                      bgColor =
+                        "bg-gradient-to-br from-primary/15 via-primary/10 to-primary/5 shadow-lg shadow-primary/20"
                     }
 
-                    return (option || question.optionImages?.[optIndex]) && (
-                      <motion.label
-                        key={optIndex}
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: optIndex * 0.05 }}
-                        whileHover={!reviewMode ? { scale: 1.02, x: 4 } : {}}
-                        whileTap={!reviewMode ? { scale: 0.98 } : {}}
-                        className={`group relative flex items-start gap-4 p-5 rounded-2xl border-2 transition-all duration-300 overflow-hidden ${borderColor} ${bgColor} ${
-                          reviewMode ? "cursor-default" : "cursor-pointer hover:border-primary/60 hover:bg-gradient-to-br hover:from-accent/10 hover:to-background hover:shadow-md"
-                        }`}
-                      >
-                        {answers[question.id] === optIndex && (
-                          <motion.div
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent"
-                          />
-                        )}
-                        <div className="relative flex items-center justify-center z-10">
-                          <input
-                            type="radio"
-                            name={`question-${question.id}`}
-                            value={optIndex}
-                            checked={answers[question.id] === optIndex}
-                            onChange={() => !reviewMode && handleAnswerChange(question.id, optIndex)}
-                            className="peer sr-only"
-                            disabled={reviewMode}
-                          />
-                          <div className={`relative w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
-                            showCorrectness && isCorrectAnswer
-                              ? "border-green-600 bg-green-600"
-                              : showCorrectness && isUserAnswer && !isCorrectAnswer
-                              ? "border-red-600 bg-red-600"
-                              : answers[question.id] === optIndex
-                              ? "border-primary bg-gradient-to-br from-primary to-primary/80 shadow-md shadow-primary/30"
-                              : "border-muted-foreground group-hover:border-primary/60 group-hover:bg-primary/5"
-                          }`}>
-                            {(answers[question.id] === optIndex || (showCorrectness && isCorrectAnswer)) && (
-                              <motion.div
-                                initial={{ scale: 0, rotate: -180 }}
-                                animate={{ scale: 1, rotate: 0 }}
-                                transition={{ type: "spring", stiffness: 200 }}
-                              >
-                                <CheckCircle2 className="w-4 h-4 text-white" />
-                              </motion.div>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex-1 z-10">
-                          <div className="flex items-center gap-3 mb-1">
-                            <span className={`font-bold text-sm px-3 py-1 rounded-lg transition-all duration-300 ${
-                              answers[question.id] === optIndex
-                                ? "bg-gradient-to-br from-primary to-primary/90 text-primary-foreground shadow-sm"
-                                : "bg-gradient-to-br from-muted to-muted/80 text-muted-foreground group-hover:from-primary/20 group-hover:to-primary/10"
-                            }`}>
-                              {String.fromCharCode(65 + optIndex)}
-                            </span>
-                            {option && (
-                              <span className={`text-base font-medium transition-colors ${
-                                answers[question.id] === optIndex ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"
-                              }`}>
-                                {option}
-                              </span>
-                            )}
-                          </div>
-                          {question.optionImages?.[optIndex] && (
-                            <motion.img
-                              whileHover={{ scale: 1.02 }}
-                              src={question.optionImages[optIndex]}
-                              alt={`Option ${String.fromCharCode(65 + optIndex)}`}
-                              className={`max-w-sm rounded-xl mt-3 border-2 transition-all duration-300 ${
-                                answers[question.id] === optIndex
-                                  ? "border-primary shadow-md"
-                                  : "border-border group-hover:border-primary/40"
-                              }`}
+                    return (
+                      (option || question.optionImages?.[optIndex]) && (
+                        <motion.label
+                          key={optIndex}
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: optIndex * 0.05 }}
+                          whileHover={!reviewMode ? { scale: 1.02, x: 4 } : {}}
+                          whileTap={!reviewMode ? { scale: 0.98 } : {}}
+                          className={`group relative flex items-start gap-4 p-5 rounded-2xl border-2 transition-all duration-300 overflow-hidden ${borderColor} ${bgColor} ${
+                            reviewMode
+                              ? "cursor-default"
+                              : "cursor-pointer hover:border-primary/60 hover:bg-gradient-to-br hover:from-accent/10 hover:to-background hover:shadow-md"
+                          }`}
+                        >
+                          {answers[question.id] === optIndex && (
+                            <motion.div
+                              initial={{ scale: 0 }}
+                              animate={{ scale: 1 }}
+                              className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent"
                             />
                           )}
-                        </div>
-                      </motion.label>
+                          <div className="relative flex items-center justify-center z-10">
+                            <input
+                              type="radio"
+                              name={`question-${question.id}`}
+                              value={optIndex}
+                              checked={answers[question.id] === optIndex}
+                              onChange={() => !reviewMode && handleAnswerChange(question.id, optIndex)}
+                              className="peer sr-only"
+                              disabled={reviewMode}
+                            />
+                            <div
+                              className={`relative w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
+                                showCorrectness && isCorrectAnswer
+                                  ? "border-green-600 bg-green-600"
+                                  : showCorrectness && isUserAnswer && !isCorrectAnswer
+                                    ? "border-red-600 bg-red-600"
+                                    : answers[question.id] === optIndex
+                                      ? "border-primary bg-gradient-to-br from-primary to-primary/80 shadow-md shadow-primary/30"
+                                      : "border-muted-foreground group-hover:border-primary/60 group-hover:bg-primary/5"
+                              }`}
+                            >
+                              {(answers[question.id] === optIndex || (showCorrectness && isCorrectAnswer)) && (
+                                <motion.div
+                                  initial={{ scale: 0, rotate: -180 }}
+                                  animate={{ scale: 1, rotate: 0 }}
+                                  transition={{ type: "spring", stiffness: 200 }}
+                                >
+                                  <CheckCircle2 className="w-4 h-4 text-white" />
+                                </motion.div>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex-1 z-10">
+                            <div className="flex items-center gap-3 mb-1">
+                              <span
+                                className={`font-bold text-sm px-3 py-1 rounded-lg transition-all duration-300 ${
+                                  answers[question.id] === optIndex
+                                    ? "bg-gradient-to-br from-primary to-primary/90 text-primary-foreground shadow-sm"
+                                    : "bg-gradient-to-br from-muted to-muted/80 text-muted-foreground group-hover:from-primary/20 group-hover:to-primary/10"
+                                }`}
+                              >
+                                {String.fromCharCode(65 + optIndex)}
+                              </span>
+                              {option && (
+                                <span
+                                  className={`text-base font-medium transition-colors ${
+                                    answers[question.id] === optIndex
+                                      ? "text-foreground"
+                                      : "text-muted-foreground group-hover:text-foreground"
+                                  }`}
+                                >
+                                  {option}
+                                </span>
+                              )}
+                            </div>
+                            {question.optionImages?.[optIndex] && (
+                              <motion.img
+                                whileHover={{ scale: 1.02 }}
+                                src={question.optionImages[optIndex]}
+                                alt={`Option ${String.fromCharCode(65 + optIndex)}`}
+                                className={`max-w-sm rounded-xl mt-3 border-2 transition-all duration-300 ${
+                                  answers[question.id] === optIndex
+                                    ? "border-primary shadow-md"
+                                    : "border-border group-hover:border-primary/40"
+                                }`}
+                              />
+                            )}
+                          </div>
+                        </motion.label>
+                      )
                     )
                   })}
                 </div>
@@ -472,7 +507,7 @@ export default function ExamView() {
                     rows={5}
                     placeholder="লিখিত উত্তর লিখুন... / Write your answer here..."
                   />
-                  
+
                   <div className="border-2 border-dashed border-border rounded-xl p-4 bg-accent/5">
                     <div className="flex items-start gap-3 mb-3">
                       <Upload className="w-5 h-5 text-primary mt-1" />
@@ -508,7 +543,7 @@ export default function ExamView() {
                         {cqImages[question.id].map((imageUrl, idx) => (
                           <div key={idx} className="relative group">
                             <img
-                              src={imageUrl}
+                              src={imageUrl || "/placeholder.svg"}
                               alt={`Answer ${idx + 1}`}
                               className="w-full h-32 object-cover rounded-lg border-2 border-border"
                             />
@@ -544,7 +579,7 @@ export default function ExamView() {
                     message: "Are you sure you want to exit? Your progress will be lost.",
                     variant: "danger",
                     confirmText: "Exit",
-                    onConfirm: () => navigate(-1)
+                    onConfirm: () => navigate(-1),
                   })
                 }}
                 className="px-6 py-3 bg-muted hover:bg-muted/80 rounded-lg transition-colors font-medium"

@@ -1,5 +1,18 @@
-import { createContext, useContext, useState, useEffect } from "react"
-import { collection, addDoc, getDocs, query, where, doc, getDoc, updateDoc, deleteDoc, serverTimestamp } from "firebase/firestore"
+"use client"
+
+import { createContext, useContext, useState } from "react"
+import {
+  collection,
+  addDoc,
+  getDocs,
+  query,
+  where,
+  doc,
+  getDoc,
+  updateDoc,
+  deleteDoc,
+  serverTimestamp,
+} from "firebase/firestore"
 import { db } from "../lib/firebase"
 
 const ExamContext = createContext({})
@@ -34,7 +47,7 @@ export function ExamProvider({ children }) {
     try {
       const q = query(collection(db, "exams"), where("classId", "==", classId))
       const snapshot = await getDocs(q)
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+      return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
     } catch (error) {
       console.error("Error fetching exams:", error)
       return []
@@ -45,12 +58,12 @@ export function ExamProvider({ children }) {
     try {
       const q = query(collection(db, "exams"), where("courseId", "==", courseId))
       const snapshot = await getDocs(q)
-      const allExams = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
-      
+      const allExams = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
+
       if (!includeArchived) {
-        return allExams.filter(exam => !exam.isArchived)
+        return allExams.filter((exam) => !exam.isArchived)
       }
-      
+
       return allExams
     } catch (error) {
       console.error("Error fetching exams:", error)
@@ -62,9 +75,7 @@ export function ExamProvider({ children }) {
     try {
       const q = query(collection(db, "exams"), where("courseId", "==", courseId))
       const snapshot = await getDocs(q)
-      return snapshot.docs
-        .map(doc => ({ id: doc.id, ...doc.data() }))
-        .filter(exam => !exam.isArchived)
+      return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })).filter((exam) => !exam.isArchived)
     } catch (error) {
       console.error("Error fetching active exams:", error)
       return []
@@ -75,9 +86,7 @@ export function ExamProvider({ children }) {
     try {
       const q = query(collection(db, "exams"), where("courseId", "==", courseId))
       const snapshot = await getDocs(q)
-      return snapshot.docs
-        .map(doc => ({ id: doc.id, ...doc.data() }))
-        .filter(exam => exam.isArchived === true)
+      return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })).filter((exam) => exam.isArchived === true)
     } catch (error) {
       console.error("Error fetching archived exams:", error)
       return []
@@ -116,7 +125,7 @@ export function ExamProvider({ children }) {
       await deleteDoc(doc(db, "exams", examId))
       const questionsQ = query(collection(db, "examQuestions"), where("examId", "==", examId))
       const questionsSnapshot = await getDocs(questionsQ)
-      const deletePromises = questionsSnapshot.docs.map(doc => deleteDoc(doc.ref))
+      const deletePromises = questionsSnapshot.docs.map((doc) => deleteDoc(doc.ref))
       await Promise.all(deletePromises)
     } catch (error) {
       console.error("Error deleting exam:", error)
@@ -141,7 +150,7 @@ export function ExamProvider({ children }) {
     try {
       const q = query(collection(db, "examQuestions"), where("examId", "==", examId))
       const snapshot = await getDocs(q)
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+      return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
     } catch (error) {
       console.error("Error fetching questions:", error)
       return []
@@ -169,26 +178,43 @@ export function ExamProvider({ children }) {
 
   const submitExamResult = async (userId, examId, answers, score, questions, cqImages = {}) => {
     try {
-      const wrongAnswers = questions.filter((q, index) => {
-        const userAnswer = answers[q.id]
-        return userAnswer !== q.correctAnswer
-      }).map(q => ({
-        questionId: q.id,
-        questionText: q.questionText,
-        correctAnswer: q.correctAnswer,
-        userAnswer: answers[q.id],
-        options: q.options
-      }))
+      if (!userId || !examId) {
+        throw new Error("User ID and Exam ID are required")
+      }
 
-      const cqAnswers = questions.filter(q => q.type === "cq" || q.type === "creative").map(q => ({
-        questionId: q.id,
-        questionText: q.questionText,
-        textAnswer: answers[q.id] || "",
-        images: cqImages[q.id] || [],
-        marks: q.marks || 0
-      }))
+      const wrongAnswers = questions
+        .filter((q, index) => {
+          const userAnswer = answers[q.id]
+          return userAnswer !== q.correctAnswer
+        })
+        .map((q) => ({
+          questionId: q.id,
+          questionText: q.questionText,
+          correctAnswer: q.correctAnswer,
+          userAnswer: answers[q.id],
+          options: q.options,
+        }))
 
-      await addDoc(collection(db, "examResults"), {
+      const cqAnswers = questions
+        .filter((q) => q.type === "cq" || q.type === "creative")
+        .map((q) => ({
+          questionId: q.id,
+          questionText: q.questionText,
+          textAnswer: answers[q.id] || "",
+          images: cqImages[q.id] || [],
+          marks: q.marks || 0,
+        }))
+
+      console.log("[v0] Submitting exam result:", {
+        userId,
+        examId,
+        score,
+        totalQuestions: questions.length,
+        cqAnswersCount: cqAnswers.length,
+        wrongAnswersCount: wrongAnswers.length,
+      })
+
+      const result = await addDoc(collection(db, "examResults"), {
         userId,
         examId,
         answers,
@@ -198,19 +224,18 @@ export function ExamProvider({ children }) {
         totalQuestions: questions.length,
         submittedAt: serverTimestamp(),
       })
+
+      console.log("[v0] Exam result submitted successfully:", result.id)
+      return result.id
     } catch (error) {
-      console.error("Error submitting exam result:", error)
-      throw error
+      console.error("[v0] Error submitting exam result:", error)
+      throw new Error(`Failed to submit exam: ${error.message}`)
     }
   }
 
   const getExamResult = async (userId, examId) => {
     try {
-      const q = query(
-        collection(db, "examResults"),
-        where("userId", "==", userId),
-        where("examId", "==", examId)
-      )
+      const q = query(collection(db, "examResults"), where("userId", "==", userId), where("examId", "==", examId))
       const snapshot = await getDocs(q)
       if (!snapshot.empty) {
         return { id: snapshot.docs[0].id, ...snapshot.docs[0].data() }
@@ -224,15 +249,42 @@ export function ExamProvider({ children }) {
 
   const getUserExamResults = async (userId) => {
     try {
-      const q = query(
-        collection(db, "examResults"),
-        where("userId", "==", userId)
-      )
+      const q = query(collection(db, "examResults"), where("userId", "==", userId))
       const snapshot = await getDocs(q)
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+      return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
     } catch (error) {
       console.error("Error fetching user exam results:", error)
       return []
+    }
+  }
+
+  const copyExamQuestions = async (sourceExamId, targetExamId) => {
+    try {
+      console.log("[v0] Copying questions from exam", sourceExamId, "to", targetExamId)
+      const sourceQuestions = await getQuestionsByExam(sourceExamId)
+
+      if (sourceQuestions.length === 0) {
+        console.log("[v0] No questions to copy")
+        return 0
+      }
+
+      let copiedCount = 0
+      for (const question of sourceQuestions) {
+        const newQuestion = {
+          ...question,
+          examId: targetExamId,
+          createdAt: serverTimestamp(),
+        }
+        delete newQuestion.id
+        await addDoc(collection(db, "examQuestions"), newQuestion)
+        copiedCount++
+      }
+
+      console.log("[v0] Successfully copied", copiedCount, "questions")
+      return copiedCount
+    } catch (error) {
+      console.error("[v0] Error copying exam questions:", error)
+      throw error
     }
   }
 
@@ -254,6 +306,7 @@ export function ExamProvider({ children }) {
     submitExamResult,
     getExamResult,
     getUserExamResults,
+    copyExamQuestions,
   }
 
   return <ExamContext.Provider value={value}>{children}</ExamContext.Provider>

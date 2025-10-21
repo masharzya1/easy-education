@@ -49,7 +49,7 @@ export default function ManageClasses() {
   const [teachers, setTeachers] = useState([])
   const [confirmDialog, setConfirmDialog] = useState({ isOpen: false, title: "", message: "", onConfirm: () => {} })
 
-  const { getExamsByCourse } = useExam()
+  const { getExamsByCourse, copyExamQuestions } = useExam()
 
   useEffect(() => {
     fetchCourses()
@@ -76,7 +76,7 @@ export default function ManageClasses() {
     try {
       const examsData = await getExamsByCourse(courseId)
       // Filter out already archived exams
-      const nonArchivedExams = examsData.filter(exam => !exam.isArchived)
+      const nonArchivedExams = examsData.filter((exam) => !exam.isArchived)
       setArchiveExams(nonArchivedExams)
     } catch (error) {
       console.error("Error fetching archive exams:", error)
@@ -130,8 +130,12 @@ export default function ManageClasses() {
         }))
         .filter((cls) => {
           if (cls.isArchived === true) return false
-          const subjectIsArchive = Array.isArray(cls.subject) ? cls.subject.includes("archive") : cls.subject === "archive"
-          const chapterIsArchive = Array.isArray(cls.chapter) ? cls.chapter.includes("archive") : cls.chapter === "archive"
+          const subjectIsArchive = Array.isArray(cls.subject)
+            ? cls.subject.includes("archive")
+            : cls.subject === "archive"
+          const chapterIsArchive = Array.isArray(cls.chapter)
+            ? cls.chapter.includes("archive")
+            : cls.chapter === "archive"
           return !subjectIsArchive && !chapterIsArchive
         })
         .sort((a, b) => a.order - b.order)
@@ -253,14 +257,14 @@ export default function ManageClasses() {
       handleCloseModal()
       toast({
         title: "Success",
-        description: editingClass ? "Class updated successfully!" : "Class created successfully!"
+        description: editingClass ? "Class updated successfully!" : "Class created successfully!",
       })
     } catch (error) {
       console.error("Error saving class:", error)
       toast({
         variant: "error",
         title: "Error",
-        description: "Failed to save class. " + (error.message || "Please try again.")
+        description: "Failed to save class. " + (error.message || "Please try again."),
       })
     } finally {
       setSubmitting(false)
@@ -280,17 +284,17 @@ export default function ManageClasses() {
           await fetchClasses()
           toast({
             title: "Success",
-            description: "Class deleted successfully"
+            description: "Class deleted successfully",
           })
         } catch (error) {
           console.error("Error deleting class:", error)
           toast({
             variant: "error",
             title: "Error",
-            description: "Failed to delete class"
+            description: "Failed to delete class",
           })
         }
-      }
+      },
     })
   }
 
@@ -299,15 +303,16 @@ export default function ManageClasses() {
     try {
       const isClassArchived = (cls) => {
         if (cls.isArchived === true) return true
-        const subjectIsArchive = Array.isArray(cls.subject) ? cls.subject.includes("archive") : cls.subject === "archive"
-        const chapterIsArchive = Array.isArray(cls.chapter) ? cls.chapter.includes("archive") : cls.chapter === "archive"
+        const subjectIsArchive = Array.isArray(cls.subject)
+          ? cls.subject.includes("archive")
+          : cls.subject === "archive"
+        const chapterIsArchive = Array.isArray(cls.chapter)
+          ? cls.chapter.includes("archive")
+          : cls.chapter === "archive"
         return subjectIsArchive || chapterIsArchive
       }
 
-      const classesQuery = query(
-        collection(db, "classes"), 
-        where("courseId", "==", courseId)
-      )
+      const classesQuery = query(collection(db, "classes"), where("courseId", "==", courseId))
       const classesSnapshot = await getDocs(classesQuery)
       const classesData = classesSnapshot.docs
         .map((doc) => ({ id: doc.id, ...doc.data() }))
@@ -331,16 +336,14 @@ export default function ManageClasses() {
   }
 
   const toggleArchiveExam = (examId) => {
-    setSelectedArchiveExams(prev => 
-      prev.includes(examId) ? prev.filter(id => id !== examId) : [...prev, examId]
-    )
+    setSelectedArchiveExams((prev) => (prev.includes(examId) ? prev.filter((id) => id !== examId) : [...prev, examId]))
   }
 
   const toggleAllArchiveExams = () => {
     if (selectedArchiveExams.length === archiveExams.length && archiveExams.length > 0) {
       setSelectedArchiveExams([])
     } else {
-      setSelectedArchiveExams(archiveExams.map(e => e.id))
+      setSelectedArchiveExams(archiveExams.map((e) => e.id))
     }
   }
 
@@ -349,7 +352,7 @@ export default function ManageClasses() {
       toast({
         variant: "error",
         title: "Selection Required",
-        description: "Please select at least one class or exam to archive"
+        description: "Please select at least one class or exam to archive",
       })
       return
     }
@@ -358,7 +361,7 @@ export default function ManageClasses() {
       toast({
         variant: "error",
         title: "Invalid Course Type",
-        description: "Archive feature is only available for batch type courses!"
+        description: "Archive feature is only available for batch type courses!",
       })
       return
     }
@@ -369,10 +372,10 @@ export default function ManageClasses() {
 
       // Archive classes
       if (selectedArchiveClasses.length > 0) {
-        const currentMaxOrder = classes.length > 0 ? Math.max(...classes.map(c => c.order)) : -1
-        
+        const currentMaxOrder = classes.length > 0 ? Math.max(...classes.map((c) => c.order)) : -1
+
         for (let i = 0; i < selectedArchiveClasses.length; i++) {
-          const sourceClass = archiveClasses.find(c => c.id === selectedArchiveClasses[i])
+          const sourceClass = archiveClasses.find((c) => c.id === selectedArchiveClasses[i])
           if (!sourceClass) continue
 
           const newClass = {
@@ -389,10 +392,9 @@ export default function ManageClasses() {
         }
       }
 
-      // Archive exams
       if (selectedArchiveExams.length > 0) {
         for (const examId of selectedArchiveExams) {
-          const sourceExam = archiveExams.find(e => e.id === examId)
+          const sourceExam = archiveExams.find((e) => e.id === examId)
           if (!sourceExam) continue
 
           const newExam = {
@@ -403,7 +405,24 @@ export default function ManageClasses() {
             archivedFrom: archiveSourceCourse,
           }
           delete newExam.id
-          await addDoc(collection(db, "exams"), newExam)
+
+          // Create the new exam first
+          const newExamRef = await addDoc(collection(db, "exams"), newExam)
+          console.log("[v0] Created archived exam:", newExamRef.id)
+
+          // Then copy all questions from the source exam to the new exam
+          try {
+            const questionsCopied = await copyExamQuestions(examId, newExamRef.id)
+            console.log("[v0] Copied", questionsCopied, "questions for exam", newExamRef.id)
+          } catch (questionError) {
+            console.error("[v0] Error copying questions for exam:", questionError)
+            toast({
+              variant: "error",
+              title: "Warning",
+              description: `Exam archived but failed to copy questions: ${questionError.message}`,
+            })
+          }
+
           archivedCount++
         }
       }
@@ -414,14 +433,14 @@ export default function ManageClasses() {
       setSelectedArchiveExams([])
       toast({
         title: "Success",
-        description: `Successfully archived ${archivedCount} item(s)!`
+        description: `Successfully archived ${archivedCount} item(s)!`,
       })
     } catch (error) {
-      console.error("Error archiving:", error)
+      console.error("[v0] Error archiving:", error)
       toast({
         variant: "error",
         title: "Error",
-        description: "Failed to archive. Please try again."
+        description: "Failed to archive. Please try again.",
       })
     } finally {
       setArchiveSubmitting(false)
@@ -431,21 +450,21 @@ export default function ManageClasses() {
   const getFilteredArchiveClasses = () => {
     let filtered = archiveClasses
     if (archiveSubject) {
-      filtered = filtered.filter(c => 
-        Array.isArray(c.subject) ? c.subject.includes(archiveSubject) : c.subject === archiveSubject
+      filtered = filtered.filter((c) =>
+        Array.isArray(c.subject) ? c.subject.includes(archiveSubject) : c.subject === archiveSubject,
       )
     }
     if (archiveChapter) {
-      filtered = filtered.filter(c => 
-        Array.isArray(c.chapter) ? c.chapter.includes(archiveChapter) : c.chapter === archiveChapter
+      filtered = filtered.filter((c) =>
+        Array.isArray(c.chapter) ? c.chapter.includes(archiveChapter) : c.chapter === archiveChapter,
       )
     }
     return filtered
   }
 
   const toggleArchiveClass = (classId) => {
-    setSelectedArchiveClasses(prev => 
-      prev.includes(classId) ? prev.filter(id => id !== classId) : [...prev, classId]
+    setSelectedArchiveClasses((prev) =>
+      prev.includes(classId) ? prev.filter((id) => id !== classId) : [...prev, classId],
     )
   }
 
@@ -454,7 +473,7 @@ export default function ManageClasses() {
     if (selectedArchiveClasses.length === filtered.length && filtered.length > 0) {
       setSelectedArchiveClasses([])
     } else {
-      setSelectedArchiveClasses(filtered.map(c => c.id))
+      setSelectedArchiveClasses(filtered.map((c) => c.id))
     }
   }
 
@@ -463,7 +482,7 @@ export default function ManageClasses() {
       toast({
         variant: "error",
         title: "Course Required",
-        description: "Please select a course first!"
+        description: "Please select a course first!",
       })
       return
     }
@@ -475,12 +494,11 @@ export default function ManageClasses() {
       confirmText: "Fix URLs",
       onConfirm: async () => {
         await performFixVideoURLs()
-      }
+      },
     })
   }
 
   const performFixVideoURLs = async () => {
-
     try {
       setSubmitting(true)
       let updatedCount = 0
@@ -496,14 +514,14 @@ export default function ManageClasses() {
       await fetchClasses()
       toast({
         title: "Success",
-        description: `Successfully updated ${updatedCount} class(es) with videoURL field!`
+        description: `Successfully updated ${updatedCount} class(es) with videoURL field!`,
       })
     } catch (error) {
       console.error("Error fixing video URLs:", error)
       toast({
         variant: "error",
         title: "Error",
-        description: "Failed to fix video URLs. Please try again."
+        description: "Failed to fix video URLs. Please try again.",
       })
     } finally {
       setSubmitting(false)
@@ -513,12 +531,12 @@ export default function ManageClasses() {
   const selectedCourseData = courses.find((c) => c.id === selectedCourse)
   const batchCourses = courses.filter((c) => c.type === "batch")
   const archiveSourceCourseData = courses.find((c) => c.id === archiveSourceCourse)
-  const uniqueArchiveSubjects = [...new Set(archiveClasses.map(c => 
-    Array.isArray(c.subject) ? c.subject : [c.subject]
-  ).flat().filter(Boolean))].sort()
-  const uniqueArchiveChapters = [...new Set(archiveClasses.map(c => 
-    Array.isArray(c.chapter) ? c.chapter : [c.chapter]
-  ).flat().filter(Boolean))].sort()
+  const uniqueArchiveSubjects = [
+    ...new Set(archiveClasses.flatMap((c) => (Array.isArray(c.subject) ? c.subject : [c.subject])).filter(Boolean)),
+  ].sort()
+  const uniqueArchiveChapters = [
+    ...new Set(archiveClasses.flatMap((c) => (Array.isArray(c.chapter) ? c.chapter : [c.chapter])).filter(Boolean)),
+  ].sort()
 
   return (
     <div>
@@ -581,7 +599,9 @@ export default function ManageClasses() {
               <thead className="bg-muted">
                 <tr>
                   <th className="text-left p-2 font-medium text-xs">Title</th>
-                  {selectedCourseData?.type === "batch" && <th className="text-left p-2 font-medium text-xs">Subject</th>}
+                  {selectedCourseData?.type === "batch" && (
+                    <th className="text-left p-2 font-medium text-xs">Subject</th>
+                  )}
                   <th className="text-left p-2 font-medium text-xs">Chapter</th>
                   <th className="text-left p-2 font-medium text-xs">Teacher</th>
                   <th className="text-left p-2 font-medium text-xs">Order</th>
@@ -898,7 +918,10 @@ export default function ManageClasses() {
           >
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-bold">Archive Classes to Current Course</h2>
-              <button onClick={() => setShowArchiveModal(false)} className="p-1 hover:bg-muted rounded transition-colors">
+              <button
+                onClick={() => setShowArchiveModal(false)}
+                className="p-1 hover:bg-muted rounded transition-colors"
+              >
                 <X className="w-4 h-4" />
               </button>
             </div>
@@ -918,7 +941,7 @@ export default function ManageClasses() {
                 >
                   <option value="">Select source course...</option>
                   {courses
-                    .filter(c => c.id !== selectedCourse)
+                    .filter((c) => c.id !== selectedCourse)
                     .map((course) => (
                       <option key={course.id} value={course.id}>
                         {course.title} ({course.type})
@@ -973,7 +996,8 @@ export default function ManageClasses() {
                         onClick={toggleAllArchiveClasses}
                         className="px-2 py-1 text-xs bg-muted hover:bg-muted/80 rounded transition-colors"
                       >
-                        {selectedArchiveClasses.length === getFilteredArchiveClasses().length && getFilteredArchiveClasses().length > 0
+                        {selectedArchiveClasses.length === getFilteredArchiveClasses().length &&
+                        getFilteredArchiveClasses().length > 0
                           ? "Deselect All"
                           : "Select All"}
                       </button>
@@ -995,10 +1019,16 @@ export default function ManageClasses() {
                             <div className="font-medium">{classItem.title}</div>
                             <div className="text-muted-foreground">
                               {archiveSourceCourseData?.type === "batch" && classItem.subject && (
-                                <span className="mr-2">Subject: {Array.isArray(classItem.subject) ? classItem.subject.join(", ") : classItem.subject}</span>
+                                <span className="mr-2">
+                                  Subject:{" "}
+                                  {Array.isArray(classItem.subject) ? classItem.subject.join(", ") : classItem.subject}
+                                </span>
                               )}
                               {classItem.chapter && (
-                                <span>Chapter: {Array.isArray(classItem.chapter) ? classItem.chapter.join(", ") : classItem.chapter}</span>
+                                <span>
+                                  Chapter:{" "}
+                                  {Array.isArray(classItem.chapter) ? classItem.chapter.join(", ") : classItem.chapter}
+                                </span>
                               )}
                             </div>
                           </div>
@@ -1058,10 +1088,14 @@ export default function ManageClasses() {
                     <button
                       type="button"
                       onClick={handleArchiveSubmit}
-                      disabled={archiveSubmitting || (selectedArchiveClasses.length === 0 && selectedArchiveExams.length === 0)}
+                      disabled={
+                        archiveSubmitting || (selectedArchiveClasses.length === 0 && selectedArchiveExams.length === 0)
+                      }
                       className="flex-1 py-2 text-sm bg-primary hover:bg-primary/90 text-primary-foreground rounded transition-colors disabled:opacity-50"
                     >
-                      {archiveSubmitting ? "Transferring..." : `Transfer ${selectedArchiveClasses.length + selectedArchiveExams.length} Item(s)`}
+                      {archiveSubmitting
+                        ? "Transferring..."
+                        : `Transfer ${selectedArchiveClasses.length + selectedArchiveExams.length} Item(s)`}
                     </button>
                     <button
                       type="button"
