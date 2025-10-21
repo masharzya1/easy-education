@@ -156,27 +156,29 @@ export default function Analytics() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-6">
-        <div className="mb-8">
+    <div className="min-h-screen bg-white">
+      <div className="max-w-6xl mx-auto px-6 py-12">
+        <div className="mb-12">
           <button
             onClick={() => navigate("/dashboard")}
-            className="flex items-center gap-2 text-primary hover:text-primary/80 mb-4 transition-colors"
+            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6 transition-colors font-medium"
           >
-            <ArrowLeft className="w-5 h-5" />
+            <ArrowLeft className="w-4 h-4" />
             Back to Dashboard
           </button>
-          <h1 className="text-3xl font-bold mb-2">Exam Analytics</h1>
-          <p className="text-muted-foreground">Track your exam performance and see areas for improvement</p>
+          <div>
+            <h1 className="text-4xl font-bold text-gray-900 mb-2">Exam Analytics</h1>
+            <p className="text-gray-600">Track your exam performance and see areas for improvement</p>
+          </div>
         </div>
 
         {examResults.length === 0 ? (
-          <div className="text-center py-12 bg-card border border-border rounded-xl">
-            <FileQuestion className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground mb-4">You haven't taken any exams yet.</p>
+          <div className="text-center py-16 bg-gray-50 border border-gray-200 rounded-lg">
+            <FileQuestion className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <p className="text-gray-600 mb-6">You haven't taken any exams yet.</p>
             <Link
               to="/courses"
-              className="inline-block px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+              className="inline-block px-6 py-3 bg-black text-white rounded-full hover:bg-gray-900 transition-colors font-medium"
             >
               Browse Courses
             </Link>
@@ -184,18 +186,18 @@ export default function Analytics() {
         ) : (
           <>
             {/* Filters */}
-            <div className="bg-card border border-border rounded-xl p-6 mb-8">
+            <div className="bg-white border border-gray-200 rounded-lg p-6 mb-8">
               <div className="flex items-center gap-2 mb-4">
-                <Filter className="w-5 h-5 text-primary" />
-                <h2 className="text-lg font-bold">Filters</h2>
+                <Filter className="w-5 h-5 text-gray-900" />
+                <h2 className="text-lg font-bold text-gray-900">Filters</h2>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2">Filter by Course</label>
+                  <label className="block text-sm font-medium text-gray-900 mb-2">Filter by Course</label>
                   <select
                     value={courseFilter}
                     onChange={(e) => setCourseFilter(e.target.value)}
-                    className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full px-4 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 text-gray-900"
                   >
                     <option value="all">All Courses</option>
                     {uniqueCourses.map((course) => (
@@ -206,11 +208,11 @@ export default function Analytics() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">Filter by Date</label>
+                  <label className="block text-sm font-medium text-gray-900 mb-2">Filter by Date</label>
                   <select
                     value={dateFilter}
                     onChange={(e) => setDateFilter(e.target.value)}
-                    className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full px-4 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 text-gray-900"
                   >
                     <option value="all">All Time</option>
                     <option value="week">Last 7 Days</option>
@@ -225,7 +227,7 @@ export default function Analytics() {
                     setCourseFilter("all")
                     setDateFilter("all")
                   }}
-                  className="mt-4 text-sm text-primary hover:text-primary/80 transition-colors"
+                  className="mt-4 text-sm text-gray-600 hover:text-gray-900 transition-colors font-medium"
                 >
                   Clear all filters
                 </button>
@@ -237,15 +239,15 @@ export default function Analytics() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0 }}
-                className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-500/20 rounded-xl p-6 hover:shadow-lg transition-shadow"
+                className="bg-white border border-gray-200 rounded-lg p-6 hover:border-gray-300 hover:shadow-md transition-all"
               >
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center">
-                    <FileQuestion className="w-6 h-6 text-blue-600" />
+                  <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                    <FileQuestion className="w-6 h-6 text-gray-900" />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground font-medium">Total Exams</p>
-                    <p className="text-3xl font-bold text-blue-600">{stats.totalExams}</p>
+                    <p className="text-sm text-gray-600 font-medium">Total Exams</p>
+                    <p className="text-3xl font-bold text-gray-900">{stats.totalExams}</p>
                   </div>
                 </div>
               </motion.div>
@@ -254,15 +256,15 @@ export default function Analytics() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
-                className="bg-gradient-to-br from-green-500/10 to-green-600/5 border border-green-500/20 rounded-xl p-6 hover:shadow-lg transition-shadow"
+                className="bg-white border border-gray-200 rounded-lg p-6 hover:border-gray-300 hover:shadow-md transition-all"
               >
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center">
-                    <TrendingUp className="w-6 h-6 text-green-600" />
+                  <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                    <TrendingUp className="w-6 h-6 text-gray-900" />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground font-medium">Average Score</p>
-                    <p className="text-3xl font-bold text-green-600">{stats.averageScore}%</p>
+                    <p className="text-sm text-gray-600 font-medium">Average Score</p>
+                    <p className="text-3xl font-bold text-gray-900">{stats.averageScore}%</p>
                   </div>
                 </div>
               </motion.div>
@@ -271,15 +273,15 @@ export default function Analytics() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="bg-gradient-to-br from-purple-500/10 to-purple-600/5 border border-purple-500/20 rounded-xl p-6 hover:shadow-lg transition-shadow"
+                className="bg-white border border-gray-200 rounded-lg p-6 hover:border-gray-300 hover:shadow-md transition-all"
               >
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center">
-                    <Award className="w-6 h-6 text-purple-600" />
+                  <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                    <Award className="w-6 h-6 text-gray-900" />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground font-medium">Passed Exams</p>
-                    <p className="text-3xl font-bold text-purple-600">{stats.passedExams}</p>
+                    <p className="text-sm text-gray-600 font-medium">Passed Exams</p>
+                    <p className="text-3xl font-bold text-gray-900">{stats.passedExams}</p>
                   </div>
                 </div>
               </motion.div>
@@ -288,15 +290,15 @@ export default function Analytics() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
-                className="bg-gradient-to-br from-orange-500/10 to-orange-600/5 border border-orange-500/20 rounded-xl p-6 hover:shadow-lg transition-shadow"
+                className="bg-white border border-gray-200 rounded-lg p-6 hover:border-gray-300 hover:shadow-md transition-all"
               >
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-12 h-12 bg-orange-500/20 rounded-xl flex items-center justify-center">
-                    <CheckCircle className="w-6 h-6 text-orange-600" />
+                  <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                    <CheckCircle className="w-6 h-6 text-gray-900" />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground font-medium">Pass Rate</p>
-                    <p className="text-3xl font-bold text-orange-600">{stats.passRate}%</p>
+                    <p className="text-sm text-gray-600 font-medium">Pass Rate</p>
+                    <p className="text-3xl font-bold text-gray-900">{stats.passRate}%</p>
                   </div>
                 </div>
               </motion.div>
@@ -308,35 +310,35 @@ export default function Analytics() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4 }}
-                className="bg-card border border-border rounded-xl p-6 mb-8"
+                className="bg-white border border-gray-200 rounded-lg p-6 mb-8"
               >
                 <div className="flex items-center gap-2 mb-6">
-                  <TrendingUp className="w-5 h-5 text-primary" />
-                  <h2 className="text-2xl font-bold">Performance Trends</h2>
-                  <span className="text-sm text-muted-foreground ml-auto">Last {chartData.length} exams</span>
+                  <TrendingUp className="w-5 h-5 text-gray-900" />
+                  <h2 className="text-2xl font-bold text-gray-900">Performance Trends</h2>
+                  <span className="text-sm text-gray-600 ml-auto">Last {chartData.length} exams</span>
                 </div>
                 <div className="w-full h-64">
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={chartData}>
                       <defs>
                         <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
-                          <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                          <stop offset="5%" stopColor="#000000" stopOpacity={0.2} />
+                          <stop offset="95%" stopColor="#000000" stopOpacity={0} />
                         </linearGradient>
                       </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                      <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={12} />
-                      <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} domain={[0, 100]} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                      <XAxis dataKey="date" stroke="#6b7280" fontSize={12} />
+                      <YAxis stroke="#6b7280" fontSize={12} domain={[0, 100]} />
                       <Tooltip
                         contentStyle={{
-                          backgroundColor: "hsl(var(--card))",
-                          border: "1px solid hsl(var(--border))",
+                          backgroundColor: "#ffffff",
+                          border: "1px solid #e5e7eb",
                           borderRadius: "8px",
                           padding: "8px 12px",
                         }}
-                        labelStyle={{ color: "hsl(var(--foreground))" }}
+                        labelStyle={{ color: "#000000" }}
                       />
-                      <Area type="monotone" dataKey="score" stroke="#10b981" strokeWidth={2} fill="url(#colorScore)" />
+                      <Area type="monotone" dataKey="score" stroke="#000000" strokeWidth={2} fill="url(#colorScore)" />
                     </AreaChart>
                   </ResponsiveContainer>
                 </div>
@@ -345,11 +347,11 @@ export default function Analytics() {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2 space-y-4">
-                <h2 className="text-2xl font-bold">Exam History</h2>
+                <h2 className="text-2xl font-bold text-gray-900">Exam History</h2>
                 {filteredResults.length === 0 ? (
-                  <div className="text-center py-12 bg-card border border-border rounded-xl">
-                    <FileQuestion className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-                    <p className="text-muted-foreground">No exams match the selected filters.</p>
+                  <div className="text-center py-12 bg-gray-50 border border-gray-200 rounded-lg">
+                    <FileQuestion className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-600">No exams match the selected filters.</p>
                   </div>
                 ) : (
                   filteredResults.map((result, index) => {
@@ -364,24 +366,26 @@ export default function Analytics() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.05 }}
-                        className="bg-card border border-border rounded-xl p-6 hover:shadow-lg transition-all cursor-pointer"
+                        className="bg-white border border-gray-200 rounded-lg p-6 hover:border-gray-300 hover:shadow-md transition-all cursor-pointer"
                         onClick={() => setSelectedResult(result)}
                       >
                         <div className="flex justify-between items-start mb-4">
                           <div className="flex-1">
-                            <h3 className="text-xl font-bold mb-1">{result.examTitle || "Untitled Exam"}</h3>
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+                            <h3 className="text-xl font-bold text-gray-900 mb-1">
+                              {result.examTitle || "Untitled Exam"}
+                            </h3>
+                            <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
                               <BookOpen className="w-4 h-4" />
                               <span>{result.courseName}</span>
                             </div>
                             {cqPending && (
-                              <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-yellow-500/10 border border-yellow-500/30 rounded-full text-yellow-700 dark:text-yellow-400 text-xs font-medium">
+                              <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-yellow-50 border border-yellow-200 rounded-full text-yellow-700 text-xs font-medium">
                                 <AlertCircle className="w-3.5 h-3.5" />
-                                <span>অপেক্ষমাণ / CQ Grading Pending</span>
+                                <span>CQ Grading Pending</span>
                               </div>
                             )}
                             {hasCQAnswers && result.cqGraded && (
-                              <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-500/10 border border-blue-500/30 rounded-full text-blue-700 dark:text-blue-400 text-xs font-medium">
+                              <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-gray-100 border border-gray-200 rounded-full text-gray-700 text-xs font-medium">
                                 <CheckCircle className="w-3.5 h-3.5" />
                                 <span>CQ Graded: {result.cqScore?.toFixed(1) || 0}%</span>
                               </div>
@@ -389,17 +393,19 @@ export default function Analytics() {
                           </div>
                           <div
                             className={`px-4 py-2 rounded-lg ${
-                              passed ? "bg-green-500/10 text-green-600" : "bg-red-500/10 text-red-600"
+                              passed ? "bg-gray-100 text-gray-900" : "bg-gray-100 text-gray-900"
                             }`}
                           >
                             <div className="text-2xl font-bold">
                               {result.totalScore !== undefined ? result.totalScore.toFixed(1) : result.score}%
                             </div>
-                            <div className="text-xs">{cqPending ? "MCQ Only" : passed ? "Passed" : "Failed"}</div>
+                            <div className="text-xs text-gray-600">
+                              {cqPending ? "MCQ Only" : passed ? "Passed" : "Failed"}
+                            </div>
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                        <div className="flex items-center gap-4 text-sm text-gray-600">
                           <div className="flex items-center gap-1">
                             <Clock className="w-4 h-4" />
                             <span>{result.examDuration || "N/A"} mins</span>
@@ -418,18 +424,18 @@ export default function Analytics() {
                           <motion.div
                             initial={{ opacity: 0, height: 0 }}
                             animate={{ opacity: 1, height: "auto" }}
-                            className="mt-4 pt-4 border-t border-border space-y-4"
+                            className="mt-4 pt-4 border-t border-gray-200 space-y-4"
                           >
                             {result.wrongAnswers && result.wrongAnswers.length > 0 && (
                               <div>
-                                <h4 className="font-semibold mb-3 flex items-center gap-2">
+                                <h4 className="font-semibold mb-3 flex items-center gap-2 text-gray-900">
                                   <XCircle className="w-5 h-5 text-red-600" />
                                   Mistakes ({result.wrongAnswers.length})
                                 </h4>
                                 <div className="space-y-3">
                                   {result.wrongAnswers.map((mistake, idx) => (
-                                    <div key={idx} className="bg-red-500/5 border border-red-500/20 rounded-lg p-3">
-                                      <p className="font-medium mb-2">{mistake.questionText}</p>
+                                    <div key={idx} className="bg-red-50 border border-red-200 rounded-lg p-3">
+                                      <p className="font-medium text-gray-900 mb-2">{mistake.questionText}</p>
                                       <div className="space-y-1 text-sm">
                                         <div className="flex items-center gap-2">
                                           <XCircle className="w-4 h-4 text-red-600" />
@@ -452,15 +458,15 @@ export default function Analytics() {
 
                             {result.cqAnswers && result.cqAnswers.length > 0 && result.cqGraded && (
                               <div>
-                                <h4 className="font-semibold mb-3 flex items-center gap-2">
+                                <h4 className="font-semibold mb-3 flex items-center gap-2 text-gray-900">
                                   <CheckCircle className="w-5 h-5 text-green-600" />
                                   Creative Questions ({result.cqAnswers.length})
                                 </h4>
                                 <div className="space-y-3">
                                   {result.cqAnswers.map((cq, idx) => (
-                                    <div key={idx} className="bg-blue-500/5 border border-blue-500/20 rounded-lg p-3">
+                                    <div key={idx} className="bg-blue-50 border border-blue-200 rounded-lg p-3">
                                       <div className="flex justify-between items-start mb-2">
-                                        <p className="font-medium flex-1">
+                                        <p className="font-medium text-gray-900 flex-1">
                                           Q{idx + 1}. {cq.questionText}
                                         </p>
                                         <div className="text-sm font-bold text-green-600">
@@ -468,7 +474,7 @@ export default function Analytics() {
                                         </div>
                                       </div>
                                       {cq.textAnswer && (
-                                        <div className="text-sm text-muted-foreground mt-2 p-2 bg-background rounded">
+                                        <div className="text-sm text-gray-600 mt-2 p-2 bg-white rounded border border-gray-200">
                                           <strong>Your Answer:</strong> {cq.textAnswer}
                                         </div>
                                       )}
@@ -479,7 +485,7 @@ export default function Analytics() {
                                               key={imgIdx}
                                               src={img || "/placeholder.svg"}
                                               alt={`Answer ${imgIdx + 1}`}
-                                              className="rounded border border-border w-full h-24 object-cover"
+                                              className="rounded border border-gray-200 w-full h-24 object-cover"
                                             />
                                           ))}
                                         </div>
@@ -498,30 +504,30 @@ export default function Analytics() {
               </div>
 
               <div className="space-y-4">
-                <h2 className="text-2xl font-bold">Quick Stats</h2>
-                <div className="bg-card border border-border rounded-xl p-6">
-                  <h3 className="font-semibold mb-4">Performance Breakdown</h3>
+                <h2 className="text-2xl font-bold text-gray-900">Quick Stats</h2>
+                <div className="bg-white border border-gray-200 rounded-lg p-6">
+                  <h3 className="font-semibold text-gray-900 mb-4">Performance Breakdown</h3>
                   <div className="space-y-3">
                     <div>
                       <div className="flex justify-between text-sm mb-1">
-                        <span className="text-muted-foreground">Passed</span>
-                        <span className="font-medium">{stats.passedExams}</span>
+                        <span className="text-gray-600">Passed</span>
+                        <span className="font-medium text-gray-900">{stats.passedExams}</span>
                       </div>
-                      <div className="w-full bg-muted rounded-full h-2">
+                      <div className="w-full bg-gray-200 rounded-full h-2">
                         <div
-                          className="bg-green-600 h-2 rounded-full transition-all"
+                          className="bg-gray-900 h-2 rounded-full transition-all"
                           style={{ width: `${stats.passRate}%` }}
                         ></div>
                       </div>
                     </div>
                     <div>
                       <div className="flex justify-between text-sm mb-1">
-                        <span className="text-muted-foreground">Failed</span>
-                        <span className="font-medium">{stats.totalExams - stats.passedExams}</span>
+                        <span className="text-gray-600">Failed</span>
+                        <span className="font-medium text-gray-900">{stats.totalExams - stats.passedExams}</span>
                       </div>
-                      <div className="w-full bg-muted rounded-full h-2">
+                      <div className="w-full bg-gray-200 rounded-full h-2">
                         <div
-                          className="bg-red-600 h-2 rounded-full transition-all"
+                          className="bg-gray-400 h-2 rounded-full transition-all"
                           style={{ width: `${100 - stats.passRate}%` }}
                         ></div>
                       </div>
@@ -529,14 +535,14 @@ export default function Analytics() {
                   </div>
                 </div>
 
-                <div className="bg-gradient-to-br from-primary/10 to-secondary/10 border border-primary/30 rounded-xl p-6">
-                  <h3 className="font-semibold mb-2">Keep Going!</h3>
-                  <p className="text-sm text-muted-foreground mb-4">
+                <div className="bg-white border border-gray-200 rounded-lg p-6">
+                  <h3 className="font-semibold text-gray-900 mb-2">Keep Going!</h3>
+                  <p className="text-sm text-gray-600 mb-4">
                     You're making great progress. Keep practicing to improve your scores!
                   </p>
                   <Link
                     to="/courses"
-                    className="block w-full px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors text-center font-medium"
+                    className="block w-full px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-900 transition-colors text-center font-medium"
                   >
                     Browse Courses
                   </Link>
