@@ -1,98 +1,100 @@
-import fetch from "node-fetch"
-import FormData from "form-data"
+// The actual upload will be handled by a server action
 
-export default async function handler(req, res) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" })
+/**
+ * Upload an image file via server action
+ * @param {File} file - The image file to upload
+ * @returns {Promise<string>} - The URL of the uploaded image
+ */
+export async function uploadToImgbb(file) {
+  if (!file) {
+    throw new Error("No file provided for upload")
   }
-
+  
+  // Validate file type
+  if (!file.type.startsWith("image/")) {
+    throw new Error("File must be an image")
+  }
+  
+  // Validate file size (imgbb free tier limit is 32MB)
+  const maxSize = 32 * 1024 * 1024 // 32MB in bytes
+  if (file.size > maxSize) {
+    throw new Error("Image size must be less than 32MB")
+  }
+  
   try {
-    console.log("[v0] Image upload request received")
-
-    let imageBuffer
-    let fileName = "image.jpg"
-
-    if (req.headers["content-type"]?.includes("application/json")) {
-      const { image } = req.body
-      if (!image) {
-        return res.status(400).json({ error: "No image data provided" })
-      }
-      imageBuffer = Buffer.from(image, "base64")
-      fileName = "image.jpg"
-    } else if (req.headers["content-type"]?.includes("multipart/form-data")) {
-      const files = req.files
-      if (!files || !files.image) {
-        return res.status(400).json({ error: "No image file provided" })
-      }
-      imageBuffer = files.image.data
-      fileName = files.image.name
-    } else {
-      return res.status(400).json({ error: "Invalid content type" })
-    }
-
-    const maxSize = 32 * 1024 * 1024
-    if (imageBuffer.length > maxSize) {
-      return res.status(400).json({ error: "Image size exceeds 32MB limit" })
-    }
-
-    const imgbbApiKey = process.env.IMGBB_API_KEY
-    if (!imgbbApiKey) {
-      console.error("[v0] IMGBB_API_KEY not configured")
-      return res.status(500).json({ error: "Image upload service not configured" })
-    }
-
+    console.log("[v0] Uploading image to server...")
+    console.log("[v0] File name:", file.name)
+    console.log("[v0] File size:", (file.size / 1024).toFixed(2), "KB")
+    
+    // Create form data
     const formData = new FormData()
-    formData.append("image", imageBuffer, fileName)
-    formData.append("key", imgbbApiKey)
-
-    console.log("[v0] Uploading to imgbb...")
-    const response = await fetch("https://api.imgbb.com/1/upload", {
+    formData.append("image", file)
+    
+    // Call server API route - পাথটি সংশোধন করা হয়েছে: /api/upload-image
+    const response = await fetch("/api/upload-image", {
       method: "POST",
       body: formData,
-      headers: formData.getHeaders(),
+      // Content-Type: 'multipart/form-data' header স্বয়ংক্রিয়ভাবে যুক্ত হবে
     })
-
-    const responseText = await response.text()
-    console.log("[v0] imgbb response status:", response.status)
-    console.log("[v0] imgbb response text:", responseText)
-
+    
     if (!response.ok) {
-      console.error("[v0] imgbb error response:", responseText)
-      try {
-        const errorData = JSON.parse(responseText)
-        return res.status(response.status).json({
-          error: errorData.error?.message || "Failed to upload image to imgbb",
-        })
-      } catch {
-        return res.status(response.status).json({
-          error: "Failed to upload image to imgbb",
-        })
-      }
+      const errorData = await response.json()
+      console.error("[v0] Upload error:", errorData)
+      throw new Error(errorData.error || "Failed to upload image")
     }
-
-    let data
-    try {
-      data = JSON.parse(responseText)
-    } catch (parseError) {
-      console.error("[v0] Failed to parse imgbb response:", parseError)
-      console.error("[v0] Response text was:", responseText)
-      return res.status(500).json({ error: "Invalid response format from image service" })
+    
+    const data = await response.json()
+    
+    if (!data.url) {
+      throw new Error("Invalid response from server")
     }
-
-    if (!data.success || !data.data?.url) {
-      console.error("[v0] Invalid imgbb response:", data)
-      return res.status(500).json({ error: "Invalid response from image service" })
-    }
-
-    console.log("[v0] Image uploaded successfully:", data.data.url)
-    return res.status(200).json({
-      url: data.data.url,
-      success: true,
-    })
+    
+    console.log("[v0] Image uploaded successfully:", data.url)
+    return data.url
   } catch (error) {
-    console.error("[v0] Image upload error:", error)
-    return res.status(500).json({
-      error: error.message || "Failed to upload image",
-    })
+    console.error("[v0] Error uploading image:", error)
+    throw new Error(`Failed to upload image: ${error.message}`)
   }
 }
+
+export async function uploadBase64ToImgbb(base64String) {
+  if (!base64String) {
+    throw new Error("No base64 string provided")
+  }
+  
+  try {
+    console.log("[v0] Uploading base64 image to server...")
+    
+    // Remove data:image prefix if present
+    const base64Data = base64String.replace(/^data:image\/\w+;base64,/, "")
+    
+    // Call server API route - পাথটি সংশোধন করা হয়েছে: /api/upload-image
+    const response = await fetch("/api/upload-image", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ image: base64Data }),
+    })
+    
+    if (!response.ok) {
+      const errorData = await response.json()
+      console.error("[v0] Upload error:", errorData)
+      throw new Error(errorData.error || "Failed to upload image")
+    }
+    
+    const data = await response.json()
+    
+    if (!data.url) {
+      throw new Error("Invalid response from server")
+    }
+    
+    console.log("[v0] Base64 image uploaded successfully:", data.url)
+    return data.url
+  } catch (error) {
+    console.error("[v0] Error uploading base64 image:", error)
+    throw new Error(`Failed to upload image: ${error.message}`)
+  }
+}
+
+export { uploadToImgbb as uploadImageToImgBB }
