@@ -7,7 +7,7 @@ import { collection, getDocs, query, where, updateDoc, doc, setDoc, serverTimest
 import { db, auth } from "../../lib/firebase"
 import { saveAdminFCMToken } from "../../lib/notifications"
 import { requestNotificationPermission } from "../../lib/pwa"
-import { uploadToImgbb } from "../../lib/imgbb"
+import { uploadImageToImgBB } from "../../lib/imgbb"
 
 export default function WebsiteSettings() {
   const [loading, setLoading] = useState(true)
@@ -121,7 +121,7 @@ export default function WebsiteSettings() {
     setErrorMessage("")
     
     try {
-      const imageUrl = await uploadToImgbb(file)
+      const imageUrl = await uploadImageToImgBB(file)
       setSettings({ ...settings, appIcon: imageUrl })
       setSuccessMessage("App icon uploaded successfully!")
       setTimeout(() => setSuccessMessage(""), 3000)
@@ -141,7 +141,7 @@ export default function WebsiteSettings() {
     setErrorMessage("")
     
     try {
-      const imageUrl = await uploadToImgbb(file)
+      const imageUrl = await uploadImageToImgBB(file)
       setSettings({ ...settings, appLogo: imageUrl })
       setSuccessMessage("App logo uploaded successfully!")
       setTimeout(() => setSuccessMessage(""), 3000)

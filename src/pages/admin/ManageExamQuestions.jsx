@@ -6,7 +6,7 @@ import { doc, getDoc } from "firebase/firestore"
 import { db } from "../../lib/firebase"
 import { useExam } from "../../contexts/ExamContext"
 import { toast } from "../../hooks/use-toast"
-import { uploadToImgbb } from "../../lib/imgbb"
+import { uploadImageToImgBB } from "../../lib/imgbb"
 import ConfirmDialog from "../../components/ConfirmDialog"
 
 export default function ManageExamQuestions() {
@@ -83,7 +83,7 @@ export default function ManageExamQuestions() {
 
     setUploadingImage(true)
     try {
-      const imageUrl = await uploadToImgbb(file)
+      const imageUrl = await uploadImageToImgBB(file)
       
       if (index !== null && field === "optionImages") {
         const newOptionImages = [...formData.optionImages]

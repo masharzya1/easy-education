@@ -7,7 +7,7 @@ import { Clock, Send, AlertCircle, ImageIcon, Upload, X, CheckCircle2 } from "lu
 import { useAuth } from "../contexts/AuthContext"
 import { useExam } from "../contexts/ExamContext"
 import { toast } from "../hooks/use-toast"
-import { uploadToImgbb } from "../lib/imgbb"
+import { uploadImageToImgBB } from "../lib/imgbb"
 import ConfirmDialog from "../components/ConfirmDialog"
 
 export default function ExamView() {
@@ -137,7 +137,7 @@ export default function ExamView() {
       const uploadedUrls = []
 
       for (const file of Array.from(files)) {
-        const url = await uploadToImgbb(file)
+        const url = await uploadImageToImgBB(file)
         uploadedUrls.push(url)
       }
 

@@ -6,7 +6,7 @@ import { motion } from "framer-motion"
 import { Plus, Search, Edit2, Trash2, X, BookOpen, Upload, Link as LinkIcon } from "lucide-react"
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from "firebase/firestore"
 import { db } from "../../lib/firebase"
-import { uploadToImgbb } from "../../lib/imgbb"
+import { uploadImageToImgBB } from "../../lib/imgbb"
 import ConfirmDialog from "../../components/ConfirmDialog"
 
 export default function ManageCourses() {
@@ -108,7 +108,7 @@ export default function ManageCourses() {
       let thumbnailURL = formData.imageLink
 
       if (formData.imageType === "upload" && imageFile) {
-        thumbnailURL = await uploadToImgbb(imageFile)
+        thumbnailURL = await uploadImageToImgBB(imageFile)
       }
 
       const courseData = {

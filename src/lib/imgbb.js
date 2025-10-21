@@ -1,99 +1,119 @@
-// The actual upload will be handled by a server action
+/**
+ * Client-side Image Upload Helper
+ * Serverless function কে call করবে
+ */
+
+const API_URL = import.meta.env.VITE_API_URL || 'https://easy-education.vercel.app'
 
 /**
- * Upload an image file via server action
- * @param {File} file - The image file to upload
- * @returns {Promise<string>} - The URL of the uploaded image
+ * Upload file to server (which uploads to ImgBB)
  */
-export async function uploadToImgbb(file) {
+export async function uploadImageToImgBB(file) {
   if (!file) {
     throw new Error("No file provided for upload")
   }
-
+  
   // Validate file type
   if (!file.type.startsWith("image/")) {
     throw new Error("File must be an image")
   }
-
-  // Validate file size (imgbb free tier limit is 32MB)
-  const maxSize = 32 * 1024 * 1024 // 32MB in bytes
+  
+  // Validate file size (32MB max)
+  const maxSize = 32 * 1024 * 1024
   if (file.size > maxSize) {
     throw new Error("Image size must be less than 32MB")
   }
-
+  
   try {
-    console.log("[v0] Uploading image to server...")
-    console.log("[v0] File name:", file.name)
-    console.log("[v0] File size:", (file.size / 1024).toFixed(2), "KB")
-
-    // Create form data
-    const formData = new FormData()
-    formData.append("image", file)
-
-    // Call server API route
-    const response = await fetch("/src/pages/api/upload-image", {
-      method: "POST",
-      body: formData,
-    })
-
-    if (!response.ok) {
-      const errorData = await response.json()
-      console.error("[v0] Upload error:", errorData)
-      throw new Error(errorData.error || "Failed to upload image")
-    }
-
-    const data = await response.json()
-
-    if (!data.url) {
-      throw new Error("Invalid response from server")
-    }
-
-    console.log("[v0] Image uploaded successfully:", data.url)
-    return data.url
-  } catch (error) {
-    console.error("[v0] Error uploading image:", error)
-    throw new Error(`Failed to upload image: ${error.message}`)
-  }
-}
-
-export async function uploadBase64ToImgbb(base64String) {
-  if (!base64String) {
-    throw new Error("No base64 string provided")
-  }
-
-  try {
-    console.log("[v0] Uploading base64 image to server...")
-
-    // Remove data:image prefix if present
-    const base64Data = base64String.replace(/^data:image\/\w+;base64,/, "")
-
-    // Call server API route
-    const response = await fetch("/api/upload-image", {
+    console.log("[Upload] Starting upload...")
+    console.log("[Upload] File:", file.name, `(${(file.size / 1024).toFixed(2)} KB)`)
+    
+    // Convert file to base64
+    const base64 = await fileToBase64(file)
+    const base64Data = base64.replace(/^data:image\/\w+;base64,/, "")
+    
+    // Call serverless function
+    const response = await fetch(`${API_URL}/api/upload-image`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ image: base64Data }),
     })
-
+    
     if (!response.ok) {
       const errorData = await response.json()
-      console.error("[v0] Upload error:", errorData)
-      throw new Error(errorData.error || "Failed to upload image")
+      console.error("[Upload] Error:", errorData)
+      throw new Error(errorData.error || "Upload failed")
     }
-
+    
     const data = await response.json()
-
-    if (!data.url) {
+    
+    if (!data.success || !data.url) {
       throw new Error("Invalid response from server")
     }
-
-    console.log("[v0] Base64 image uploaded successfully:", data.url)
+    
+    console.log("[Upload] Success:", data.url)
     return data.url
+    
   } catch (error) {
-    console.error("[v0] Error uploading base64 image:", error)
+    console.error("[Upload] Failed:", error)
     throw new Error(`Failed to upload image: ${error.message}`)
   }
 }
 
-export { uploadToImgbb as uploadImageToImgBB }
+/**
+ * Upload base64 string to server
+ */
+export async function uploadBase64ToImgbb(base64String) {
+  if (!base64String) {
+    throw new Error("No base64 string provided")
+  }
+  
+  try {
+    console.log("[Upload] Uploading base64 image...")
+    
+    const base64Data = base64String.replace(/^data:image\/\w+;base64,/, "")
+    
+    const response = await fetch(`${API_URL}/api/upload-image`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ image: base64Data }),
+    })
+    
+    if (!response.ok) {
+      const errorData = await response.json()
+      throw new Error(errorData.error || "Upload failed")
+    }
+    
+    const data = await response.json()
+    
+    if (!data.success || !data.url) {
+      throw new Error("Invalid response from server")
+    }
+    
+    console.log("[Upload] Base64 upload success:", data.url)
+    return data.url
+    
+  } catch (error) {
+    console.error("[Upload] Base64 upload failed:", error)
+    throw new Error(`Failed to upload image: ${error.message}`)
+  }
+}
+
+/**
+ * Convert File to Base64
+ */
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.readAsDataURL(file)
+    reader.onload = () => resolve(reader.result)
+    reader.onerror = (error) => reject(error)
+  })
+}
+
+// Export alias
+export { uploadImageToImgBB as uploadImageToImgBB }

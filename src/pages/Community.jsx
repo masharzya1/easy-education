@@ -19,7 +19,7 @@ import {
   where,
   getDocs,
 } from "firebase/firestore"
-import { uploadToImgbb } from "../lib/imgbb"
+import { uploadImageToImgBB } from "../lib/imgbb"
 import { db } from "../lib/firebase"
 import { useAuth } from "../contexts/AuthContext"
 
@@ -194,7 +194,7 @@ export default function Community() {
       if (newPostImage) {
         console.log(" Uploading image to imgbb...")
         try {
-          imageURL = await uploadToImgbb(newPostImage)
+          imageURL = await uploadImageToImgBB(newPostImage)
           console.log(" Image uploaded successfully:", imageURL)
         } catch (uploadError) {
           console.error(" Image upload error:", uploadError)

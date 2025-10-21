@@ -3,7 +3,7 @@ import { motion } from "framer-motion"
 import { User, Building, Phone, Facebook, Linkedin, Github, Camera } from "lucide-react"
 import { doc, updateDoc } from "firebase/firestore"
 import { db } from "../lib/firebase"
-import { uploadToImgbb } from "../lib/imgbb"
+import { uploadImageToImgBB } from "../lib/imgbb"
 import { useAuth } from "../contexts/AuthContext"
 
 export default function Profile() {
@@ -71,7 +71,7 @@ export default function Profile() {
       if (photoFile) {
         console.log(" Uploading profile photo to imgbb...")
         try {
-          photoURL = await uploadToImgbb(photoFile)
+          photoURL = await uploadImageToImgBB(photoFile)
           console.log(" Photo uploaded successfully:", photoURL)
         } catch (uploadError) {
           console.error(" Photo upload error:", uploadError)

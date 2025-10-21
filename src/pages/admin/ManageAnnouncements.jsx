@@ -13,7 +13,7 @@ import {
   Timestamp
 } from "firebase/firestore"
 import { db } from "../../lib/firebase"
-import { uploadToImgbb } from "../../lib/imgbb"
+import { uploadImageToImgBB } from "../../lib/imgbb"
 import ConfirmDialog from "../../components/ConfirmDialog"
 
 export default function ManageAnnouncements() {
@@ -53,7 +53,7 @@ export default function ManageAnnouncements() {
 
     setUploading(true)
     try {
-      const imageUrl = await uploadToImgbb(file)
+      const imageUrl = await uploadImageToImgBB(file)
       setFormData({ ...formData, imageURL: imageUrl })
       toast({
         title: "Success",

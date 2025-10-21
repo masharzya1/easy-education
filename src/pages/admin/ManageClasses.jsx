@@ -6,7 +6,7 @@ import { motion } from "framer-motion"
 import { Plus, X } from "lucide-react"
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, where } from "firebase/firestore"
 import { db } from "../../lib/firebase"
-import { uploadToImgbb } from "../../lib/imgbb"
+import { uploadImageToImgBB } from "../../lib/imgbb"
 import { useExam } from "../../contexts/ExamContext"
 import ConfirmDialog from "../../components/ConfirmDialog"
 
@@ -217,13 +217,13 @@ export default function ManageClasses() {
       let teacherImageURL = editingClass?.teacherImageURL || ""
 
       if (imageFile) {
-        imageURL = await uploadToImgbb(imageFile)
+        imageURL = await uploadImageToImgBB(imageFile)
       } else if (formData.imageType === "link") {
         imageURL = formData.imageLink
       }
 
       if (teacherImageFile) {
-        teacherImageURL = await uploadToImgbb(teacherImageFile)
+        teacherImageURL = await uploadImageToImgBB(teacherImageFile)
       } else if (formData.teacherImageType === "link") {
         teacherImageURL = formData.teacherImageLink
       }
