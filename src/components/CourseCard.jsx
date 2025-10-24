@@ -164,6 +164,19 @@ export default function CourseCard({ course, onAddToCart, showProgress = false }
               <Users className="w-16 h-16 text-primary/50" />
             </div>
           )}
+          {course.status && (
+            <div className="absolute top-2 right-2">
+              <span className={`px-2 py-1 rounded-full text-xs font-semibold uppercase ${
+                course.status === "running" 
+                  ? "bg-green-500 text-white" 
+                  : course.status === "ongoing" 
+                  ? "bg-blue-500 text-white" 
+                  : "bg-gray-500 text-white"
+              }`}>
+                {course.status}
+              </span>
+            </div>
+          )}
         </div>
         <div className="p-5">
           <h3 className="font-semibold text-lg mb-2 line-clamp-2 group-hover:text-primary transition-colors">

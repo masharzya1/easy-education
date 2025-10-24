@@ -14,7 +14,7 @@ import { toast } from "../hooks/use-toast"
 export default function Home() {
   const navigate = useNavigate()
   const { addToCart, openCart, cartItems, removeFromCart } = useCart()
-  const { currentUser } = useAuth()
+  const { currentUser, isAdmin } = useAuth()
   const [searchQuery, setSearchQuery] = useState("")
   const [trendingCourses, setTrendingCourses] = useState([])
   const [categories, setCategories] = useState([])
@@ -24,7 +24,7 @@ export default function Home() {
 
   useEffect(() => {
     fetchData()
-  }, [])
+  }, [isAdmin])
 
   useEffect(() => {
     if (currentUser) {
@@ -89,13 +89,19 @@ export default function Home() {
         return
       }
 
-      const coursesQuery = query(collection(db, "courses"), orderBy("createdAt", "desc"), limit(6))
+      const coursesQuery = query(collection(db, "courses"), orderBy("createdAt", "desc"), limit(20))
       const coursesSnapshot = await getDocs(coursesQuery)
-      const coursesData = coursesSnapshot.docs.map((doc) => ({
+      let coursesData = coursesSnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       }))
-      setTrendingCourses(coursesData)
+      
+      // Filter out draft courses for non-admin users
+      if (!isAdmin) {
+        coursesData = coursesData.filter(course => course.publishStatus !== "draft")
+      }
+      
+      setTrendingCourses(coursesData.slice(0, 6))
 
       const categoriesQuery = query(collection(db, "categories"), limit(8))
       const categoriesSnapshot = await getDocs(categoriesQuery)
@@ -211,10 +217,10 @@ export default function Home() {
               transition={{ delay: 0.1, duration: 0.4 }}
               className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight tracking-tight"
             >
-              Develop the skills to{" "}
+              Unlock Your Potential with{" "}
               <span className="relative inline-block">
                 <span className="bg-gradient-to-r from-foreground via-foreground to-foreground/80 bg-clip-text text-transparent">
-                  drive your career
+                  Easy Education
                 </span>
               </span>
             </motion.h1>
@@ -225,7 +231,7 @@ export default function Home() {
               transition={{ delay: 0.2, duration: 0.4 }}
               className="text-base md:text-lg text-muted-foreground mb-12 max-w-2xl mx-auto leading-relaxed"
             >
-              Learn from expert instructors with hands-on courses designed to help you master new skills and advance your education.
+              Access quality education from anywhere, anytime. Start your learning journey today with courses designed to help you achieve your goals and excel in your studies.
             </motion.p>
 
             <motion.div

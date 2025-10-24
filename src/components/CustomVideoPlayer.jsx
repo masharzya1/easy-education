@@ -10,8 +10,6 @@ import {
   Settings,
   Loader2,
   AlertCircle,
-  ChevronLeft,
-  ChevronRight,
   SkipForward,
   SkipBack,
 } from "lucide-react"
@@ -1054,28 +1052,6 @@ export default function CustomVideoPlayer({ url, onNext, onPrevious }) {
                   aria-label="Skip forward 10 seconds"
                 >
                   <SkipForward className="w-5 h-5 sm:w-6 sm:h-6" />
-                </motion.button>
-              </div>
-
-              <div className="flex items-center gap-2 border-l border-white/20 pl-3">
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={handlePrevious}
-                  className="text-white hover:text-red-500 transition-colors p-1"
-                  aria-label="Previous video"
-                >
-                  <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
-                </motion.button>
-
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={handleNext}
-                  className="text-white hover:text-red-500 transition-colors p-1"
-                  aria-label="Next video"
-                >
-                  <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
                 </motion.button>
               </div>
 

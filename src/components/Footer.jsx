@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom"
-import { Facebook, Twitter, Instagram, Github } from "lucide-react"
+import { Send, Youtube, MessageCircle, Mail } from "lucide-react"
 
 export default function Footer() {
   return (
@@ -9,10 +9,10 @@ export default function Footer() {
           {/* Brand */}
           <div>
             <h3 className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-4">
-              EduStream
+              Easy Education
             </h3>
             <p className="text-muted-foreground text-sm">
-              Stream free courses anytime, anywhere. Learn at your own pace.
+              Get Free or Paid courses Anytime, Anywhere. Learn at your own pace.
             </p>
           </div>
 
@@ -36,63 +36,73 @@ export default function Footer() {
           <div>
             <h4 className="font-semibold mb-4">Support</h4>
             <div className="flex flex-col gap-2">
-              <Link to="/about" className="text-muted-foreground hover:text-primary transition-colors text-sm">
-                About Us
-              </Link>
-              <Link to="/contact" className="text-muted-foreground hover:text-primary transition-colors text-sm">
+              <a
+                href="https://bondipathshala.com.bd/contact"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-muted-foreground hover:text-primary transition-colors text-sm flex items-center gap-2"
+              >
+                <Mail className="w-4 h-4" />
                 Contact
-              </Link>
-              <Link to="/faq" className="text-muted-foreground hover:text-primary transition-colors text-sm">
-                FAQ
-              </Link>
-              <Link to="/privacy" className="text-muted-foreground hover:text-primary transition-colors text-sm">
-                Privacy Policy
-              </Link>
+              </a>
+              <a
+                href="https://t.me/YOUR_BOT_USERNAME"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-muted-foreground hover:text-primary transition-colors text-sm flex items-center gap-2"
+              >
+                <MessageCircle className="w-4 h-4" />
+                Support Bot
+              </a>
+              <a
+                href="https://t.me/YOUR_SUPPORT_ID"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-muted-foreground hover:text-primary transition-colors text-sm flex items-center gap-2"
+              >
+                <Send className="w-4 h-4" />
+                Support ID
+              </a>
             </div>
           </div>
 
-          {/* Social */}
+          {/* Follow Us */}
           <div>
             <h4 className="font-semibold mb-4">Follow Us</h4>
-            <div className="flex gap-4">
+            <div className="flex flex-col gap-3">
               <a
-                href="https://facebook.com"
+                href="https://t.me/YOUR_CHANNEL"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-2 bg-muted hover:bg-primary hover:text-primary-foreground rounded-lg transition-colors"
+                className="flex items-center gap-2 p-2 bg-muted hover:bg-primary hover:text-primary-foreground rounded-lg transition-colors text-sm"
               >
-                <Facebook className="w-5 h-5" />
+                <Send className="w-5 h-5" />
+                <span>Telegram Channel</span>
               </a>
               <a
-                href="https://twitter.com"
+                href="https://youtube.com/@YOUR_CHANNEL_1"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-2 bg-muted hover:bg-primary hover:text-primary-foreground rounded-lg transition-colors"
+                className="flex items-center gap-2 p-2 bg-muted hover:bg-primary hover:text-primary-foreground rounded-lg transition-colors text-sm"
               >
-                <Twitter className="w-5 h-5" />
+                <Youtube className="w-5 h-5" />
+                <span>YouTube Channel 1</span>
               </a>
               <a
-                href="https://instagram.com"
+                href="https://youtube.com/@YOUR_CHANNEL_2"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-2 bg-muted hover:bg-primary hover:text-primary-foreground rounded-lg transition-colors"
+                className="flex items-center gap-2 p-2 bg-muted hover:bg-primary hover:text-primary-foreground rounded-lg transition-colors text-sm"
               >
-                <Instagram className="w-5 h-5" />
-              </a>
-              <a
-                href="https://github.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="p-2 bg-muted hover:bg-primary hover:text-primary-foreground rounded-lg transition-colors"
-              >
-                <Github className="w-5 h-5" />
+                <Youtube className="w-5 h-5" />
+                <span>YouTube Channel 2</span>
               </a>
             </div>
           </div>
         </div>
 
         <div className="mt-8 pt-8 border-t border-border text-center text-muted-foreground text-sm">
-          <p>&copy; {new Date().getFullYear()} EduStream. All rights reserved.</p>
+          <p>Copyright @2025 Easy Education All rights reserved</p>
         </div>
       </div>
     </footer>

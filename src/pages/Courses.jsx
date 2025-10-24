@@ -15,7 +15,7 @@ export default function Courses() {
   const location = useLocation()
   const navigate = useNavigate()
   const { addToCart, openCart, cartItems, removeFromCart } = useCart()
-  const { currentUser } = useAuth()
+  const { currentUser, isAdmin } = useAuth()
   const [courses, setCourses] = useState([])
   const [filteredCourses, setFilteredCourses] = useState([])
   const [searchQuery, setSearchQuery] = useState("")
@@ -36,7 +36,7 @@ export default function Courses() {
 
   useEffect(() => {
     fetchCourses()
-  }, [])
+  }, [isAdmin])
 
   useEffect(() => {
     if (currentUser) {
@@ -101,10 +101,16 @@ export default function Courses() {
     try {
       const coursesQuery = query(collection(db, "courses"), orderBy("createdAt", "desc"))
       const coursesSnapshot = await getDocs(coursesQuery)
-      const coursesData = coursesSnapshot.docs.map((doc) => ({
+      let coursesData = coursesSnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       }))
+      
+      // Filter out draft courses for non-admin users
+      if (!isAdmin) {
+        coursesData = coursesData.filter(course => course.publishStatus !== "draft")
+      }
+      
       setCourses(coursesData)
     } catch (error) {
       console.error("Error fetching courses:", error)

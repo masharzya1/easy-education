@@ -25,6 +25,8 @@ export default function ManageCourses() {
     category: "",
     type: "subject",
     price: "",
+    status: "running",
+    publishStatus: "published",
     imageType: "upload",
     imageLink: "",
   })
@@ -66,6 +68,8 @@ export default function ManageCourses() {
         category: course.category || "",
         type: course.type || "subject",
         price: course.price || "",
+        status: course.status || "running",
+        publishStatus: course.publishStatus || "published",
         imageType: course.thumbnailURL ? "link" : "upload",
         imageLink: course.thumbnailURL || "",
       })
@@ -78,6 +82,8 @@ export default function ManageCourses() {
         category: "",
         type: "subject",
         price: "",
+        status: "running",
+        publishStatus: "published",
         imageType: "upload",
         imageLink: "",
       })
@@ -119,6 +125,8 @@ export default function ManageCourses() {
         category: formData.category,
         type: formData.type,
         price: Number(formData.price) || 0,
+        status: formData.status,
+        publishStatus: formData.publishStatus,
         thumbnailURL: thumbnailURL || "",
         updatedAt: serverTimestamp(),
       }
@@ -393,6 +401,31 @@ export default function ManageCourses() {
                     placeholder="0"
                     min="0"
                   />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1.5">Course Status</label>
+                  <select
+                    value={formData.status}
+                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                    className="w-full px-3 py-2 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                  >
+                    <option value="running">Running</option>
+                    <option value="ongoing">Ongoing</option>
+                    <option value="complete">Complete</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1.5">Publish Status</label>
+                  <select
+                    value={formData.publishStatus}
+                    onChange={(e) => setFormData({ ...formData, publishStatus: e.target.value })}
+                    className="w-full px-3 py-2 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                  >
+                    <option value="published">Published</option>
+                    <option value="draft">Draft</option>
+                  </select>
                 </div>
               </div>
 
