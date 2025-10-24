@@ -3,13 +3,11 @@
 import { useState, useEffect, useCallback, useMemo } from "react"
 import { useNavigate } from "react-router-dom"
 import { motion } from "framer-motion"
-import { ShoppingCart, Tag, CreditCard, ArrowLeft, AlertCircle } from "lucide-react"
+import { ShoppingCart, Tag, CreditCard, ArrowLeft, AlertCircle, Loader2 } from "lucide-react"
 import { useAuth } from "../contexts/AuthContext"
 import { useCart } from "../contexts/CartContext"
-import { collection, addDoc, getDocs, query, where, serverTimestamp } from "firebase/firestore"
+import { collection, getDocs, query, where } from "firebase/firestore"
 import { db } from "../lib/firebase"
-import { sendLocalNotification, requestNotificationPermission } from "../lib/pwa"
-import { notifyAdminsOfCheckout } from "../lib/notifications"
 import { toast } from "../hooks/use-toast"
 
 export default function Checkout() {
@@ -20,15 +18,7 @@ export default function Checkout() {
   const [couponCode, setCouponCode] = useState("")
   const [appliedCoupon, setAppliedCoupon] = useState(null)
   const [couponError, setCouponError] = useState("")
-  const [paymentInstructions, setPaymentInstructions] = useState("")
   const [purchasedCourses, setPurchasedCourses] = useState(new Set())
-
-  const [formData, setFormData] = useState({
-    senderNumber: "",
-    transactionId: "",
-    name: userProfile?.name || "",
-    email: userProfile?.email || "",
-  })
 
   useEffect(() => {
     if (!currentUser) {
@@ -40,19 +30,8 @@ export default function Checkout() {
       return
     }
 
-    const fetchInitialData = async () => {
+    const fetchPurchasedCourses = async () => {
       try {
-        // Fetch payment instructions
-        const settingsRef = collection(db, "settings")
-        const settingsQuery = query(settingsRef, where("type", "==", "payment"))
-        const settingsSnapshot = await getDocs(settingsQuery)
-
-        if (!settingsSnapshot.empty) {
-          const settings = settingsSnapshot.docs[0].data()
-          setPaymentInstructions(settings.instructions || "Please pay to 018XXXXXXXX via bKash")
-        }
-
-        // Fetch purchased courses
         const approvedPaymentQuery = query(
           collection(db, "payments"),
           where("userId", "==", currentUser.uid),
@@ -69,22 +48,12 @@ export default function Checkout() {
         })
         setPurchasedCourses(purchased)
       } catch (error) {
-        console.error("Error fetching initial data:", error)
+        console.error("Error fetching purchased courses:", error)
       }
     }
 
-    fetchInitialData()
+    fetchPurchasedCourses()
   }, [currentUser, cartItems, navigate])
-
-  useEffect(() => {
-    if (userProfile) {
-      setFormData((prev) => ({
-        ...prev,
-        name: userProfile.name || "",
-        email: userProfile.email || "",
-      }))
-    }
-  }, [userProfile])
 
   const validateCoupon = useCallback(async () => {
     if (!couponCode.trim()) {
@@ -153,18 +122,7 @@ export default function Checkout() {
     return Math.max(0, subtotal - calculateDiscount)
   }, [getTotal, calculateDiscount])
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-
-    if (!formData.senderNumber || !formData.transactionId) {
-      toast({
-        variant: "error",
-        title: "Missing Information",
-        description: "Please fill in all required fields",
-      })
-      return
-    }
-
+  const handleCheckout = async () => {
     const alreadyPurchased = cartItems.filter((item) => purchasedCourses.has(item.id))
     if (alreadyPurchased.length > 0) {
       toast({
@@ -178,131 +136,53 @@ export default function Checkout() {
     setLoading(true)
 
     try {
-      const existingPaymentQuery = query(
-        collection(db, "payments"),
-        where("userId", "==", currentUser.uid),
-        where("status", "==", "pending"),
-      )
-      const existingPaymentSnapshot = await getDocs(existingPaymentQuery)
-
-      if (!existingPaymentSnapshot.empty) {
-        const existingPayment = existingPaymentSnapshot.docs[0].data()
-        const existingCourseIds = new Set(existingPayment.courses?.map((c) => c.id) || [])
-        const currentCheckoutIds = new Set(cartItems.map((c) => c.id))
-
-        if (
-          existingCourseIds.size === currentCheckoutIds.size &&
-          [...existingCourseIds].every((id) => currentCheckoutIds.has(id))
-        ) {
-          toast({
-            variant: "warning",
-            title: "Pending Payment Exists",
-            description: "You already have a pending payment for these exact courses. Please wait for admin approval or contact support.",
-          })
-          setLoading(false)
-          return
-        }
-
-        const hasOverlap = [...currentCheckoutIds].some((id) => existingCourseIds.has(id))
-        if (hasOverlap) {
-          toast({
-            variant: "warning",
-            title: "Duplicate Courses",
-            description: "Some courses in your cart are already in a pending payment. Please wait for approval or remove them.",
-          })
-          setLoading(false)
-          return
-        }
-      }
-
-      console.log("Submitting payment with data:", {
+      const finalTotal = calculateTotal
+      const finalDiscount = calculateDiscount
+      const subtotalAmount = getTotal()
+      
+      const metadata = {
         userId: currentUser.uid,
-        courses: cartItems.length,
-        total: calculateTotal
-      })
-
-      const paymentData = {
-        userId: currentUser.uid,
-        userName: formData.name,
-        userEmail: formData.email,
-        senderNumber: formData.senderNumber,
-        transactionId: formData.transactionId,
         courses: cartItems.map((item) => ({
           id: item.id,
           title: item.title,
-          price: item.price || 0,
+          price: parseFloat(item.price) || 0,
         })),
-        subtotal: getTotal(),
-        discountType: appliedCoupon?.discountType || "none",
-        discountPercent: appliedCoupon?.discountPercent || 0,
-        discountAmount: appliedCoupon?.discountAmount || 0,
-        discount: calculateDiscount,
+        subtotal: parseFloat(subtotalAmount.toFixed(2)),
+        discount: parseFloat(finalDiscount.toFixed(2)),
         couponCode: appliedCoupon?.code || "",
-        finalAmount: calculateTotal,
-        status: "pending",
-        submittedAt: serverTimestamp(),
       }
 
-      const paymentDocRef = await addDoc(collection(db, "payments"), paymentData)
-      console.log("Payment document created with ID:", paymentDocRef.id)
-
-      try {
-        await addDoc(collection(db, "adminNotifications"), {
-          type: 'new_payment',
-          userName: formData.name,
-          userEmail: formData.email,
-          amount: calculateTotal,
-          courseCount: cartItems.length,
-          transactionId: formData.transactionId,
-          paymentId: paymentDocRef.id,
-          read: false,
-          createdAt: serverTimestamp()
-        })
-        console.log("Admin notification created successfully")
-      } catch (error) {
-        console.error('Failed to create admin notification:', error)
-      }
-
-      await requestNotificationPermission()
-      sendLocalNotification('Payment Submitted! 🎉', {
-        body: `Your payment of ৳${calculateTotal} has been submitted for ${cartItems.length} course(s). You'll be notified once it's approved.`,
-        tag: 'payment-submitted',
-        requireInteraction: false
-      })
-
-      notifyAdminsOfCheckout({
-        id: paymentDocRef.id,
-        name: formData.name,
-        email: formData.email,
-        totalAmount: calculateTotal,
-        courses: cartItems.map(item => ({ id: item.id, title: item.title, price: item.price || 0 })),
-      }).catch(err => console.error('Failed to notify admins:', err))
-
-      const coursesForState = [...cartItems]
-      clearCart()
-      
-      console.log("Navigating to checkout-complete page")
-      navigate("/checkout-complete", { 
-        state: { 
-          courses: coursesForState, 
-          paymentData: {
-            ...paymentData,
-            id: paymentDocRef.id,
-            totalAmount: calculateTotal,
-            subtotalAmount: getTotal(),
-            discountAmount: calculateDiscount,
-            courseCount: cartItems.length
-          }
+      const response = await fetch('/api/create-payment', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-        replace: true
+        body: JSON.stringify({
+          fullname: userProfile?.name || currentUser.displayName || "User",
+          email: userProfile?.email || currentUser.email,
+          amount: finalTotal.toFixed(2),
+          metadata: metadata
+        })
       })
+
+      const data = await response.json()
+
+      if (data.success && data.payment_url) {
+        clearCart()
+        window.location.href = data.payment_url
+      } else {
+        toast({
+          variant: "error",
+          title: "Payment Failed",
+          description: data.error || "Failed to create payment link. Please try again.",
+        })
+      }
     } catch (error) {
-      console.error("Error submitting payment:", error)
-      console.error("Error details:", error.message, error.code)
+      console.error("Error creating payment:", error)
       toast({
         variant: "error",
-        title: "Payment Submission Failed",
-        description: error.message || "Failed to submit payment. Please try again or contact support.",
+        title: "Payment Error",
+        description: "Failed to process payment request. Please try again.",
       })
     } finally {
       setLoading(false)
@@ -401,84 +281,60 @@ export default function Checkout() {
               </div>
             </div>
 
-            {/* Payment Form */}
+            {/* Payment Section */}
             <div className="lg:col-span-2 order-1 lg:order-2">
               <div className="bg-card border border-border rounded-lg p-3 sm:p-4 lg:p-6">
                 <h2 className="text-base sm:text-lg lg:text-xl font-semibold mb-4 sm:mb-6 flex items-center gap-2">
                   <CreditCard className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-primary" />
-                  Payment Details
+                  Payment Method
                 </h2>
 
-                {/* Payment Instructions */}
-                <div className="mb-4 sm:mb-6 p-2 sm:p-3 lg:p-4 bg-primary/10 border border-primary/20 rounded-lg">
-                  <h3 className="font-semibold text-xs sm:text-sm lg:text-base mb-1 sm:mb-2">Payment Instructions</h3>
-                  <p className="text-xs sm:text-sm text-muted-foreground whitespace-pre-line">{paymentInstructions}</p>
+                <div className="mb-6 p-4 bg-primary/10 border border-primary/20 rounded-lg">
+                  <h3 className="font-semibold text-sm lg:text-base mb-2">Secure Payment with RupantorPay</h3>
+                  <p className="text-xs sm:text-sm text-muted-foreground">
+                    You will be redirected to RupantorPay's secure payment page where you can pay using:
+                  </p>
+                  <ul className="mt-2 space-y-1 text-xs sm:text-sm text-muted-foreground">
+                    <li>• bKash, Nagad, Rocket</li>
+                    <li>• Credit/Debit Cards</li>
+                    <li>• Other supported payment methods</li>
+                  </ul>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4 lg:space-y-6">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                    <div>
-                      <label className="block text-xs sm:text-sm font-medium mb-1.5 sm:mb-2">
-                        Name <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        className="w-full px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 lg:py-3 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-xs sm:text-sm"
-                        required
-                      />
+                <div className="space-y-4">
+                  <div className="bg-muted/50 rounded-lg p-4">
+                    <div className="flex justify-between mb-2">
+                      <span className="text-sm font-medium">Customer Name:</span>
+                      <span className="text-sm">{userProfile?.name || currentUser?.displayName || "User"}</span>
                     </div>
-                    <div>
-                      <label className="block text-xs sm:text-sm font-medium mb-1.5 sm:mb-2">
-                        Email <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="email"
-                        value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        className="w-full px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 lg:py-3 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-xs sm:text-sm"
-                        required
-                      />
+                    <div className="flex justify-between">
+                      <span className="text-sm font-medium">Email:</span>
+                      <span className="text-sm">{userProfile?.email || currentUser?.email}</span>
                     </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs sm:text-sm font-medium mb-1.5 sm:mb-2">
-                      Sender Number <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="tel"
-                      value={formData.senderNumber}
-                      onChange={(e) => setFormData({ ...formData, senderNumber: e.target.value })}
-                      placeholder="01XXXXXXXXX"
-                      className="w-full px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 lg:py-3 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-xs sm:text-sm"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs sm:text-sm font-medium mb-1.5 sm:mb-2">
-                      Transaction ID <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.transactionId}
-                      onChange={(e) => setFormData({ ...formData, transactionId: e.target.value })}
-                      placeholder="Enter transaction ID"
-                      className="w-full px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 lg:py-3 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-xs sm:text-sm"
-                      required
-                    />
                   </div>
 
                   <button
-                    type="submit"
+                    onClick={handleCheckout}
                     disabled={loading}
-                    className="w-full py-2 sm:py-3 lg:py-4 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm lg:text-base"
+                    className="w-full py-3 lg:py-4 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm lg:text-base flex items-center justify-center gap-2"
                   >
-                    {loading ? "Submitting..." : "Submit Payment"}
+                    {loading ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      <>
+                        <CreditCard className="w-5 h-5" />
+                        Proceed to Payment
+                      </>
+                    )}
                   </button>
-                </form>
+
+                  <p className="text-xs text-center text-muted-foreground">
+                    By proceeding, you agree to our terms and conditions. Your payment is secured by RupantorPay.
+                  </p>
+                </div>
               </div>
             </div>
           </div>

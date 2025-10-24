@@ -3,83 +3,23 @@
 import { useState, useEffect } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { motion } from "framer-motion"
-import { Search, TrendingUp, Clock, Users, ArrowRight, ShoppingCart, Trash2, Check, Zap, BookOpen, Award, Infinity } from "lucide-react"
+import { Search, TrendingUp, ArrowRight, BookOpen, Award, Infinity } from "lucide-react"
+import CourseCard from "../components/CourseCard"
 import { collection, query, orderBy, limit, getDocs, where } from "firebase/firestore"
 import { db } from "../lib/firebase"
-import { useCart } from "../contexts/CartContext"
 import { useAuth } from "../contexts/AuthContext"
-import { enrollInFreeCourse } from "../lib/enrollment"
-import { toast } from "../hooks/use-toast"
 
 export default function Home() {
   const navigate = useNavigate()
-  const { addToCart, openCart, cartItems, removeFromCart } = useCart()
-  const { currentUser, isAdmin } = useAuth()
+  const { isAdmin } = useAuth()
   const [searchQuery, setSearchQuery] = useState("")
   const [trendingCourses, setTrendingCourses] = useState([])
   const [categories, setCategories] = useState([])
   const [loading, setLoading] = useState(true)
-  const [purchasedCourses, setPurchasedCourses] = useState({})
-  const [pendingCourses, setPendingCourses] = useState({})
 
   useEffect(() => {
     fetchData()
   }, [isAdmin])
-
-  useEffect(() => {
-    if (currentUser) {
-      checkPurchasedCourses()
-      checkPendingCourses()
-    }
-  }, [currentUser, trendingCourses])
-
-  const checkPurchasedCourses = async () => {
-    if (!currentUser || trendingCourses.length === 0 || !db) return
-
-    try {
-      const paymentsQuery = query(
-        collection(db, "payments"),
-        where("userId", "==", currentUser.uid),
-        where("status", "==", "approved"),
-      )
-      const paymentsSnapshot = await getDocs(paymentsQuery)
-
-      const purchased = {}
-      paymentsSnapshot.docs.forEach((doc) => {
-        const payment = doc.data()
-        payment.courses?.forEach((c) => {
-          purchased[c.id] = true
-        })
-      })
-      setPurchasedCourses(purchased)
-    } catch (error) {
-      console.error("[v0] Error checking purchased courses:", error)
-    }
-  }
-
-  const checkPendingCourses = async () => {
-    if (!currentUser || trendingCourses.length === 0 || !db) return
-
-    try {
-      const pendingQuery = query(
-        collection(db, "payments"),
-        where("userId", "==", currentUser.uid),
-        where("status", "==", "pending"),
-      )
-      const pendingSnapshot = await getDocs(pendingQuery)
-
-      const pending = {}
-      pendingSnapshot.docs.forEach((doc) => {
-        const payment = doc.data()
-        payment.courses?.forEach((c) => {
-          pending[c.id] = true
-        })
-      })
-      setPendingCourses(pending)
-    } catch (error) {
-      console.error("[v0] Error checking pending courses:", error)
-    }
-  }
 
   const fetchData = async () => {
     try {
@@ -123,64 +63,6 @@ export default function Home() {
     if (searchQuery.trim()) {
       navigate("/courses", { state: { searchQuery: searchQuery.trim() } })
       setSearchQuery("")
-    }
-  }
-
-  const handleAddToCart = (course, e) => {
-    e.preventDefault()
-    e.stopPropagation()
-    const success = addToCart(course)
-    if (success) {
-      openCart()
-    } else {
-      toast({
-        variant: "error",
-        title: "Already in Cart",
-        description: "This course is already in your cart!"
-      })
-    }
-  }
-
-  const handleRemoveFromCart = (course, e) => {
-    e.preventDefault()
-    e.stopPropagation()
-    removeFromCart(course.id)
-  }
-
-  const handleEnrollFree = async (course, e) => {
-    e.preventDefault()
-    e.stopPropagation()
-    
-    if (!currentUser) {
-      toast({
-        variant: "error",
-        title: "Login Required",
-        description: "Please login to enroll in courses",
-      })
-      navigate("/login")
-      return
-    }
-
-    const result = await enrollInFreeCourse(
-      currentUser.uid,
-      currentUser.email,
-      currentUser.displayName || "User",
-      course
-    )
-
-    if (result.success) {
-      toast({
-        variant: "success",
-        title: "Enrolled Successfully!",
-        description: result.message,
-      })
-      checkPurchasedCourses()
-    } else {
-      toast({
-        variant: "error",
-        title: "Enrollment Failed",
-        description: result.message,
-      })
     }
   }
 
@@ -353,87 +235,7 @@ export default function Home() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
                 >
-                  <Link to={`/course/${course.id}`}>
-                    <div className="bg-card border border-border rounded-xl overflow-hidden hover:border-primary hover:shadow-lg transition-all group relative">
-                      <div className="aspect-video bg-gradient-to-br from-primary/20 to-secondary/20 relative overflow-hidden">
-                        {course.thumbnailURL ? (
-                          <img
-                            src={course.thumbnailURL || "/placeholder.svg"}
-                            alt={course.title}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <Users className="w-16 h-16 text-primary/50" />
-                          </div>
-                        )}
-                        {course.status && (
-                          <div className="absolute top-2 right-2">
-                            <span className={`px-2 py-1 rounded-full text-xs font-semibold uppercase ${
-                              course.status === "running" 
-                                ? "bg-green-500 text-white" 
-                                : course.status === "ongoing" 
-                                ? "bg-blue-500 text-white" 
-                                : "bg-gray-500 text-white"
-                            }`}>
-                              {course.status}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                      <div className="p-5">
-                        <h3 className="font-semibold text-lg mb-3 line-clamp-2 group-hover:text-primary transition-colors">
-                          {course.title}
-                        </h3>
-                        <div className="flex items-center justify-between mb-3">
-                          <span className="text-sm text-muted-foreground">{course.instructorName}</span>
-                          <span className="px-3 py-1 bg-primary/10 text-primary text-xs rounded-full font-medium">
-                            {course.category}
-                          </span>
-                        </div>
-                        {purchasedCourses[course.id] ? (
-                          <Link 
-                            to={course.type === "batch" ? `/course/${course.id}/subjects` : `/course/${course.id}/chapters`} 
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <button className="w-full px-4 py-2 bg-green-500/20 text-green-700 dark:text-green-400 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm font-medium hover:bg-green-500/30">
-                              <Check className="w-4 h-4" />
-                              Continue Course
-                            </button>
-                          </Link>
-                        ) : pendingCourses[course.id] ? (
-                          <div className="w-full px-4 py-2 bg-yellow-500/20 text-yellow-700 dark:text-yellow-400 rounded-lg flex items-center justify-center gap-2 text-sm font-medium">
-                            <Clock className="w-4 h-4" />
-                            Payment Pending
-                          </div>
-                        ) : (!course.price || course.price === 0 || course.price === "0") ? (
-                          <button
-                            onClick={(e) => handleEnrollFree(course, e)}
-                            className="w-full px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-lg transition-all flex items-center justify-center gap-2 text-sm font-medium shadow-sm"
-                          >
-                            <Zap className="w-4 h-4" />
-                            Enroll Free
-                          </button>
-                        ) : cartItems.some((item) => item.id === course.id) ? (
-                          <button
-                            onClick={(e) => handleRemoveFromCart(course, e)}
-                            className="w-full px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-700 dark:text-red-400 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm font-medium"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                            Remove from Cart
-                          </button>
-                        ) : (
-                          <button
-                            onClick={(e) => handleAddToCart(course, e)}
-                            className="w-full px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-colors flex items-center justify-center gap-2 text-sm font-medium"
-                          >
-                            <ShoppingCart className="w-4 h-4" />
-                            Add to Cart
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  </Link>
+                  <CourseCard course={course} />
                 </motion.div>
               ))}
             </div>

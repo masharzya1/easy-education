@@ -27,6 +27,8 @@ import Dashboard from "./pages/Dashboard"
 import AdminDashboard from "./pages/admin/AdminDashboard"
 import Checkout from "./pages/Checkout"
 import CheckoutComplete from "./pages/CheckoutComplete"
+import PaymentSuccess from "./pages/PaymentSuccess"
+import PaymentCancel from "./pages/PaymentCancel"
 import PaymentHistory from "./pages/PaymentHistory"
 import MyCourses from "./pages/MyCourses"
 import ExamView from "./pages/ExamView"
@@ -64,6 +66,15 @@ function App() {
                   <Route path="/course/:courseId/watch" element={<CourseWatch />} />
                   <Route path="/checkout" element={<Checkout />} />
                   <Route path="/checkout-complete" element={<CheckoutComplete />} />
+                  <Route 
+                    path="/payment-success" 
+                    element={
+                      <ProtectedRoute>
+                        <PaymentSuccess />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route path="/payment-cancel" element={<PaymentCancel />} />
                   <Route
                     path="/payment-history"
                     element={
