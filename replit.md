@@ -11,9 +11,10 @@ The platform is built using React 18.2.0 with Vite, styled with TailwindCSS and 
 
 **Key Features & Implementations:**
 - **User Management**: Authentication via email/password and Google OAuth, with user profiles and rankings.
-- **Course Management**: Comprehensive system for browsing, enrolling, and managing courses, chapters, and classes. Includes archiving functionality for seamless course transitions.
+- **Course Management**: Comprehensive system for browsing, enrolling, and managing courses, chapters, and classes. Includes archiving functionality for seamless course transitions. Course status badges (running/ongoing) are displayed consistently across all pages using the CourseCard component.
 - **Content Delivery**: Integrated video player with custom controls (10-second skip forward/backward, double-click gestures).
 - **Assessment System**: Course-level exams with MCQ and Creative Questions, supporting text and image options. Includes student assessment tracking, exam history, and analytics. Admins can bulk create exams and questions via JSON upload.
+- **Payment System**: Integrated RupantorPay payment gateway for automated payment processing. Supports bKash, Nagad, Rocket, and credit/debit cards. Includes coupon system with percentage and fixed-amount discounts. Payment verification and automatic course enrollment upon successful payment.
 - **Notification System**: PWA push notifications via Firebase Cloud Messaging (FCM) for announcements and admin alerts (e.g., student checkouts). Email notifications via SendGrid are pre-integrated.
 - **UI/UX**: Responsive design with a focus on mobile optimization. Consistent branding with theme-aware elements (Dark/Light mode) and a clean, modern aesthetic. Bangla language and Bangladeshi Taka (৳) currency support are integrated.
 - **Admin Dashboard**: A dedicated interface for managing all aspects of the platform, including courses, users, payments, exams, and website settings. Features include student removal from courses, bulk creation tools, and comprehensive content management.
@@ -21,9 +22,24 @@ The platform is built using React 18.2.0 with Vite, styled with TailwindCSS and 
 
 ### External Dependencies
 - **Firebase**: Used for Authentication (Firebase Auth) and Database (Firestore).
+- **RupantorPay**: Payment gateway for automated payment processing (API key stored in RUPANTORPAY_API_KEY secret).
 - **imgbb.com API**: For image uploads, particularly for exam questions and options.
 - **SendGrid**: Integrated for sending email notifications (requires API key setup).
 - **React Router DOM**: For client-side routing.
 - **Radix UI**: For unstyled, accessible UI components.
 - **Vite**: As the build tool and development server.
 - **TailwindCSS**: For utility-first CSS styling.
+
+### Recent Changes (October 24, 2025)
+1. **RupantorPay Integration**: Replaced manual payment submission system with RupantorPay automated payment gateway
+   - Created backend API endpoints for payment creation, verification, and webhooks
+   - Updated checkout flow to redirect to RupantorPay payment page
+   - Added payment success and cancel pages for proper payment flow completion
+   - Automatic course enrollment upon successful payment verification
+
+2. **Course Card Consistency**: Refactored Home and Courses pages to use shared CourseCard component
+   - Eliminated duplicate course card rendering logic
+   - Ensured consistent course status badge display across all pages
+   - Improved code maintainability and reduced bundle size
+
+3. **Draft Course Filtering**: Confirmed draft courses are properly filtered from public pages for non-admin users
