@@ -1,6 +1,7 @@
 import { processPaymentAndEnrollUser } from './utils/process-payment.js';
 
 const RUPANTORPAY_API_KEY = process.env.RUPANTORPAY_API_KEY;
+const RUPANTORPAY_DEVICE_KEY = process.env.RUPANTORPAY_DEVICE_KEY;
 const VERIFY_API_URL = 'https://payment.rupantorpay.com/api/payment/verify-payment';
 
 export default async function handler(req, res) {
@@ -31,6 +32,7 @@ export default async function handler(req, res) {
       method: 'POST',
       headers: {
         'X-API-KEY': RUPANTORPAY_API_KEY,
+        'X-DEVICE-KEY': RUPANTORPAY_DEVICE_KEY,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({ transaction_id: webhookData.transactionId })

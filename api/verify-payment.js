@@ -1,4 +1,5 @@
 const RUPANTORPAY_API_KEY = process.env.RUPANTORPAY_API_KEY;
+const RUPANTORPAY_DEVICE_KEY = process.env.RUPANTORPAY_DEVICE_KEY;
 const VERIFY_API_URL = 'https://payment.rupantorpay.com/api/payment/verify-payment';
 
 export default async function handler(req, res) {
@@ -10,6 +11,11 @@ export default async function handler(req, res) {
   if (!RUPANTORPAY_API_KEY) {
     console.error("RUPANTORPAY_API_KEY is missing!");
     return res.status(500).json({ success: false, error: "Server configuration error: Payment service key missing." });
+  }
+
+  if (!RUPANTORPAY_DEVICE_KEY) {
+    console.error("RUPANTORPAY_DEVICE_KEY is missing!");
+    return res.status(500).json({ success: false, error: "Server configuration error: Device key missing." });
   }
 
   const { transaction_id } = req.body;
@@ -26,6 +32,7 @@ export default async function handler(req, res) {
       method: 'POST',
       headers: {
         'X-API-KEY': RUPANTORPAY_API_KEY,
+        'X-DEVICE-KEY': RUPANTORPAY_DEVICE_KEY,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({ transaction_id })
