@@ -307,6 +307,19 @@ export default function Courses() {
                           <BookOpen className="w-12 h-12 text-primary/30" />
                         </div>
                       )}
+                      {course.status && (
+                        <div className="absolute top-2 right-2">
+                          <span className={`px-2 py-1 rounded-full text-xs font-semibold uppercase ${
+                            course.status === "running" 
+                              ? "bg-green-500 text-white" 
+                              : course.status === "ongoing" 
+                              ? "bg-blue-500 text-white" 
+                              : "bg-gray-500 text-white"
+                          }`}>
+                            {course.status}
+                          </span>
+                        </div>
+                      )}
                     </div>
                     <div className="p-4 flex flex-col flex-1">
                       <h3 className="font-semibold text-base mb-3 line-clamp-2 text-foreground">{course.title}</h3>
