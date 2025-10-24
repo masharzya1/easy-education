@@ -30,16 +30,39 @@ The platform is built using React 18.2.0 with Vite, styled with TailwindCSS and 
 - **Vite**: As the build tool and development server.
 - **TailwindCSS**: For utility-first CSS styling.
 
-### Recent Changes (October 24, 2025)
-1. **RupantorPay Integration**: Replaced manual payment submission system with RupantorPay automated payment gateway
-   - Created backend API endpoints for payment creation, verification, and webhooks
-   - Updated checkout flow to redirect to RupantorPay payment page
-   - Added payment success and cancel pages for proper payment flow completion
-   - Automatic course enrollment upon successful payment verification
+### Backend Architecture
+The application now uses an Express.js server that serves both the Vite development environment and handles API routes:
+- **Server**: Express server (server.js) running on port 5000
+- **Development**: Vite middleware integrated with Express for hot module replacement
+- **Production**: Serves built static files from /dist directory
+- **API Routes**: RESTful endpoints for payment processing, image uploads, and enrollment
 
-2. **Course Card Consistency**: Refactored Home and Courses pages to use shared CourseCard component
+### Recent Changes (October 24, 2025)
+1. **Complete RupantorPay Integration with Automatic Enrollment**
+   - Created Express server to handle API routes and serve Vite app
+   - Implemented server-side payment processing with Firebase Admin SDK
+   - Created shared payment processing utility (api/utils/process-payment.js) for idempotent enrollment
+   - Updated webhook to verify payments and automatically enroll users
+   - Created /api/process-enrollment endpoint for secure payment verification from frontend
+   - Added security validation to prevent payment fraud (userId verification from metadata)
+   - Both webhook and frontend redirect paths automatically enroll students without admin approval
+   - Installed firebase-admin package for server-side Firestore operations
+
+2. **API Endpoints**
+   - POST /api/create-payment: Creates RupantorPay payment link with metadata
+   - POST /api/verify-payment: Verifies payment status with RupantorPay
+   - POST /api/payment-webhook: Processes webhook notifications and enrolls users
+   - POST /api/process-enrollment: Verifies and processes enrollment from frontend (with security validation)
+   - POST /api/upload-image: Handles image uploads to imgbb.com
+
+3. **Security Enhancements**
+   - Payment metadata includes userId to prevent unauthorized enrollments
+   - API validates userId matches payment metadata before processing
+   - Idempotent payment processing prevents duplicate enrollments
+
+4. **Course Card Consistency**: Refactored Home and Courses pages to use shared CourseCard component
    - Eliminated duplicate course card rendering logic
    - Ensured consistent course status badge display across all pages
    - Improved code maintainability and reduced bundle size
 
-3. **Draft Course Filtering**: Confirmed draft courses are properly filtered from public pages for non-admin users
+5. **Draft Course Filtering**: Confirmed draft courses are properly filtered from public pages for non-admin users
