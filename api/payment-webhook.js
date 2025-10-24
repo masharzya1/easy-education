@@ -1,13 +1,20 @@
+/**
+ * Rupantorpay Payment Webhook Handler
+ * Receives payment notifications from Rupantorpay and processes enrollment
+ */
+
 import { processPaymentAndEnrollUser } from './utils/process-payment.js';
 
 const RUPANTORPAY_API_KEY = process.env.RUPANTORPAY_API_KEY;
-const RUPANTORPAY_DEVICE_KEY = process.env.RUPANTORPAY_DEVICE_KEY;
 const VERIFY_API_URL = 'https://payment.rupantorpay.com/api/payment/verify-payment';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', ['POST']);
-    return res.status(405).json({ success: false, error: "Method Not Allowed" });
+    return res.status(405).json({ 
+      success: false, 
+      error: "Method Not Allowed" 
+    });
   }
 
   try {
@@ -16,10 +23,10 @@ export default async function handler(req, res) {
     console.log('Payment webhook received:', {
       transactionId: webhookData.transactionId,
       status: webhookData.status,
-      amount: webhookData.paymentAmount,
-      method: webhookData.paymentMethod
+      amount: webhookData.paymentAmount
     });
 
+    // Only process completed payments
     if (webhookData.status !== 'COMPLETED') {
       console.log(`Webhook received with status: ${webhookData.status}, not processing`);
       return res.status(200).json({ 
@@ -28,11 +35,11 @@ export default async function handler(req, res) {
       });
     }
 
+    // Verify payment with Rupantorpay to prevent fraud
     const verifyResponse = await fetch(VERIFY_API_URL, {
       method: 'POST',
       headers: {
         'X-API-KEY': RUPANTORPAY_API_KEY,
-        'X-DEVICE-KEY': RUPANTORPAY_DEVICE_KEY,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({ transaction_id: webhookData.transactionId })
@@ -48,6 +55,7 @@ export default async function handler(req, res) {
       });
     }
 
+    // Extract payment and course information
     const payment = verifyData;
     const metadata = payment.metadata || {};
     const courses = metadata.courses || [];
@@ -61,6 +69,7 @@ export default async function handler(req, res) {
       });
     }
 
+    // Process payment and enroll user in courses
     const result = await processPaymentAndEnrollUser({
       userId,
       userName: payment.fullname,

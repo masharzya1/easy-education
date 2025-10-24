@@ -1,23 +1,28 @@
+/**
+ * Manual Payment Enrollment Processing
+ * Used when webhook fails or for manual verification
+ */
+
 import { processPaymentAndEnrollUser } from './utils/process-payment.js';
 
 const RUPANTORPAY_API_KEY = process.env.RUPANTORPAY_API_KEY;
-const RUPANTORPAY_DEVICE_KEY = process.env.RUPANTORPAY_DEVICE_KEY;
 const VERIFY_API_URL = 'https://payment.rupantorpay.com/api/payment/verify-payment';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', ['POST']);
-    return res.status(405).json({ success: false, error: "Method Not Allowed" });
+    return res.status(405).json({ 
+      success: false, 
+      error: "Method Not Allowed" 
+    });
   }
 
   if (!RUPANTORPAY_API_KEY) {
     console.error("RUPANTORPAY_API_KEY is missing!");
-    return res.status(500).json({ success: false, error: "Server configuration error" });
-  }
-
-  if (!RUPANTORPAY_DEVICE_KEY) {
-    console.error("RUPANTORPAY_DEVICE_KEY is missing!");
-    return res.status(500).json({ success: false, error: "Server configuration error: Device key missing." });
+    return res.status(500).json({ 
+      success: false, 
+      error: "Server configuration error" 
+    });
   }
 
   const { transaction_id, userId } = req.body;
@@ -30,11 +35,11 @@ export default async function handler(req, res) {
   }
 
   try {
+    // Verify payment with Rupantorpay
     const verifyResponse = await fetch(VERIFY_API_URL, {
       method: 'POST',
       headers: {
         'X-API-KEY': RUPANTORPAY_API_KEY,
-        'X-DEVICE-KEY': RUPANTORPAY_DEVICE_KEY,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({ transaction_id })
@@ -50,11 +55,13 @@ export default async function handler(req, res) {
       });
     }
 
+    // Extract payment data
     const payment = verifyData;
     const metadata = payment.metadata || {};
     const courses = metadata.courses || [];
     const metadataUserId = metadata.userId;
 
+    // Validate user ID matches
     if (!metadataUserId) {
       return res.status(400).json({
         success: false,
@@ -69,6 +76,7 @@ export default async function handler(req, res) {
       });
     }
 
+    // Process enrollment
     const result = await processPaymentAndEnrollUser({
       userId: metadataUserId,
       userName: payment.fullname,
@@ -87,20 +95,9 @@ export default async function handler(req, res) {
     if (result.success) {
       return res.status(200).json({
         success: true,
-        verified: true,
+        message: result.message,
         alreadyProcessed: result.alreadyProcessed,
-        payment: {
-          fullname: payment.fullname,
-          email: payment.email,
-          amount: payment.amount,
-          transaction_id: payment.transaction_id,
-          trx_id: payment.trx_id,
-          currency: payment.currency,
-          metadata: payment.metadata,
-          payment_method: payment.payment_method,
-          status: payment.status
-        },
-        paymentRecord: result.paymentRecord
+        coursesEnrolled: courses.length
       });
     } else {
       return res.status(500).json({

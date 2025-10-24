@@ -1,21 +1,26 @@
+/**
+ * Rupantorpay Payment Creation API
+ * Official Docs: https://rupantorpay.readme.io/reference/get_new-endpoint
+ */
+
 const RUPANTORPAY_API_KEY = process.env.RUPANTORPAY_API_KEY;
-const RUPANTORPAY_DEVICE_KEY = process.env.RUPANTORPAY_DEVICE_KEY;
 const PAYMENT_API_URL = 'https://payment.rupantorpay.com/api/payment/checkout';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', ['POST']);
-    return res.status(405).json({ success: false, error: "Method Not Allowed" });
+    return res.status(405).json({ 
+      success: false, 
+      error: "Method Not Allowed" 
+    });
   }
 
   if (!RUPANTORPAY_API_KEY) {
     console.error("RUPANTORPAY_API_KEY is missing!");
-    return res.status(500).json({ success: false, error: "Server configuration error: Payment service key missing." });
-  }
-
-  if (!RUPANTORPAY_DEVICE_KEY) {
-    console.error("RUPANTORPAY_DEVICE_KEY is missing!");
-    return res.status(500).json({ success: false, error: "Server configuration error: Device key missing. Please register a device in Rupantorpay dashboard." });
+    return res.status(500).json({ 
+      success: false, 
+      error: "Server configuration error: Payment service key missing." 
+    });
   }
 
   const { fullname, email, amount, metadata } = req.body;
@@ -27,38 +32,47 @@ export default async function handler(req, res) {
     });
   }
 
-  const host = req.headers.host || 'localhost:5000';
-  const protocol = host.includes('localhost') ? 'http' : 'https';
+  // Get base URL for callbacks
+  const host = req.headers.host;
+  const protocol = host?.includes('localhost') ? 'http' : 'https';
   const baseUrl = `${protocol}://${host}`;
 
   try {
+    // Prepare payment data according to Rupantorpay API specs
     const paymentData = {
       fullname,
       email,
-      amount: parseFloat(amount).toString(),
+      amount: parseFloat(amount).toFixed(2),
       success_url: `${baseUrl}/payment-success`,
       cancel_url: `${baseUrl}/payment-cancel`,
       webhook_url: `${baseUrl}/api/payment-webhook`,
-      meta_data: metadata || {}
+      metadata: metadata || {}
     };
 
-    console.log('Creating payment with data:', { ...paymentData, meta_data: '[metadata]' });
+    console.log('Creating payment:', { 
+      fullname, 
+      email, 
+      amount: paymentData.amount,
+      baseUrl 
+    });
 
     const response = await fetch(PAYMENT_API_URL, {
       method: 'POST',
       headers: {
         'X-API-KEY': RUPANTORPAY_API_KEY,
-        'X-DEVICE-KEY': RUPANTORPAY_DEVICE_KEY,
-        'Content-Type': 'application/json',
-        'X-CLIENT': host
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify(paymentData)
     });
 
     const data = await response.json();
-    console.log('Rupantorpay response:', data);
+    console.log('Rupantorpay response:', { 
+      status: data.status, 
+      hasPaymentUrl: !!data.payment_url 
+    });
 
-    if ((data.status === 1 || data.status === true) && data.payment_url) {
+    // Check for successful response
+    if ((data.status === true || data.status === 1) && data.payment_url) {
       return res.status(200).json({
         success: true,
         payment_url: data.payment_url,
@@ -67,16 +81,14 @@ export default async function handler(req, res) {
     } else {
       return res.status(400).json({
         success: false,
-        error: data.message || data.error || "Failed to create payment link",
-        details: data
+        error: data.message || data.error || "Failed to create payment link"
       });
     }
   } catch (error) {
     console.error("Error creating payment:", error);
     return res.status(500).json({
       success: false,
-      error: "Failed to process payment request. Please try again.",
-      details: error.message
+      error: "Failed to process payment request. Please try again."
     });
   }
 }
