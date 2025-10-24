@@ -1,17 +1,30 @@
+{
+  "rewrites": [
     {
-      "rewrites": [
-        {
-          "source": "/(.*)",
-          "destination": "/index.html"
-        }
-      ],
-      "functions": {
+      "source": "/api/:path*",
+      "destination": "/api/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ],
+  "functions": {
     "api/upload-image.js": {
       "maxDuration": 30
+    },
+    "api/create-payment.js": {
+      "maxDuration": 30
+    },
+    "api/verify-payment.js": {
+      "maxDuration": 30
+    },
+    "api/payment-webhook.js": {
+      "maxDuration": 30
+    },
+    "api/process-enrollment.js": {
+      "maxDuration": 30
     }
-  },
-  "env": {
-    "IMGBB_API_KEY": "74ab1b5e9a3dd246d0c7745d5e33d051"
   }
 }
     
