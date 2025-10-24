@@ -6,6 +6,7 @@ import createPaymentHandler from './api/create-payment.js';
 import verifyPaymentHandler from './api/verify-payment.js';
 import paymentWebhookHandler from './api/payment-webhook.js';
 import uploadImageHandler from './api/upload-image.js';
+import processEnrollmentHandler from './api/process-enrollment.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -34,6 +35,10 @@ app.post('/api/verify-payment', (req, res) => {
 
 app.post('/api/payment-webhook', (req, res) => {
   paymentWebhookHandler(req, res);
+});
+
+app.post('/api/process-enrollment', (req, res) => {
+  processEnrollmentHandler(req, res);
 });
 
 app.post('/api/upload-image', (req, res) => {

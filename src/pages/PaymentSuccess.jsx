@@ -4,8 +4,6 @@ import { useState, useEffect } from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
 import { motion } from "framer-motion"
 import { CheckCircle, Loader2, AlertCircle, Home, BookOpen } from "lucide-react"
-import { collection, addDoc, getDocs, query, where, serverTimestamp, setDoc, doc } from "firebase/firestore"
-import { db } from "../lib/firebase"
 import { useAuth } from "../contexts/AuthContext"
 import { sendLocalNotification } from "../lib/pwa"
 import { toast } from "../hooks/use-toast"
@@ -49,84 +47,48 @@ export default function PaymentSuccess() {
     try {
       setVerifying(true)
 
-      const existingPaymentQuery = query(
-        collection(db, "payments"),
-        where("transactionId", "==", transactionId),
-        where("status", "==", "approved")
-      )
-      const existingPayments = await getDocs(existingPaymentQuery)
-
-      if (!existingPayments.empty) {
-        const payment = existingPayments.docs[0].data()
-        setPaymentData(payment)
-        setVerifying(false)
-        setLoading(false)
-        return
-      }
-
-      const verifyResponse = await fetch('/api/verify-payment', {
+      const enrollmentResponse = await fetch('/api/process-enrollment', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ transaction_id: transactionId })
+        body: JSON.stringify({ 
+          transaction_id: transactionId,
+          userId: currentUser.uid
+        })
       })
 
-      const verifyData = await verifyResponse.json()
+      const enrollmentData = await enrollmentResponse.json()
 
-      if (!verifyData.success || !verifyData.verified) {
-        setError(verifyData.error || "Payment verification failed")
+      if (!enrollmentData.success || !enrollmentData.verified) {
+        setError(enrollmentData.error || "Payment verification failed")
         setVerifying(false)
         setLoading(false)
         return
       }
 
-      const payment = verifyData.payment
-      const metadata = payment.metadata || {}
-      const courses = metadata.courses || []
-
-      const paymentRecord = {
-        userId: currentUser.uid,
-        userName: payment.fullname,
-        userEmail: payment.email,
-        transactionId: payment.transaction_id,
-        trxId: payment.trx_id,
-        paymentMethod: payment.payment_method,
-        courses: courses,
-        subtotal: parseFloat(payment.amount),
-        discount: 0,
-        finalAmount: parseFloat(payment.amount),
-        status: "approved",
-        submittedAt: serverTimestamp(),
-        approvedAt: serverTimestamp(),
-        paymentGateway: "RupantorPay",
-        currency: payment.currency || "BDT"
-      }
-
-      await addDoc(collection(db, "payments"), paymentRecord)
-
-      for (const course of courses) {
-        await setDoc(doc(db, "userCourses", `${currentUser.uid}_${course.id}`), {
-          userId: currentUser.uid,
-          courseId: course.id,
-          enrolledAt: serverTimestamp(),
-          progress: 0,
-        })
+      const paymentRecord = enrollmentData.paymentRecord || {
+        transactionId: enrollmentData.payment.transaction_id,
+        finalAmount: enrollmentData.payment.amount,
+        courses: enrollmentData.payment.metadata?.courses || []
       }
 
       setPaymentData(paymentRecord)
-      
-      sendLocalNotification('Payment Successful! 🎉', {
-        body: `Your payment of ৳${payment.amount} has been confirmed. You now have access to ${courses.length} course(s).`,
-        tag: 'payment-success',
-        requireInteraction: false
-      })
 
-      toast({
-        variant: "success",
-        title: "Payment Successful!",
-        description: `You now have access to ${courses.length} course(s).`,
-      })
+      if (!enrollmentData.alreadyProcessed) {
+        const courses = paymentRecord.courses || []
+        sendLocalNotification('Payment Successful! 🎉', {
+          body: `Your payment of ৳${enrollmentData.payment.amount} has been confirmed. You now have access to ${courses.length} course(s).`,
+          tag: 'payment-success',
+          requireInteraction: false
+        })
+
+        toast({
+          variant: "success",
+          title: "Payment Successful!",
+          description: `You now have access to ${courses.length} course(s).`,
+        })
+      }
 
     } catch (error) {
       console.error("Error processing payment:", error)
