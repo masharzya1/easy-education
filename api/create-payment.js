@@ -66,10 +66,9 @@ export default async function handler(req, res) {
     });
 
     const data = await response.json();
-    console.log('Rupantorpay response:', { 
-      status: data.status, 
-      hasPaymentUrl: !!data.payment_url 
-    });
+    console.log('Rupantorpay create payment response:', JSON.stringify(data, null, 2));
+    console.log('Response status code:', response.status);
+    console.log('Metadata sent:', JSON.stringify(metadata, null, 2));
 
     // Check for successful response
     if ((data.status === true || data.status === 1) && data.payment_url) {

@@ -33,6 +33,8 @@ export default async function handler(req, res) {
   }
 
   try {
+    console.log('Verifying payment with transaction_id:', transaction_id);
+    
     const response = await fetch(VERIFY_API_URL, {
       method: 'POST',
       headers: {
@@ -43,6 +45,9 @@ export default async function handler(req, res) {
     });
 
     const data = await response.json();
+    
+    console.log('RupantorPay verification response:', JSON.stringify(data, null, 2));
+    console.log('Response status code:', response.status);
 
     if (data.status === 'COMPLETED') {
       return res.status(200).json({
