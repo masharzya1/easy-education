@@ -33,7 +33,7 @@ export default async function handler(req, res) {
       success_url: `${baseUrl}/payment-success`,
       cancel_url: `${baseUrl}/payment-cancel`,
       webhook_url: `${baseUrl}/api/payment-webhook`,
-      meta_data: JSON.stringify(metadata || {})
+      meta_data: metadata || {}
     };
 
     console.log('Creating payment with data:', { ...paymentData, meta_data: '[metadata]' });
