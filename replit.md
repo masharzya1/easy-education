@@ -37,6 +37,9 @@ The application now uses an Express.js server that serves both the Vite developm
 - **Production**: Serves built static files from /dist directory
 - **API Routes**: RESTful endpoints for payment processing, image uploads, and enrollment
 
+### Notes
+- **Google Sheets Integration**: User declined Google Sheets connector setup. If automatic student purchase data export to Google Sheets is needed in the future, either use the connector (connector:ccfg_google-sheet_E42A9F6CA62546F68A1FECA0E8) or implement custom integration with Google Sheets API credentials.
+
 ### Recent Changes (October 25, 2025)
 
 **Session 1: Payment Gateway Migration**
@@ -83,6 +86,32 @@ The application now uses an Express.js server that serves both the Vite developm
 5. **Express.js Downgrade**
    - Downgraded Express from v5.1.0 to v4.x for better ES module compatibility
    - Fixed ERR_MODULE_NOT_FOUND errors in development environment
+
+**Session 3: Course Watch Enhancements & UI Improvements**
+6. **Checkout Page Reload Bug Fix**
+   - Fixed critical bug where reloading checkout page would redirect to /courses
+   - Added proper loading state checks for both cart (isCartLoaded) and coupon (isCouponLoaded)
+   - Prevents navigation until both states are fully loaded
+   - Maintains coupon state across page reloads using sessionStorage
+   - Ensures 100% discount coupons work correctly after page refresh
+
+7. **Course Details - Removed Static Content**
+   - Removed generic "This course includes" section with static features
+   - Cleaned up sidebar to focus on actual course purchase options
+   - Streamlined course detail page for better user experience
+
+8. **Telegram Integration in Course Watch**
+   - Added Telegram community section in CourseWatch page
+   - Join button with direct link to course's Telegram group (course.telegramLink)
+   - Student information submission form (one-time per course per user):
+     * Auto-filled webapp account name (from user profile)
+     * Auto-filled webapp account email (from user account)
+     * Telegram ID input field (manual entry)
+     * Mobile number input field (manual entry)
+   - Form submission stored in Firestore collection "telegramSubmissions"
+   - Prevents duplicate submissions per course per user
+   - Success/error feedback with toast notifications
+   - Visual confirmation when information already submitted
 
 ### Previous Changes (October 24, 2025)
 1. **Payment Integration Infrastructure**
