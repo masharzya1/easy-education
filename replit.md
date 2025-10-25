@@ -38,21 +38,21 @@ The application now uses an Express.js server that serves both the Vite developm
 - **API Routes**: RESTful endpoints for payment processing, image uploads, and enrollment
 
 ### Recent Changes (October 25, 2025)
-1. **Migrated from RupantorPay to ZiniPay Payment Gateway**
-   - Updated all API endpoints to use ZiniPay API (https://api.zinipay.com/v1/payment/*)
-   - Changed authentication from `X-API-KEY` to `zini-api-key` header
-   - Implemented dual ID system (invoiceId + transactionId) for better payment tracking
-   - **Fixed critical metadata handling bug**: Metadata must be sent as object, not double-stringified
-     * Changed from `metadata: JSON.stringify(metadata)` to `metadata: metadata` in create-payment.js
-     * This was causing all payment creation requests to fail
-   - Resolved all three payment issues:
+1. **Migrated to RupantorPay Payment Gateway with Metadata Fix**
+   - Updated all API endpoints to use RupantorPay API (https://payment.rupantorpay.com/api/*)
+   - Authentication via `X-API-KEY` header
+   - **CRITICAL FIX: Resolved metadata handling bug that caused "userId not found" errors**
+     * Metadata is now sent as JSON object (not double-stringified)
+     * Proper parsing of metadata in webhook and verification responses
+     * Handles both string and object metadata formats for compatibility
+     * Added extensive logging for debugging metadata issues
+   - Fixed all three previous payment issues:
      * Payment link creation failures (metadata now properly formatted)
-     * "Transaction ID not found" errors (support for both invoiceId and transactionId)
+     * "Transaction ID not found" errors (improved verification)
      * "userId not found in metadata" errors (proper metadata parsing throughout flow)
-   - Created comprehensive ZiniPay integration documentation (ZINIPAY_INTEGRATION.md)
-   - Enhanced error handling in Checkout.jsx to properly display error messages (prevents React error #31)
-   - Updated frontend to handle ZiniPay redirect parameters correctly
-   - Environment variable changed from RUPANTORPAY_API_KEY to ZINIPAY_API_KEY
+   - Updated RUPANTORPAY_INTEGRATION.md with metadata fix documentation
+   - Enhanced error handling throughout payment flow
+   - Environment variable: RUPANTORPAY_API_KEY
 
 ### Previous Changes (October 24, 2025)
 1. **Payment Integration Infrastructure**
