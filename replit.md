@@ -123,6 +123,42 @@ The application now uses an Express.js server that serves both the Vite developm
    - Provides code examples for backend integration
    - Troubleshooting guide included
 
+**Session 4: UI Enhancements & Exam Display Fix**
+10. **Dynamic Resource Links for Class Materials**
+   - Added resource links feature to admin class management (ManageClasses.jsx)
+   - Admins can add multiple custom label+link pairs (e.g., "Notes", "PDF", "Assignment")
+   - Each link has label and URL fields with '+' button to add more
+   - Resource links saved to Firebase and displayed on CourseWatch page
+   - New "Class Resources" section shows clickable buttons below class videos
+   - Opens PDFs and external links in new tab with proper security attributes
+
+11. **Home Page Desktop Optimization**
+   - Increased course card grid to 4 columns on xl screens (previously 3)
+   - Category grid now shows 6 columns on xl screens (previously 4)
+   - Reduced section padding from 16 to 12-14 for more compact desktop view
+   - Tighter gaps and spacing between items for professional, dense layout
+   - Maintained mobile-first responsive design
+
+12. **Telegram Form Desktop Optimization**
+   - Made telegram submission form more compact and beautiful on desktop
+   - Reduced overall padding (p-6 → p-4 md:p-5)
+   - Smaller input fields with refined typography (text-xs)
+   - Added max-width constraint (max-w-4xl) to prevent excessive stretching
+   - Header and "Join Group" button displayed side-by-side on desktop
+   - Submit button auto-width on desktop (not full-width)
+   - Maintained mobile stacked layout
+
+13. **Exam Display Fix for Subject-Type Courses**
+   - **Problem:** Exams displayed correctly in "batch" type courses but showed empty in "subject" type courses
+   - **Root Cause:** CourseChapters.jsx (for subject courses) was missing exam fetching logic and exam button
+   - **Solution:** Added complete exam functionality to CourseChapters.jsx:
+     * Imported useExam context and FileQuestion icon
+     * Added exam fetching logic using getExamsByCourse()
+     * Added exam button card to grid (visible when !isArchive && !subject && exams exist)
+     * Navigates to /course/${courseId}/exams route (same as batch courses)
+   - Exams now display consistently across both batch and subject course types
+   - Exam button only appears on course root (chapters list), hidden in archive and subject-specific views
+
 ### Previous Changes (October 24, 2025)
 1. **Payment Integration Infrastructure**
    - Created Express server to handle API routes and serve Vite app
