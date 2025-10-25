@@ -1,15 +1,17 @@
 /**
  * Manual Payment Enrollment Processing
  * Used when webhook fails or for manual verification
- * Official Docs: https://rupantorpay.readme.io/reference/verify-payment
+ * Official Docs: https://rupantorpay.com/developers/docs
  * 
- * CRITICAL FIX: Proper metadata parsing to prevent enrollment failures
+ * CRITICAL FIXES according to official documentation:
+ * 1. Verify endpoint returns direct payment object (not wrapped)
+ * 2. Status is string: "COMPLETED", "PENDING", or "ERROR"
  */
 
 import { processPaymentAndEnrollUser } from './utils/process-payment.js';
 
 const RUPANTORPAY_API_KEY = process.env.RUPANTORPAY_API_KEY;
-const VERIFY_API_URL = 'https://payment.rupantorpay.com/api/verify';
+const VERIFY_API_URL = 'https://payment.rupantorpay.com/api/payment/verify-payment';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -53,29 +55,27 @@ export default async function handler(req, res) {
     const paymentData = await verifyResponse.json();
     console.log('RupantorPay verification response:', JSON.stringify(paymentData, null, 2));
 
-    if (paymentData.status !== 'success' || !paymentData.data) {
+    if (paymentData.status !== 'COMPLETED') {
       return res.status(400).json({
         success: false,
         verified: false,
-        error: paymentData.message || "Payment verification failed"
+        error: paymentData.message || "Payment verification failed or not completed"
       });
     }
 
-    const verifyData = paymentData.data;
-
-    // CRITICAL FIX: Parse metadata properly - handle both string and object formats
+    // Parse metadata - may be JSON string or object
     let metadata = {};
-    if (verifyData.metadata) {
-      if (typeof verifyData.metadata === 'string') {
+    if (paymentData.metadata) {
+      if (typeof paymentData.metadata === 'string') {
         try {
-          metadata = JSON.parse(verifyData.metadata);
+          metadata = JSON.parse(paymentData.metadata);
           console.log('✅ Metadata parsed from string');
         } catch (e) {
           console.error('❌ Failed to parse metadata:', e);
-          console.error('Raw metadata:', verifyData.metadata);
+          console.error('Raw metadata:', paymentData.metadata);
         }
-      } else if (typeof verifyData.metadata === 'object') {
-        metadata = verifyData.metadata;
+      } else if (typeof paymentData.metadata === 'object') {
+        metadata = paymentData.metadata;
         console.log('✅ Metadata is already object');
       }
     }
@@ -103,18 +103,18 @@ export default async function handler(req, res) {
     // Process enrollment
     const result = await processPaymentAndEnrollUser({
       userId: metadataUserId,
-      userName: verifyData.name || metadata.fullname || 'N/A',
-      userEmail: verifyData.email || metadata.email,
-      transactionId: verifyData.transaction_id,
-      invoiceId: verifyData.transaction_id,
-      trxId: verifyData.transaction_id,
-      paymentMethod: verifyData.payment_method || 'N/A',
+      userName: paymentData.fullname || metadata.fullname || 'N/A',
+      userEmail: paymentData.email || metadata.email,
+      transactionId: paymentData.transaction_id,
+      invoiceId: paymentData.transaction_id,
+      trxId: paymentData.trx_id || paymentData.transaction_id,
+      paymentMethod: paymentData.payment_method || 'N/A',
       courses,
-      subtotal: parseFloat(metadata.subtotal || verifyData.amount),
+      subtotal: parseFloat(metadata.subtotal || paymentData.amount),
       discount: parseFloat(metadata.discount || 0),
       couponCode: metadata.couponCode || '',
-      finalAmount: parseFloat(verifyData.amount),
-      currency: 'BDT'
+      finalAmount: parseFloat(paymentData.amount),
+      currency: paymentData.currency || 'BDT'
     });
 
     if (result.success) {
@@ -125,8 +125,8 @@ export default async function handler(req, res) {
         alreadyProcessed: result.alreadyProcessed,
         coursesEnrolled: courses.length,
         payment: {
-          transaction_id: verifyData.transaction_id,
-          amount: verifyData.amount,
+          transaction_id: paymentData.transaction_id,
+          amount: paymentData.amount,
           metadata: metadata
         }
       });

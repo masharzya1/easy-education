@@ -1,13 +1,16 @@
 /**
  * RupantorPay Payment Verification API
  * Verifies payment status using transaction_id
- * Official Docs: https://rupantorpay.readme.io/reference/verify-payment
+ * Official Docs: https://rupantorpay.com/developers/docs
  * 
- * CRITICAL FIX: Proper metadata parsing to handle both string and object formats
+ * CRITICAL FIXES according to official documentation:
+ * 1. Correct endpoint: /api/payment/verify-payment
+ * 2. Response format: returns payment details directly (not wrapped in data object)
+ * 3. Status is string: "COMPLETED", "PENDING", or "ERROR"
  */
 
 const RUPANTORPAY_API_KEY = process.env.RUPANTORPAY_API_KEY;
-const VERIFY_API_URL = 'https://payment.rupantorpay.com/api/verify';
+const VERIFY_API_URL = 'https://payment.rupantorpay.com/api/payment/verify-payment';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -54,58 +57,66 @@ export default async function handler(req, res) {
     console.log('RupantorPay verification response:', JSON.stringify(paymentData, null, 2));
     console.log('Response status code:', response.status);
 
-    if (paymentData.status === 'success' && paymentData.data) {
-      const data = paymentData.data;
-      
-      // CRITICAL FIX: Parse metadata properly - handle both string and object formats
+    // According to docs: response is direct object with status field
+    if (paymentData.status === 'COMPLETED') {
+      // Parse metadata if it's a JSON string
       let metadata = {};
-      if (data.metadata) {
-        if (typeof data.metadata === 'string') {
+      if (paymentData.metadata) {
+        if (typeof paymentData.metadata === 'string') {
           try {
-            metadata = JSON.parse(data.metadata);
-            console.log('✅ Metadata parsed from string:', metadata);
+            metadata = JSON.parse(paymentData.metadata);
+            console.log('✅ Metadata parsed from string');
           } catch (e) {
-            console.error('❌ Failed to parse metadata string:', e);
-            console.error('Raw metadata value:', data.metadata);
+            console.error('❌ Failed to parse metadata:', e);
+            console.error('Raw metadata:', paymentData.metadata);
           }
-        } else if (typeof data.metadata === 'object') {
-          metadata = data.metadata;
-          console.log('✅ Metadata is already an object:', metadata);
+        } else if (typeof paymentData.metadata === 'object') {
+          metadata = paymentData.metadata;
+          console.log('✅ Metadata is already object');
         }
       }
 
       console.log('✅ Payment verified successfully!');
-      console.log('Transaction ID:', data.transaction_id);
-      console.log('Amount:', data.amount);
+      console.log('Transaction ID:', paymentData.transaction_id);
+      console.log('Amount:', paymentData.amount);
       console.log('Parsed metadata:', metadata);
 
       return res.status(200).json({
         success: true,
         verified: true,
         payment: {
-          fullname: data.name || metadata.fullname || 'N/A',
-          email: data.email || metadata.email || 'N/A',
-          amount: data.amount,
-          transaction_id: data.transaction_id,
-          trx_id: data.transaction_id,
-          status: data.status || 'COMPLETED',
-          payment_method: data.payment_method || 'N/A',
+          fullname: paymentData.fullname || 'N/A',
+          email: paymentData.email || 'N/A',
+          amount: paymentData.amount,
+          transaction_id: paymentData.transaction_id,
+          trx_id: paymentData.trx_id,
+          status: paymentData.status,
+          payment_method: paymentData.payment_method || 'N/A',
+          currency: paymentData.currency || 'BDT',
           metadata: metadata
         }
       });
-    } else if (paymentData.status === 'pending') {
+    } else if (paymentData.status === 'PENDING') {
       return res.status(200).json({
         success: true,
         verified: false,
         status: 'pending',
         message: "Payment is still pending"
       });
-    } else {
+    } else if (paymentData.status === 'ERROR' || paymentData.status === false) {
       console.error('❌ Payment verification failed');
       return res.status(400).json({
         success: false,
         verified: false,
         error: paymentData.message || "Payment verification failed"
+      });
+    } else {
+      // Unexpected status
+      console.error('❌ Unexpected status:', paymentData.status);
+      return res.status(400).json({
+        success: false,
+        verified: false,
+        error: "Unexpected payment status"
       });
     }
   } catch (error) {

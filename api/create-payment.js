@@ -1,12 +1,15 @@
 /**
  * RupantorPay Payment Creation API
- * Official Docs: https://rupantorpay.readme.io/reference/new-endpoint
+ * Official Docs: https://rupantorpay.com/developers/docs
  * 
- * CRITICAL FIX: Proper metadata handling to prevent double-stringification
+ * CRITICAL FIXES according to official documentation:
+ * 1. Correct endpoint: /api/payment/checkout (NOT /api/payment/create)
+ * 2. Field name: metadata (NOT meta_data)
+ * 3. Metadata should be sent as JSON object (will be auto-stringified)
  */
 
 const RUPANTORPAY_API_KEY = process.env.RUPANTORPAY_API_KEY;
-const PAYMENT_API_URL = 'https://payment.rupantorpay.com/api/create';
+const PAYMENT_API_URL = 'https://payment.rupantorpay.com/api/payment/checkout';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -39,15 +42,14 @@ export default async function handler(req, res) {
   const baseUrl = `${protocol}://${host}`;
 
   try {
-    // IMPORTANT: Do NOT stringify metadata here - it will be automatically 
-    // stringified when the whole paymentData object is converted to JSON
+    // According to docs: metadata should be JSON object (not stringified)
     const paymentData = {
-      name: fullname,
+      fullname: fullname,
       email: email,
-      amount: parseFloat(amount).toFixed(2),
+      amount: String(parseFloat(amount).toFixed(2)),
       success_url: `${baseUrl}/payment-success`,
       cancel_url: `${baseUrl}/payment-cancel`,
-      // Send metadata as object, NOT as stringified JSON
+      webhook_url: `${baseUrl}/api/payment-webhook`,
       metadata: metadata || {}
     };
 
@@ -56,15 +58,15 @@ export default async function handler(req, res) {
       email, 
       amount: paymentData.amount,
       baseUrl,
-      metadata_type: typeof metadata,
-      metadata: metadata 
+      metadata: metadata
     });
 
     const response = await fetch(PAYMENT_API_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-API-KEY': RUPANTORPAY_API_KEY
+        'X-API-KEY': RUPANTORPAY_API_KEY,
+        'X-CLIENT': host || 'localhost'
       },
       body: JSON.stringify(paymentData)
     });
@@ -73,20 +75,21 @@ export default async function handler(req, res) {
     console.log('RupantorPay create payment response:', JSON.stringify(data, null, 2));
     console.log('Response status code:', response.status);
 
-    if (data.status === 'success' && data.payment_url) {
+    // According to docs: success response has status: 1 (number, not string)
+    if (data.status === 1 && data.payment_url) {
       console.log('✅ Payment created successfully');
       console.log('Payment URL:', data.payment_url);
       
       return res.status(200).json({
         success: true,
         payment_url: data.payment_url,
-        message: "Payment link created successfully"
+        message: data.message || "Payment link created successfully"
       });
     } else {
       console.error('❌ RupantorPay error response:', data);
       return res.status(400).json({
         success: false,
-        error: data.message || data.error || "Failed to create payment link"
+        error: data.message || "Failed to create payment link"
       });
     }
   } catch (error) {

@@ -1,15 +1,18 @@
 /**
  * RupantorPay Payment Webhook Handler
  * Receives payment notifications from RupantorPay and processes enrollment
- * Official Docs: https://rupantorpay.readme.io/
+ * Official Docs: https://rupantorpay.com/developers/docs
  * 
- * CRITICAL FIX: Proper metadata parsing from webhook data
+ * CRITICAL FIXES according to official documentation:
+ * 1. Webhook receives: transactionId, paymentMethod, paymentAmount, paymentFee, currency, status
+ * 2. Status can be: PENDING, COMPLETED, or ERROR
+ * 3. Must verify payment with API before processing
  */
 
 import { processPaymentAndEnrollUser } from './utils/process-payment.js';
 
 const RUPANTORPAY_API_KEY = process.env.RUPANTORPAY_API_KEY;
-const VERIFY_API_URL = 'https://payment.rupantorpay.com/api/verify';
+const VERIFY_API_URL = 'https://payment.rupantorpay.com/api/payment/verify-payment';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -24,13 +27,14 @@ export default async function handler(req, res) {
     const webhookData = req.body;
     
     console.log('RupantorPay webhook received:', {
-      transactionId: webhookData.transactionId || webhookData.transaction_id,
+      transactionId: webhookData.transactionId,
       status: webhookData.status,
-      amount: webhookData.paymentAmount || webhookData.amount
+      paymentAmount: webhookData.paymentAmount,
+      paymentMethod: webhookData.paymentMethod
     });
 
     // Only process completed payments
-    if (webhookData.status !== 'COMPLETED' && webhookData.status !== 'completed' && webhookData.status !== 'success') {
+    if (webhookData.status !== 'COMPLETED') {
       console.log(`Webhook received with status: ${webhookData.status}, not processing`);
       return res.status(200).json({ 
         success: true, 
@@ -38,8 +42,17 @@ export default async function handler(req, res) {
       });
     }
 
+    const transactionId = webhookData.transactionId;
+    
+    if (!transactionId) {
+      console.error('❌ No transaction ID in webhook data');
+      return res.status(400).json({
+        success: false,
+        error: "No transaction ID in webhook data"
+      });
+    }
+
     // Verify payment with RupantorPay to prevent fraud
-    const transactionId = webhookData.transactionId || webhookData.transaction_id;
     const verifyResponse = await fetch(VERIFY_API_URL, {
       method: 'POST',
       headers: {
@@ -51,7 +64,7 @@ export default async function handler(req, res) {
 
     const paymentData = await verifyResponse.json();
 
-    if (paymentData.status !== 'success' || !paymentData.data) {
+    if (paymentData.status !== 'COMPLETED') {
       console.log('Payment verification failed or not completed:', paymentData.status);
       return res.status(200).json({ 
         success: true, 
@@ -59,25 +72,23 @@ export default async function handler(req, res) {
       });
     }
 
-    const verifyData = paymentData.data;
-
     console.log('✅ Webhook - Payment verified successfully!');
-    console.log('Transaction ID:', verifyData.transaction_id);
-    console.log('Amount:', verifyData.amount);
+    console.log('Transaction ID:', paymentData.transaction_id);
+    console.log('Amount:', paymentData.amount);
 
-    // CRITICAL FIX: Parse metadata properly - handle both string and object formats
+    // Parse metadata - may be JSON string or object
     let metadata = {};
-    if (verifyData.metadata) {
-      if (typeof verifyData.metadata === 'string') {
+    if (paymentData.metadata) {
+      if (typeof paymentData.metadata === 'string') {
         try {
-          metadata = JSON.parse(verifyData.metadata);
+          metadata = JSON.parse(paymentData.metadata);
           console.log('✅ Webhook - Metadata parsed from string');
         } catch (e) {
           console.error('❌ Webhook - Failed to parse metadata:', e);
-          console.error('Raw metadata:', verifyData.metadata);
+          console.error('Raw metadata:', paymentData.metadata);
         }
-      } else if (typeof verifyData.metadata === 'object') {
-        metadata = verifyData.metadata;
+      } else if (typeof paymentData.metadata === 'object') {
+        metadata = paymentData.metadata;
         console.log('✅ Webhook - Metadata is already object');
       }
     }
@@ -98,18 +109,18 @@ export default async function handler(req, res) {
     // Process payment and enroll user in courses
     const result = await processPaymentAndEnrollUser({
       userId,
-      userName: verifyData.name || metadata.fullname || 'N/A',
-      userEmail: verifyData.email || metadata.email,
-      transactionId: verifyData.transaction_id,
-      invoiceId: verifyData.transaction_id,
-      trxId: verifyData.transaction_id,
-      paymentMethod: verifyData.payment_method || webhookData.paymentMethod || 'N/A',
+      userName: paymentData.fullname || metadata.fullname || 'N/A',
+      userEmail: paymentData.email || metadata.email,
+      transactionId: paymentData.transaction_id,
+      invoiceId: paymentData.transaction_id,
+      trxId: paymentData.trx_id || paymentData.transaction_id,
+      paymentMethod: paymentData.payment_method || webhookData.paymentMethod || 'N/A',
       courses,
-      subtotal: parseFloat(metadata.subtotal || verifyData.amount),
+      subtotal: parseFloat(metadata.subtotal || paymentData.amount),
       discount: parseFloat(metadata.discount || 0),
       couponCode: metadata.couponCode || '',
-      finalAmount: parseFloat(verifyData.amount),
-      currency: 'BDT'
+      finalAmount: parseFloat(paymentData.amount),
+      currency: paymentData.currency || 'BDT'
     });
 
     if (result.success) {
