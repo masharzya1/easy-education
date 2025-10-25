@@ -3,10 +3,11 @@
 import { useState, useEffect } from "react"
 import { useParams, useNavigate, useLocation } from "react-router-dom"
 import { motion } from "framer-motion"
-import { BookOpen, ArrowLeft, Lock, Archive, Send, CheckCircle2 } from "lucide-react"
+import { BookOpen, ArrowLeft, Lock, Archive, Send, CheckCircle2, FileQuestion } from "lucide-react"
 import { doc, getDoc, collection, query, where, getDocs, addDoc, serverTimestamp } from "firebase/firestore"
 import { db } from "../lib/firebase"
 import { useAuth } from "../contexts/AuthContext"
+import { useExam } from "../contexts/ExamContext"
 import { toast as showGlobalToast } from "../hooks/use-toast"
 
 export default function CourseChapters() {
@@ -14,9 +15,11 @@ export default function CourseChapters() {
   const navigate = useNavigate()
   const location = useLocation()
   const { currentUser, isAdmin } = useAuth()
+  const { getExamsByCourse } = useExam()
   const [course, setCourse] = useState(null)
   const [chapters, setChapters] = useState([])
   const [subjects, setSubjects] = useState([])
+  const [exams, setExams] = useState([])
   const [loading, setLoading] = useState(true)
   const [hasAccess, setHasAccess] = useState(false)
   const [telegramId, setTelegramId] = useState("")
@@ -206,6 +209,9 @@ export default function CourseChapters() {
           setChapters(uniqueChapters)
           setSubjects([])
         }
+
+        const examsData = await getExamsByCourse(courseId)
+        setExams(examsData)
       }
     } catch (error) {
       console.error("Error fetching course data:", error)
@@ -404,6 +410,27 @@ export default function CourseChapters() {
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {!isArchive && !subject && exams.length > 0 && (
+            <motion.button
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0 }}
+              onClick={() => navigate(`/course/${courseId}/exams`)}
+              className="group relative bg-card border border-border rounded-xl p-6 hover:border-primary/50 hover:shadow-lg transition-all duration-300 text-left"
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-secondary/5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="relative">
+                <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
+                  <FileQuestion className="w-6 h-6 text-primary" />
+                </div>
+                <h3 className="text-xl font-bold mb-2 group-hover:text-primary transition-colors">Exams</h3>
+                <p className="text-sm text-muted-foreground">
+                  {exams.length} exam{exams.length !== 1 ? "s" : ""} available
+                </p>
+              </div>
+            </motion.button>
+          )}
+
           {isArchive && subjects.length > 0
             ? subjects.map((archiveSubject, index) => (
                 <motion.button
