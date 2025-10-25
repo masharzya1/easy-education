@@ -237,7 +237,7 @@ export default function ExamView() {
         description: `You scored ${score}%${score >= exam.passingScore ? " - Passed! 🎉" : ""}`,
       })
 
-      setTimeout(() => navigate(-1), 2000)
+      setTimeout(() => navigate(`/exam/${examId}/result`), 1500)
     } catch (error) {
       console.error("[v0] Error submitting exam:", error)
       toast({

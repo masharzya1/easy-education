@@ -185,6 +185,9 @@ export function ExamProvider({ children }) {
         throw new Error("User ID and Exam ID are required")
       }
 
+      const previousAttempts = await getUserExamAttempts(userId, examId)
+      const attemptNumber = previousAttempts.length + 1
+
       const wrongAnswers = questions
         .filter((q, index) => {
           const userAnswer = answers[q.id]
@@ -212,6 +215,7 @@ export function ExamProvider({ children }) {
         userId,
         examId,
         score,
+        attemptNumber,
         totalQuestions: questions.length,
         cqAnswersCount: cqAnswers.length,
         wrongAnswersCount: wrongAnswers.length,
@@ -228,7 +232,8 @@ export function ExamProvider({ children }) {
         submittedAt: serverTimestamp(),
         cqGraded: false,
         cqScore: 0,
-        totalScore: score, // Initial total score is MCQ score, will be updated when CQ is graded
+        totalScore: score,
+        attemptNumber,
       })
 
       console.log("[v0] Exam result submitted successfully:", result.id)
@@ -244,12 +249,68 @@ export function ExamProvider({ children }) {
       const q = query(collection(db, "examResults"), where("userId", "==", userId), where("examId", "==", examId))
       const snapshot = await getDocs(q)
       if (!snapshot.empty) {
-        return { id: snapshot.docs[0].id, ...snapshot.docs[0].data() }
+        const results = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+        results.sort((a, b) => (b.totalScore || b.score) - (a.totalScore || a.score))
+        return results[0]
       }
       return null
     } catch (error) {
       console.error("Error fetching exam result:", error)
       return null
+    }
+  }
+
+  const getUserExamAttempts = async (userId, examId) => {
+    try {
+      const q = query(collection(db, "examResults"), where("userId", "==", userId), where("examId", "==", examId))
+      const snapshot = await getDocs(q)
+      const results = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+      results.sort((a, b) => (a.attemptNumber || 1) - (b.attemptNumber || 1))
+      return results
+    } catch (error) {
+      console.error("Error fetching user exam attempts:", error)
+      return []
+    }
+  }
+
+  const getExamLeaderboard = async (examId, limit = 10) => {
+    try {
+      const q = query(collection(db, "examResults"), where("examId", "==", examId))
+      const snapshot = await getDocs(q)
+      
+      const userBestScores = {}
+      snapshot.docs.forEach(doc => {
+        const data = doc.data()
+        const userId = data.userId
+        const score = data.totalScore || data.score || 0
+        
+        if (!userBestScores[userId] || score > userBestScores[userId].score) {
+          userBestScores[userId] = {
+            id: doc.id,
+            ...data,
+            score
+          }
+        }
+      })
+
+      const leaderboard = Object.values(userBestScores)
+      leaderboard.sort((a, b) => b.score - a.score)
+      
+      return leaderboard.slice(0, limit)
+    } catch (error) {
+      console.error("Error fetching leaderboard:", error)
+      return []
+    }
+  }
+
+  const getAllExamResults = async (examId) => {
+    try {
+      const q = query(collection(db, "examResults"), where("examId", "==", examId))
+      const snapshot = await getDocs(q)
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+    } catch (error) {
+      console.error("Error fetching all exam results:", error)
+      return []
     }
   }
 
@@ -312,6 +373,9 @@ export function ExamProvider({ children }) {
     submitExamResult,
     getExamResult,
     getUserExamResults,
+    getUserExamAttempts,
+    getExamLeaderboard,
+    getAllExamResults,
     copyExamQuestions,
   }
 
