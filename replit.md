@@ -100,18 +100,28 @@ The application now uses an Express.js server that serves both the Vite developm
    - Cleaned up sidebar to focus on actual course purchase options
    - Streamlined course detail page for better user experience
 
-8. **Telegram Integration in Course Watch**
-   - Added Telegram community section in CourseWatch page
+8. **Telegram Integration - Moved to First Page After Continue Course**
+   - Telegram form moved from CourseWatch to CourseSubjects and CourseChapters pages
+   - Appears on first page when user clicks "Continue Course" button
+   - Automatically shows based on course type (batch → subjects page, subject → chapters page)
    - Join button with direct link to course's Telegram group (course.telegramLink)
    - Student information submission form (one-time per course per user):
-     * Auto-filled webapp account name (from user profile)
+     * Auto-filled webapp account name (from user profile) 
      * Auto-filled webapp account email (from user account)
-     * Telegram ID input field (manual entry)
-     * Mobile number input field (manual entry)
+     * Telegram ID input field (manual entry, separate field)
+     * Mobile number input field (manual entry, separate field)
    - Form submission stored in Firestore collection "telegramSubmissions"
    - Prevents duplicate submissions per course per user
    - Success/error feedback with toast notifications
    - Visual confirmation when information already submitted
+
+9. **Google Sheets Integration Documentation**
+   - Created comprehensive documentation in GOOGLE_SHEETS_INTEGRATION.md
+   - Includes two setup methods: Replit Integration (recommended) and Manual Setup
+   - Step-by-step guide for automatic student purchase data export to Google Sheets
+   - Covers OAuth2 setup, API configuration, and security best practices
+   - Provides code examples for backend integration
+   - Troubleshooting guide included
 
 ### Previous Changes (October 24, 2025)
 1. **Payment Integration Infrastructure**
