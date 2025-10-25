@@ -46,7 +46,7 @@ export default async function handler(req, res) {
       redirect_url: `${baseUrl}/payment-success`,
       cancel_url: `${baseUrl}/payment-cancel`,
       webhook_url: `${baseUrl}/api/payment-webhook`,
-      metadata: JSON.stringify(metadata || {})
+      metadata: metadata || {}
     };
 
     console.log('Creating ZiniPay payment:', { 

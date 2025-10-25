@@ -42,13 +42,15 @@ The application now uses an Express.js server that serves both the Vite developm
    - Updated all API endpoints to use ZiniPay API (https://api.zinipay.com/v1/payment/*)
    - Changed authentication from `X-API-KEY` to `zini-api-key` header
    - Implemented dual ID system (invoiceId + transactionId) for better payment tracking
-   - Fixed metadata handling to properly stringify on creation and parse on verification
+   - **Fixed critical metadata handling bug**: Metadata must be sent as object, not double-stringified
+     * Changed from `metadata: JSON.stringify(metadata)` to `metadata: metadata` in create-payment.js
+     * This was causing all payment creation requests to fail
    - Resolved all three payment issues:
-     * Payment link creation failures (metadata now properly stringified)
+     * Payment link creation failures (metadata now properly formatted)
      * "Transaction ID not found" errors (support for both invoiceId and transactionId)
      * "userId not found in metadata" errors (proper metadata parsing throughout flow)
    - Created comprehensive ZiniPay integration documentation (ZINIPAY_INTEGRATION.md)
-   - Enhanced error handling and logging for better debugging
+   - Enhanced error handling in Checkout.jsx to properly display error messages (prevents React error #31)
    - Updated frontend to handle ZiniPay redirect parameters correctly
    - Environment variable changed from RUPANTORPAY_API_KEY to ZINIPAY_API_KEY
 

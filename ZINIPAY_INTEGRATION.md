@@ -12,6 +12,29 @@ Add this in your environment settings (Vercel, Replit Secrets, etc.):
    - Your API key from ZiniPay dashboard
    - Get it from: https://zinipay.com/dashboard → API Settings → API Key
 
+## Important Implementation Details
+
+### Metadata Handling
+**Critical:** Metadata must be sent as a JSON object, NOT a stringified string.
+
+✅ **Correct:**
+```javascript
+const paymentData = {
+  metadata: { userId: "123", courses: [...] }
+};
+fetch(url, { body: JSON.stringify(paymentData) });
+```
+
+❌ **Incorrect:**
+```javascript
+const paymentData = {
+  metadata: JSON.stringify({ userId: "123", courses: [...] })  // Double stringification!
+};
+fetch(url, { body: JSON.stringify(paymentData) });
+```
+
+The metadata field is automatically stringified when the entire payload is converted to JSON. Double-stringifying causes ZiniPay to reject the request.
+
 ## API Endpoints
 
 ### 1. Create Payment (`/api/create-payment`)
