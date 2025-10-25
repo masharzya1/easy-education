@@ -282,38 +282,39 @@ export default function CourseChapters() {
 
         {/* Telegram Join Section */}
         {course?.telegramLink && (
-          <div className="bg-gradient-to-br from-blue-50/80 to-cyan-50/50 dark:from-blue-950/30 dark:to-cyan-950/20 border-2 border-blue-200 dark:border-blue-800 rounded-xl p-6 mb-8 shadow-lg">
-            <h2 className="text-xl font-bold mb-3 flex items-center gap-2">
-              <Send className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-              <span className="bg-gradient-to-r from-blue-600 to-cyan-600 dark:from-blue-400 dark:to-cyan-400 bg-clip-text text-transparent">
-                Join Telegram Community
-              </span>
-            </h2>
-            
-            <p className="text-sm text-muted-foreground mb-4">
-              Join our Telegram group to get updates, interact with instructors, and connect with fellow students.
-            </p>
-
-            <a
-              href={course.telegramLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block w-full md:w-auto md:inline-block py-3 px-6 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white rounded-lg transition-all font-medium text-center mb-6 shadow-md hover:shadow-lg"
-            >
-              <div className="flex items-center justify-center gap-2">
-                <Send className="w-5 h-5" />
-                <span>Join Telegram Group</span>
+          <div className="bg-gradient-to-br from-blue-50/80 to-cyan-50/50 dark:from-blue-950/30 dark:to-cyan-950/20 border-2 border-blue-200 dark:border-blue-800 rounded-xl p-4 md:p-5 mb-6 shadow-lg max-w-4xl">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
+              <div>
+                <h2 className="text-lg md:text-xl font-bold mb-1.5 flex items-center gap-2">
+                  <Send className="w-4 h-4 md:w-5 md:h-5 text-blue-600 dark:text-blue-400" />
+                  <span className="bg-gradient-to-r from-blue-600 to-cyan-600 dark:from-blue-400 dark:to-cyan-400 bg-clip-text text-transparent">
+                    Join Telegram Community
+                  </span>
+                </h2>
+                <p className="text-xs md:text-sm text-muted-foreground">
+                  Get updates and connect with instructors and students
+                </p>
               </div>
-            </a>
 
-            <div className="border-t border-blue-200 dark:border-blue-800 pt-4">
-              <h3 className="font-semibold mb-3 text-sm">Submit Your Telegram Information</h3>
+              <a
+                href={course.telegramLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-shrink-0 py-2 md:py-2.5 px-4 md:px-5 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white rounded-lg transition-all font-medium text-center shadow-md hover:shadow-lg text-sm flex items-center justify-center gap-2"
+              >
+                <Send className="w-4 h-4" />
+                <span>Join Group</span>
+              </a>
+            </div>
+
+            <div className="border-t border-blue-200 dark:border-blue-800 pt-3">
+              <h3 className="font-semibold mb-2.5 text-xs md:text-sm">Submit Your Telegram Information</h3>
               
               {telegramSubmitted ? (
-                <div className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg p-4 flex items-start gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
+                <div className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg p-3 flex items-start gap-2.5">
+                  <CheckCircle2 className="w-4 h-4 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
                   <div>
-                    <p className="font-medium text-green-700 dark:text-green-300 text-sm mb-1">
+                    <p className="font-medium text-green-700 dark:text-green-300 text-xs mb-0.5">
                       Information Submitted
                     </p>
                     <p className="text-xs text-green-600 dark:text-green-400">
@@ -322,36 +323,36 @@ export default function CourseChapters() {
                   </div>
                 </div>
               ) : (
-                <form onSubmit={handleTelegramSubmit} className="space-y-3">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <form onSubmit={handleTelegramSubmit} className="space-y-2.5">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
                     <div>
-                      <label className="block text-xs font-medium text-muted-foreground mb-1.5">
+                      <label className="block text-xs font-medium text-muted-foreground mb-1">
                         Webapp Account Name
                       </label>
                       <input
                         type="text"
                         value={currentUser?.displayName || currentUser?.email || ""}
                         disabled
-                        className="w-full px-3 py-2 bg-muted/50 border border-border rounded-lg text-sm"
+                        className="w-full px-2.5 py-1.5 bg-muted/50 border border-border rounded-lg text-xs"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-xs font-medium text-muted-foreground mb-1.5">
+                      <label className="block text-xs font-medium text-muted-foreground mb-1">
                         Webapp Account Gmail
                       </label>
                       <input
                         type="email"
                         value={currentUser?.email || ""}
                         disabled
-                        className="w-full px-3 py-2 bg-muted/50 border border-border rounded-lg text-sm"
+                        className="w-full px-2.5 py-1.5 bg-muted/50 border border-border rounded-lg text-xs"
                       />
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
                     <div>
-                      <label className="block text-xs font-medium text-muted-foreground mb-1.5">
+                      <label className="block text-xs font-medium text-muted-foreground mb-1">
                         তোমার টেলিগ্রাম আইডির নাম লিখো [যেই আইডি থেকে রিকুয়েস্ট পাঠানো হয়েছে]
                       </label>
                       <input
@@ -360,12 +361,12 @@ export default function CourseChapters() {
                         onChange={(e) => setTelegramId(e.target.value)}
                         placeholder="Example: Shakib"
                         required
-                        className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-2.5 py-1.5 bg-background border border-border rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-xs font-medium text-muted-foreground mb-1.5">
+                      <label className="block text-xs font-medium text-muted-foreground mb-1">
                         Mobile Number
                       </label>
                       <input
@@ -374,7 +375,7 @@ export default function CourseChapters() {
                         onChange={(e) => setTelegramMobile(e.target.value)}
                         placeholder="01912345678"
                         required
-                        className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-2.5 py-1.5 bg-background border border-border rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
                   </div>
@@ -382,7 +383,7 @@ export default function CourseChapters() {
                   <button
                     type="submit"
                     disabled={submittingTelegram || !telegramId.trim() || !telegramMobile.trim()}
-                    className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-white rounded-lg transition-colors font-medium text-sm flex items-center justify-center gap-2"
+                    className="w-full md:w-auto py-2 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-white rounded-lg transition-colors font-medium text-xs flex items-center justify-center gap-2"
                   >
                     {submittingTelegram ? (
                       <>

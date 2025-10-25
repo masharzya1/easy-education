@@ -34,6 +34,7 @@ export default function ManageClasses() {
     imageLink: "",
     teacherImageType: "upload",
     teacherImageLink: "",
+    resourceLinks: [],
   })
   const [imageFile, setImageFile] = useState(null)
   const [teacherImageFile, setTeacherImageFile] = useState(null)
@@ -176,6 +177,7 @@ export default function ManageClasses() {
         imageLink: classItem.imageURL || "",
         teacherImageType: classItem.teacherImageURL?.startsWith("http") ? "link" : "upload",
         teacherImageLink: classItem.teacherImageURL || "",
+        resourceLinks: Array.isArray(classItem.resourceLinks) ? classItem.resourceLinks : [],
       })
       setVideoType(classItem.youtubeLink ? "youtube" : "hls")
     } else {
@@ -193,6 +195,7 @@ export default function ManageClasses() {
         imageLink: "",
         teacherImageType: "upload",
         teacherImageLink: "",
+        resourceLinks: [],
       })
       setVideoType("youtube")
     }
@@ -245,6 +248,7 @@ export default function ManageClasses() {
             ? [formData.teacherName]
             : [],
         teacherImageURL,
+        resourceLinks: Array.isArray(formData.resourceLinks) ? formData.resourceLinks : [],
       }
 
       if (editingClass) {
@@ -885,6 +889,68 @@ export default function ManageClasses() {
                     </p>
                   </div>
                 ) : null}
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-xs font-medium">Resource Links</label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFormData({
+                        ...formData,
+                        resourceLinks: [...formData.resourceLinks, { label: "", url: "" }]
+                      })
+                    }}
+                    className="flex items-center gap-1 px-2 py-1 text-xs bg-primary/10 hover:bg-primary/20 text-primary rounded transition-colors"
+                  >
+                    <Plus className="w-3 h-3" />
+                    Add Link
+                  </button>
+                </div>
+                <div className="space-y-2">
+                  {formData.resourceLinks.map((link, index) => (
+                    <div key={index} className="flex gap-2 items-start p-2 bg-muted/30 rounded border border-border">
+                      <div className="flex-1 space-y-2">
+                        <input
+                          type="text"
+                          value={link.label}
+                          onChange={(e) => {
+                            const updated = [...formData.resourceLinks]
+                            updated[index].label = e.target.value
+                            setFormData({ ...formData, resourceLinks: updated })
+                          }}
+                          placeholder="Button label (e.g., Notes, PDF, Assignment)"
+                          className="w-full px-2 py-1.5 text-xs bg-background border border-border rounded focus:outline-none focus:ring-2 focus:ring-primary"
+                        />
+                        <input
+                          type="url"
+                          value={link.url}
+                          onChange={(e) => {
+                            const updated = [...formData.resourceLinks]
+                            updated[index].url = e.target.value
+                            setFormData({ ...formData, resourceLinks: updated })
+                          }}
+                          placeholder="Link (PDF, Google Drive, image, etc.)"
+                          className="w-full px-2 py-1.5 text-xs bg-background border border-border rounded focus:outline-none focus:ring-2 focus:ring-primary"
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updated = formData.resourceLinks.filter((_, i) => i !== index)
+                          setFormData({ ...formData, resourceLinks: updated })
+                        }}
+                        className="p-1 text-red-500 hover:bg-red-500/10 rounded transition-colors"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Add custom resource links that will appear as buttons below the class
+                </p>
               </div>
 
               <div className="flex gap-2 pt-3">

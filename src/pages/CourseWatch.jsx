@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useParams, useNavigate, Link } from "react-router-dom"
 import { motion } from "framer-motion"
-import { ThumbsUp, ThumbsDown, Play, BookOpen, GraduationCap, User, Award, Clock, Lock, FileQuestion } from "lucide-react"
+import { ThumbsUp, ThumbsDown, Play, BookOpen, GraduationCap, User, Award, Clock, Lock, FileQuestion, FileText, ExternalLink } from "lucide-react"
 import {
   doc,
   getDoc,
@@ -510,6 +510,32 @@ export default function CourseWatch() {
                 </div>
               )}
             </div>
+
+            {currentClass?.resourceLinks && currentClass.resourceLinks.length > 0 && (
+              <div className="bg-card border border-border rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-lg">
+                <h2 className="text-lg sm:text-xl font-bold flex items-center gap-2 mb-4">
+                  <FileText className="w-5 h-5 text-primary" />
+                  Class Resources
+                </h2>
+                <div className="flex flex-wrap gap-3">
+                  {currentClass.resourceLinks.map((resource, index) => (
+                    resource.label && resource.url && (
+                      <a
+                        key={index}
+                        href={resource.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 px-4 py-2.5 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-all border border-primary/20 hover:border-primary/40 font-medium text-sm group"
+                      >
+                        <FileText className="w-4 h-4" />
+                        {resource.label}
+                        <ExternalLink className="w-3.5 h-3.5 opacity-60 group-hover:opacity-100 transition-opacity" />
+                      </a>
+                    )
+                  ))}
+                </div>
+              </div>
+            )}
 
             {exams.length > 0 && (
               <div className="bg-card border border-border rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-lg">
