@@ -13,19 +13,38 @@ import { toast } from "../hooks/use-toast"
 export default function Checkout() {
   const navigate = useNavigate()
   const { currentUser, userProfile } = useAuth()
-  const { cartItems, getTotal, clearCart } = useCart()
+  const { cartItems, getTotal, clearCart, isLoaded: isCartLoaded } = useCart()
   const [loading, setLoading] = useState(false)
   const [couponCode, setCouponCode] = useState("")
   const [appliedCoupon, setAppliedCoupon] = useState(null)
   const [couponError, setCouponError] = useState("")
   const [purchasedCourses, setPurchasedCourses] = useState(new Set())
+  const [isCouponLoaded, setIsCouponLoaded] = useState(false)
 
   useEffect(() => {
+    const storedCoupon = sessionStorage.getItem("appliedCoupon")
+    if (storedCoupon) {
+      try {
+        const coupon = JSON.parse(storedCoupon)
+        setAppliedCoupon(coupon)
+        setCouponCode(coupon.code)
+      } catch (error) {
+        console.error("Error loading coupon from session:", error)
+        sessionStorage.removeItem("appliedCoupon")
+      }
+    }
+    setIsCouponLoaded(true)
+  }, [])
+
+  useEffect(() => {
+    if (!isCouponLoaded || !isCartLoaded) return
+
     if (!currentUser) {
       navigate("/login")
       return
     }
     if (cartItems.length === 0) {
+      sessionStorage.removeItem("appliedCoupon")
       navigate("/courses")
       return
     }
@@ -53,7 +72,7 @@ export default function Checkout() {
     }
 
     fetchPurchasedCourses()
-  }, [currentUser, cartItems, navigate])
+  }, [currentUser, cartItems, navigate, isCouponLoaded, isCartLoaded])
 
   const validateCoupon = useCallback(async () => {
     if (!couponCode.trim()) {
@@ -101,6 +120,7 @@ export default function Checkout() {
 
       setAppliedCoupon(coupon)
       setCouponError("")
+      sessionStorage.setItem("appliedCoupon", JSON.stringify(coupon))
     } catch (error) {
       console.error("Error validating coupon:", error)
       setCouponError("Failed to validate coupon")
@@ -178,6 +198,7 @@ export default function Checkout() {
 
         if (enrollData.success) {
           clearCart()
+          sessionStorage.removeItem("appliedCoupon")
           toast({
             variant: "success",
             title: "Enrolled Successfully!",
@@ -212,6 +233,7 @@ export default function Checkout() {
 
       if (data.success && data.payment_url) {
         clearCart()
+        sessionStorage.removeItem("appliedCoupon")
         window.location.href = data.payment_url
       } else {
         // Handle error - ensure it's always a string

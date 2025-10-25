@@ -19,6 +19,7 @@ export default function CourseDetail() {
   const [hasAccess, setHasAccess] = useState(false)
   const [isInCart, setIsInCart] = useState(false)
   const [hasPendingPayment, setHasPendingPayment] = useState(false)
+  const [teachers, setTeachers] = useState([])
 
   useEffect(() => {
     fetchCourseData()
@@ -36,6 +37,19 @@ export default function CourseDetail() {
       if (courseDoc.exists()) {
         const courseData = { id: courseDoc.id, ...courseDoc.data() }
         setCourse(courseData)
+
+        if (courseData.instructors && courseData.instructors.length > 0) {
+          const teachersQuery = query(
+            collection(db, "teachers"),
+            where("name", "in", courseData.instructors.slice(0, 10))
+          )
+          const teachersSnapshot = await getDocs(teachersQuery)
+          const teachersData = teachersSnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          }))
+          setTeachers(teachersData)
+        }
 
         if (currentUser) {
           const paymentsQuery = query(
@@ -240,6 +254,44 @@ export default function CourseDetail() {
                     ))}
                   </div>
                 </div>
+
+                {/* Teachers Section */}
+                {teachers.length > 0 && (
+                  <div className="border-t border-border pt-6 mt-6">
+                    <h3 className="text-xl font-semibold mb-4">Course Instructors</h3>
+                    <div className="grid grid-cols-1 gap-4">
+                      {teachers.map((teacher) => (
+                        <div
+                          key={teacher.id}
+                          className="flex items-start gap-4 p-4 bg-muted/30 border border-border rounded-lg hover:bg-muted/50 transition-colors"
+                        >
+                          <div className="flex-shrink-0">
+                            {teacher.imageURL ? (
+                              <img
+                                src={teacher.imageURL}
+                                alt={teacher.name}
+                                className="w-16 h-16 rounded-full object-cover border-2 border-primary/20"
+                              />
+                            ) : (
+                              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+                                <Users className="w-8 h-8 text-white" />
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-semibold text-base mb-1">{teacher.name}</h4>
+                            {teacher.expertise && (
+                              <p className="text-xs text-primary mb-2">{teacher.expertise}</p>
+                            )}
+                            {teacher.bio && (
+                              <p className="text-sm text-muted-foreground line-clamp-2">{teacher.bio}</p>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </motion.div>
           </div>

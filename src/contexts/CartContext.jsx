@@ -13,6 +13,7 @@ export const useCart = () => {
 export function CartProvider({ children }) {
   const [cartItems, setCartItems] = useState([])
   const [isOpen, setIsOpen] = useState(false)
+  const [isLoaded, setIsLoaded] = useState(false)
 
   useEffect(() => {
     const stored = localStorage.getItem("cart")
@@ -23,6 +24,7 @@ export function CartProvider({ children }) {
         console.error("Error loading cart:", error)
       }
     }
+    setIsLoaded(true)
   }, [])
 
   useEffect(() => {
@@ -62,6 +64,7 @@ export function CartProvider({ children }) {
     isOpen,
     openCart,
     closeCart,
+    isLoaded,
   }
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>
