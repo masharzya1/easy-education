@@ -286,8 +286,8 @@ export default function CourseChapters() {
           </p>
         </div>
 
-        {/* Telegram Join Section */}
-        {course?.telegramLink && (
+        {/* Telegram Join Section - Only show on first page (subject-based courses or archive root) */}
+        {course?.telegramLink && !subject && !isArchiveSubject && !telegramSubmitted && (
           <div className="bg-gradient-to-br from-blue-50/80 to-cyan-50/50 dark:from-blue-950/30 dark:to-cyan-950/20 border-2 border-blue-200 dark:border-blue-800 rounded-xl p-4 md:p-5 mb-6 shadow-lg max-w-4xl">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
               <div>

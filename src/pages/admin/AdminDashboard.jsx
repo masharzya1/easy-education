@@ -37,6 +37,7 @@ import ManageChapters from "./ManageChapters"
 import ManageExams from "./ManageExams"
 import ManageExamQuestions from "./ManageExamQuestions"
 import ViewExamSubmissions from "./ViewExamSubmissions"
+import ViewExamResults from "./ViewExamResults"
 import ManageTelegramSubmissions from "./ManageTelegramSubmissions"
 
 export default function AdminDashboard() {
@@ -50,6 +51,7 @@ export default function AdminDashboard() {
     { name: "Courses", path: "/admin/courses", icon: BookOpen },
     { name: "Classes", path: "/admin/classes", icon: Video },
     { name: "Exams", path: "/admin/exams", icon: FileQuestion },
+    { name: "Exam Results", path: "/admin/exam-results", icon: BarChart3 },
     { name: "CQ Submissions", path: "/admin/exam-submissions", icon: FileQuestion },
     { name: "Subjects", path: "/admin/subjects", icon: BookMarked },
     { name: "Chapters", path: "/admin/chapters", icon: BookMarked },
@@ -129,6 +131,7 @@ export default function AdminDashboard() {
               <Route path="classes" element={<ManageClasses />} />
               <Route path="exams" element={<ManageExams />} />
               <Route path="exams/:examId/questions" element={<ManageExamQuestions />} />
+              <Route path="exam-results" element={<ViewExamResults />} />
               <Route path="exam-submissions" element={<ViewExamSubmissions />} />
               <Route path="subjects" element={<ManageSubjects />} />
               <Route path="chapters" element={<ManageChapters />} />

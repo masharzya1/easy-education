@@ -63,13 +63,6 @@ export default function ExamView() {
         setHasStarted(true)
         const answersMap = existingResult.answers || {}
         setAnswers(answersMap)
-      } else if (existingResult && !examData.isArchived) {
-        toast({
-          title: "Already Attempted",
-          description: "You have already completed this exam",
-        })
-        navigate(-1)
-        return
       }
 
       if (questionsData.length === 0) {
@@ -328,7 +321,7 @@ export default function ExamView() {
   }
 
   return (
-    <div className="min-h-screen p-4 pb-24">
+    <div className="min-h-screen p-2 sm:p-4 pb-24">
       <div className="max-w-4xl mx-auto">
         <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border pb-4 mb-6">
           <div className="flex justify-between items-center">
@@ -360,33 +353,29 @@ export default function ExamView() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
-              className="bg-card border border-border rounded-lg p-6"
+              className="bg-card border border-border rounded-lg p-3 sm:p-6"
             >
               <div className="mb-4">
-                {question.questionImageUrl ? (
-                  <div className="relative w-full mb-3">
+                <div className="flex items-start gap-3 mb-3">
+                  <span className="flex-shrink-0 w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center font-bold shadow-lg">
+                    {index + 1}
+                  </span>
+                  <div className="flex-1">
+                    {question.questionText && <p className="text-base mb-2">{question.questionText}</p>}
+                    <span className="text-sm text-muted-foreground">
+                      ({question.marks} mark{question.marks !== 1 ? "s" : ""})
+                    </span>
+                  </div>
+                </div>
+                {question.questionImageUrl && (
+                  <div className="w-full mb-3">
                     <img
                       src={question.questionImageUrl || "/placeholder.svg"}
                       alt="Question"
                       className="w-full rounded-lg"
                     />
-                    <span className="absolute top-2 left-2 w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center font-bold shadow-lg">
-                      {index + 1}
-                    </span>
-                  </div>
-                ) : (
-                  <div className="flex items-start gap-3 mb-2">
-                    <span className="flex-shrink-0 w-8 h-8 bg-primary/10 text-primary rounded-full flex items-center justify-center font-bold">
-                      {index + 1}
-                    </span>
                   </div>
                 )}
-                <div className="flex-1">
-                  {question.questionText && <p className="text-base mb-2">{question.questionText}</p>}
-                  <span className="text-sm text-muted-foreground">
-                    ({question.marks} mark{question.marks !== 1 ? "s" : ""})
-                  </span>
-                </div>
               </div>
 
               {question.type === "mcq" ? (
@@ -470,7 +459,29 @@ export default function ExamView() {
                           </div>
                           <div className="flex-1 z-10">
                             {question.optionImages?.[optIndex] ? (
-                              <div className="relative w-full">
+                              <div className="w-full">
+                                <div className="flex items-center gap-3 mb-2">
+                                  <span
+                                    className={`font-bold text-sm px-3 py-1 rounded-lg shadow-lg transition-all duration-300 ${
+                                      answers[question.id] === optIndex
+                                        ? "bg-gradient-to-br from-primary to-primary/90 text-primary-foreground shadow-sm"
+                                        : "bg-gradient-to-br from-muted to-muted/80 text-muted-foreground group-hover:from-primary/20 group-hover:to-primary/10"
+                                    }`}
+                                  >
+                                    {String.fromCharCode(65 + optIndex)}
+                                  </span>
+                                  {option && (
+                                    <span
+                                      className={`text-base font-medium transition-colors ${
+                                        answers[question.id] === optIndex
+                                          ? "text-foreground"
+                                          : "text-muted-foreground group-hover:text-foreground"
+                                      }`}
+                                    >
+                                      {option}
+                                    </span>
+                                  )}
+                                </div>
                                 <motion.img
                                   whileHover={{ scale: 1.02 }}
                                   src={question.optionImages[optIndex]}
@@ -481,28 +492,6 @@ export default function ExamView() {
                                       : "border-border group-hover:border-primary/40"
                                   }`}
                                 />
-                                <span
-                                  className={`absolute top-2 left-2 font-bold text-sm px-3 py-1 rounded-lg shadow-lg transition-all duration-300 ${
-                                    answers[question.id] === optIndex
-                                      ? "bg-gradient-to-br from-primary to-primary/90 text-primary-foreground shadow-sm"
-                                      : "bg-gradient-to-br from-muted to-muted/80 text-muted-foreground group-hover:from-primary/20 group-hover:to-primary/10"
-                                  }`}
-                                >
-                                  {String.fromCharCode(65 + optIndex)}
-                                </span>
-                                {option && (
-                                  <div className="mt-2">
-                                    <span
-                                      className={`text-base font-medium transition-colors ${
-                                        answers[question.id] === optIndex
-                                          ? "text-foreground"
-                                          : "text-muted-foreground group-hover:text-foreground"
-                                      }`}
-                                    >
-                                      {option}
-                                    </span>
-                                  </div>
-                                )}
                               </div>
                             ) : (
                               <div className="flex items-center gap-3 mb-1">

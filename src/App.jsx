@@ -34,6 +34,9 @@ import MyCourses from "./pages/MyCourses"
 import ExamView from "./pages/ExamView"
 import ExamList from "./pages/ExamList"
 import ExamLeaderboard from "./pages/ExamLeaderboard"
+import ExamResult from "./pages/ExamResult"
+import ExamSolutions from "./pages/ExamSolutions"
+import ExamAttempts from "./pages/ExamAttempts"
 import Analytics from "./pages/Analytics"
 
 console.log("[v0] App.jsx loaded")
@@ -131,6 +134,30 @@ function App() {
                     element={
                       <ProtectedRoute>
                         <ExamLeaderboard />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/exam/:examId/result"
+                    element={
+                      <ProtectedRoute>
+                        <ExamResult />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/exam/:examId/solutions"
+                    element={
+                      <ProtectedRoute>
+                        <ExamSolutions />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/exam/:examId/attempts"
+                    element={
+                      <ProtectedRoute>
+                        <ExamAttempts />
                       </ProtectedRoute>
                     }
                   />
