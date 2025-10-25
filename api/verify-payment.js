@@ -1,11 +1,11 @@
 /**
- * ZiniPay Payment Verification API
- * Verifies payment status using invoiceId
- * Official Docs: https://zinipay.com/docs
+ * BangoPay BD Payment Verification API
+ * Verifies payment status using order_id
+ * Official Docs: https://bangopaybd.com/developers
  */
 
-const ZINIPAY_API_KEY = process.env.ZINIPAY_API_KEY;
-const VERIFY_API_URL = 'https://api.zinipay.com/v1/payment/verify';
+const BANGOPAY_API_KEY = process.env.BANGOPAY_API_KEY;
+const VERIFY_API_BASE_URL = 'https://bangopaybd.com/api/payment/verify';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -16,92 +16,83 @@ export default async function handler(req, res) {
     });
   }
 
-  if (!ZINIPAY_API_KEY) {
-    console.error("ZINIPAY_API_KEY is missing!");
+  if (!BANGOPAY_API_KEY) {
+    console.error("BANGOPAY_API_KEY is missing!");
     return res.status(500).json({ 
       success: false, 
       error: "Server configuration error: Payment service key missing." 
     });
   }
 
-  const { transaction_id, invoiceId } = req.body;
-  const paymentId = invoiceId || transaction_id;
+  const { order_id, transaction_id } = req.body;
+  const paymentId = order_id || transaction_id;
 
   if (!paymentId) {
     return res.status(400).json({ 
       success: false, 
-      error: "Missing invoiceId or transaction_id in request body." 
+      error: "Missing order_id or transaction_id in request body." 
     });
   }
 
   try {
-    console.log('Verifying payment with invoiceId:', paymentId);
+    console.log('Verifying payment with order_id:', paymentId);
     
-    const response = await fetch(VERIFY_API_URL, {
-      method: 'POST',
+    const response = await fetch(`${VERIFY_API_BASE_URL}/${paymentId}`, {
+      method: 'GET',
       headers: {
-        'zini-api-key': ZINIPAY_API_KEY,
+        'Authorization': `Bearer ${BANGOPAY_API_KEY}`,
         'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ 
-        invoiceId: paymentId,
-        apiKey: ZINIPAY_API_KEY
-      })
+      }
     });
 
     const paymentData = await response.json();
     
-    console.log('ZiniPay verification response:', JSON.stringify(paymentData, null, 2));
+    console.log('BangoPay verification response:', JSON.stringify(paymentData, null, 2));
     console.log('Response status code:', response.status);
 
-    // According to ZiniPay official example:
-    // Status is at root level: paymentData.status
-    // Data is nested: paymentData.data.*
-    
-    if (paymentData.status === 'COMPLETED') {
-      // Payment is verified successfully
-      const data = paymentData.data || {};
-      
-      // Parse metadata if it's a string
-      let metadata = data.metadata || {};
-      if (typeof metadata === 'string') {
+    if (paymentData.status === 'completed') {
+      let metadata = {};
+      if (paymentData.metadata) {
         try {
-          metadata = JSON.parse(metadata);
+          metadata = typeof paymentData.metadata === 'string' 
+            ? JSON.parse(paymentData.metadata) 
+            : paymentData.metadata;
         } catch (e) {
           console.error('Failed to parse metadata:', e);
         }
       }
 
       console.log('✅ Payment verified successfully!');
-      console.log('Transaction ID:', data.transactionId);
-      console.log('Amount:', data.amount);
+      console.log('Order ID:', paymentData.order_id);
+      console.log('Transaction ID:', paymentData.transaction_id);
+      console.log('Amount:', paymentData.amount);
+      console.log('Payment Method:', paymentData.payment_method);
 
       return res.status(200).json({
         success: true,
         verified: true,
         payment: {
-          fullname: data.customerName,
-          email: data.customerEmail,
-          amount: data.amount,
-          transaction_id: data.transactionId,
-          invoice_id: data.invoiceId,
-          trx_id: data.transactionId,
-          currency: data.currency || 'BDT',
-          metadata: metadata,
-          payment_method: data.paymentMethod,
-          status: paymentData.status
+          fullname: metadata.fullname || paymentData.customer_name || 'N/A',
+          email: paymentData.customer_email || metadata.email || 'N/A',
+          amount: paymentData.amount,
+          transaction_id: paymentData.transaction_id,
+          order_id: paymentData.order_id,
+          trx_id: paymentData.transaction_id,
+          status: paymentData.status,
+          payment_method: paymentData.payment_method,
+          paid_at: paymentData.paid_at,
+          metadata: metadata
         }
       });
-    } else if (paymentData.status === 'PENDING') {
+    } else if (paymentData.status === 'pending') {
       return res.status(200).json({
         success: true,
         verified: false,
-        status: 'PENDING',
+        status: 'pending',
         message: "Payment is still pending"
       });
     } else {
-      // Verification failed or other status
-      console.error('❌ Payment verification failed:', paymentData.message);
+      console.error('❌ Payment verification failed');
       return res.status(400).json({
         success: false,
         verified: false,

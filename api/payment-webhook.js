@@ -1,13 +1,13 @@
 /**
- * ZiniPay Payment Webhook Handler
- * Receives payment notifications from ZiniPay and processes enrollment
- * Official Docs: https://zinipay.com/docs
+ * BangoPay BD Payment Webhook Handler
+ * Receives payment notifications from BangoPay and processes enrollment
+ * Official Docs: https://bangopaybd.com/developers
  */
 
 import { processPaymentAndEnrollUser } from './utils/process-payment.js';
 
-const ZINIPAY_API_KEY = process.env.ZINIPAY_API_KEY;
-const VERIFY_API_URL = 'https://api.zinipay.com/v1/payment/verify';
+const BANGOPAY_API_KEY = process.env.BANGOPAY_API_KEY;
+const VERIFY_API_BASE_URL = 'https://bangopaybd.com/api/payment/verify';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -21,15 +21,16 @@ export default async function handler(req, res) {
   try {
     const webhookData = req.body;
     
-    console.log('ZiniPay webhook received:', {
-      transactionId: webhookData.transactionId,
-      invoiceId: webhookData.invoiceId,
+    console.log('BangoPay webhook received:', {
+      event: webhookData.event,
+      order_id: webhookData.order_id,
+      transaction_id: webhookData.transaction_id,
       status: webhookData.status,
       amount: webhookData.amount
     });
 
     // Only process completed payments
-    if (webhookData.status !== 'COMPLETED') {
+    if (webhookData.event !== 'payment.success' && webhookData.status !== 'completed') {
       console.log(`Webhook received with status: ${webhookData.status}, not processing`);
       return res.status(200).json({ 
         success: true, 
@@ -37,43 +38,38 @@ export default async function handler(req, res) {
       });
     }
 
-    // Verify payment with ZiniPay to prevent fraud
-    const paymentId = webhookData.invoiceId || webhookData.transactionId;
-    const verifyResponse = await fetch(VERIFY_API_URL, {
-      method: 'POST',
+    // Verify payment with BangoPay to prevent fraud
+    const paymentId = webhookData.order_id || webhookData.transaction_id;
+    const verifyResponse = await fetch(`${VERIFY_API_BASE_URL}/${paymentId}`, {
+      method: 'GET',
       headers: {
-        'zini-api-key': ZINIPAY_API_KEY,
+        'Authorization': `Bearer ${BANGOPAY_API_KEY}`,
         'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ 
-        invoiceId: paymentId,
-        apiKey: ZINIPAY_API_KEY
-      })
+      }
     });
 
     const paymentData = await verifyResponse.json();
 
-    // According to ZiniPay official example, check status at root level
-    if (paymentData.status !== 'COMPLETED') {
-      console.log('Payment verification failed or not completed:', paymentData.status, paymentData.message);
+    if (paymentData.status !== 'completed') {
+      console.log('Payment verification failed or not completed:', paymentData.status);
       return res.status(200).json({ 
         success: true, 
         message: "Webhook received but payment not completed" 
       });
     }
 
-    // Payment is verified - data is in nested 'data' field
-    const verifyData = paymentData.data || {};
-
     console.log('✅ Webhook - Payment verified successfully!');
-    console.log('Transaction ID:', verifyData.transactionId);
-    console.log('Amount:', verifyData.amount);
+    console.log('Order ID:', paymentData.order_id);
+    console.log('Transaction ID:', paymentData.transaction_id);
+    console.log('Amount:', paymentData.amount);
 
     // Parse metadata if it's a string
-    let metadata = verifyData.metadata || {};
-    if (typeof metadata === 'string') {
+    let metadata = {};
+    if (paymentData.metadata) {
       try {
-        metadata = JSON.parse(metadata);
+        metadata = typeof paymentData.metadata === 'string' 
+          ? JSON.parse(paymentData.metadata) 
+          : paymentData.metadata;
       } catch (e) {
         console.error('Failed to parse metadata:', e);
         metadata = {};
@@ -94,18 +90,18 @@ export default async function handler(req, res) {
     // Process payment and enroll user in courses
     const result = await processPaymentAndEnrollUser({
       userId,
-      userName: verifyData.customerName,
-      userEmail: verifyData.customerEmail,
-      transactionId: verifyData.transactionId,
-      invoiceId: verifyData.invoiceId,
-      trxId: verifyData.transactionId,
-      paymentMethod: verifyData.paymentMethod,
+      userName: metadata.fullname || paymentData.customer_name || 'N/A',
+      userEmail: paymentData.customer_email || metadata.email,
+      transactionId: paymentData.transaction_id,
+      invoiceId: paymentData.order_id,
+      trxId: paymentData.transaction_id,
+      paymentMethod: paymentData.payment_method,
       courses,
-      subtotal: parseFloat(metadata.subtotal || verifyData.amount),
+      subtotal: parseFloat(metadata.subtotal || paymentData.amount),
       discount: parseFloat(metadata.discount || 0),
       couponCode: metadata.couponCode || '',
-      finalAmount: parseFloat(verifyData.amount),
-      currency: verifyData.currency || 'BDT'
+      finalAmount: parseFloat(paymentData.amount),
+      currency: paymentData.currency || 'BDT'
     });
 
     if (result.success) {
