@@ -332,7 +332,7 @@ export default function Checkout() {
                   </button>
 
                   <p className="text-xs text-center text-muted-foreground">
-                    By proceeding, you agree to our terms and conditions. Your payment is secured by RupantorPay.
+                    By proceeding, you agree to our terms and conditions. Your payment is secured by ZiniPay.
                   </p>
                 </div>
               </div>

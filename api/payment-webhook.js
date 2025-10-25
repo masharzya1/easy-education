@@ -1,12 +1,13 @@
 /**
- * Rupantorpay Payment Webhook Handler
- * Receives payment notifications from Rupantorpay and processes enrollment
+ * ZiniPay Payment Webhook Handler
+ * Receives payment notifications from ZiniPay and processes enrollment
+ * Official Docs: https://zinipay.com/docs
  */
 
 import { processPaymentAndEnrollUser } from './utils/process-payment.js';
 
-const RUPANTORPAY_API_KEY = process.env.RUPANTORPAY_API_KEY;
-const VERIFY_API_URL = 'https://payment.rupantorpay.com/api/payment/verify-payment';
+const ZINIPAY_API_KEY = process.env.ZINIPAY_API_KEY;
+const VERIFY_API_URL = 'https://api.zinipay.com/v1/payment/verify';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -20,10 +21,11 @@ export default async function handler(req, res) {
   try {
     const webhookData = req.body;
     
-    console.log('Payment webhook received:', {
+    console.log('ZiniPay webhook received:', {
       transactionId: webhookData.transactionId,
+      invoiceId: webhookData.invoiceId,
       status: webhookData.status,
-      amount: webhookData.paymentAmount
+      amount: webhookData.amount
     });
 
     // Only process completed payments
@@ -35,14 +37,15 @@ export default async function handler(req, res) {
       });
     }
 
-    // Verify payment with Rupantorpay to prevent fraud
+    // Verify payment with ZiniPay to prevent fraud
+    const paymentId = webhookData.invoiceId || webhookData.transactionId;
     const verifyResponse = await fetch(VERIFY_API_URL, {
       method: 'POST',
       headers: {
-        'X-API-KEY': RUPANTORPAY_API_KEY,
+        'zini-api-key': ZINIPAY_API_KEY,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ transaction_id: webhookData.transactionId })
+      body: JSON.stringify({ invoiceId: paymentId })
     });
 
     const verifyData = await verifyResponse.json();
@@ -55,14 +58,22 @@ export default async function handler(req, res) {
       });
     }
 
-    // Extract payment and course information
-    const payment = verifyData;
-    const metadata = payment.metadata || {};
+    // Parse metadata if it's a string
+    let metadata = verifyData.metadata || {};
+    if (typeof metadata === 'string') {
+      try {
+        metadata = JSON.parse(metadata);
+      } catch (e) {
+        console.error('Failed to parse metadata:', e);
+        metadata = {};
+      }
+    }
+
     const courses = metadata.courses || [];
     const userId = metadata.userId;
 
     if (!userId) {
-      console.error('No userId in payment metadata');
+      console.error('No userId in payment metadata:', metadata);
       return res.status(200).json({ 
         success: true, 
         message: "Webhook received but no user ID in metadata" 
@@ -72,17 +83,18 @@ export default async function handler(req, res) {
     // Process payment and enroll user in courses
     const result = await processPaymentAndEnrollUser({
       userId,
-      userName: payment.fullname,
-      userEmail: payment.email,
-      transactionId: payment.transaction_id,
-      trxId: payment.trx_id,
-      paymentMethod: payment.payment_method,
+      userName: verifyData.customerName,
+      userEmail: verifyData.customerEmail,
+      transactionId: verifyData.transactionId,
+      invoiceId: verifyData.invoiceId,
+      trxId: verifyData.transactionId,
+      paymentMethod: verifyData.paymentMethod,
       courses,
-      subtotal: parseFloat(metadata.subtotal || payment.amount),
+      subtotal: parseFloat(metadata.subtotal || verifyData.amount),
       discount: parseFloat(metadata.discount || 0),
       couponCode: metadata.couponCode || '',
-      finalAmount: parseFloat(payment.amount),
-      currency: payment.currency || 'BDT'
+      finalAmount: parseFloat(verifyData.amount),
+      currency: verifyData.currency || 'BDT'
     });
 
     if (result.success) {

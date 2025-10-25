@@ -1,10 +1,10 @@
 /**
- * Rupantorpay Payment Creation API
- * Official Docs: https://rupantorpay.readme.io/reference/get_new-endpoint
+ * ZiniPay Payment Creation API
+ * Official Docs: https://zinipay.com/docs
  */
 
-const RUPANTORPAY_API_KEY = process.env.RUPANTORPAY_API_KEY;
-const PAYMENT_API_URL = 'https://payment.rupantorpay.com/api/payment/checkout';
+const ZINIPAY_API_KEY = process.env.ZINIPAY_API_KEY;
+const PAYMENT_API_URL = 'https://api.zinipay.com/v1/payment/create';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -15,8 +15,8 @@ export default async function handler(req, res) {
     });
   }
 
-  if (!RUPANTORPAY_API_KEY) {
-    console.error("RUPANTORPAY_API_KEY is missing!");
+  if (!ZINIPAY_API_KEY) {
+    console.error("ZINIPAY_API_KEY is missing!");
     return res.status(500).json({ 
       success: false, 
       error: "Server configuration error: Payment service key missing." 
@@ -38,46 +38,48 @@ export default async function handler(req, res) {
   const baseUrl = `${protocol}://${host}`;
 
   try {
-    // Prepare payment data according to Rupantorpay API specs
+    // Prepare payment data according to ZiniPay API specs
     const paymentData = {
-      fullname,
-      email,
       amount: parseFloat(amount).toFixed(2),
-      success_url: `${baseUrl}/payment-success`,
+      cus_name: fullname,
+      cus_email: email,
+      redirect_url: `${baseUrl}/payment-success`,
       cancel_url: `${baseUrl}/payment-cancel`,
       webhook_url: `${baseUrl}/api/payment-webhook`,
-      metadata: metadata || {}
+      metadata: JSON.stringify(metadata || {})
     };
 
-    console.log('Creating payment:', { 
+    console.log('Creating ZiniPay payment:', { 
       fullname, 
       email, 
       amount: paymentData.amount,
-      baseUrl 
+      baseUrl,
+      metadata: metadata 
     });
 
     const response = await fetch(PAYMENT_API_URL, {
       method: 'POST',
       headers: {
-        'X-API-KEY': RUPANTORPAY_API_KEY,
+        'zini-api-key': ZINIPAY_API_KEY,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(paymentData)
     });
 
     const data = await response.json();
-    console.log('Rupantorpay create payment response:', JSON.stringify(data, null, 2));
+    console.log('ZiniPay create payment response:', JSON.stringify(data, null, 2));
     console.log('Response status code:', response.status);
     console.log('Metadata sent:', JSON.stringify(metadata, null, 2));
 
     // Check for successful response
-    if ((data.status === true || data.status === 1) && data.payment_url) {
+    if (data.status === true && data.payment_url) {
       return res.status(200).json({
         success: true,
         payment_url: data.payment_url,
         message: data.message || "Payment link created successfully"
       });
     } else {
+      console.error('ZiniPay error response:', data);
       return res.status(400).json({
         success: false,
         error: data.message || data.error || "Failed to create payment link"

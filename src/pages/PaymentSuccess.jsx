@@ -23,11 +23,14 @@ export default function PaymentSuccess() {
       return
     }
 
+    // ZiniPay returns both invoiceId and transactionId
+    const invoiceId = searchParams.get('invoiceId') || searchParams.get('invoice_id')
     const transactionId = searchParams.get('transactionId') || searchParams.get('transaction_id')
+    const paymentId = invoiceId || transactionId
     const status = searchParams.get('status')
 
-    if (!transactionId) {
-      setError("No transaction ID found")
+    if (!paymentId) {
+      setError("No payment ID found")
       setLoading(false)
       setVerifying(false)
       return
@@ -40,10 +43,10 @@ export default function PaymentSuccess() {
       return
     }
 
-    verifyAndProcessPayment(transactionId)
+    verifyAndProcessPayment(paymentId, invoiceId)
   }, [currentUser, searchParams, navigate])
 
-  const verifyAndProcessPayment = async (transactionId) => {
+  const verifyAndProcessPayment = async (paymentId, invoiceId) => {
     try {
       setVerifying(true)
 
@@ -53,7 +56,8 @@ export default function PaymentSuccess() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ 
-          transaction_id: transactionId,
+          transaction_id: paymentId,
+          invoiceId: invoiceId || paymentId,
           userId: currentUser.uid
         })
       })

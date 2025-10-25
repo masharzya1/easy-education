@@ -62,8 +62,9 @@ export async function processPaymentAndEnrollUser(paymentData) {
       userName,
       userEmail,
       transactionId,
+      invoiceId: paymentData.invoiceId || transactionId,
       trxId: trxId || transactionId,
-      paymentMethod: paymentMethod || 'RupantorPay',
+      paymentMethod: paymentMethod || 'ZiniPay',
       courses: courses || [],
       subtotal: parseFloat(subtotal || finalAmount),
       discount: parseFloat(discount || 0),
@@ -72,7 +73,7 @@ export async function processPaymentAndEnrollUser(paymentData) {
       status: 'approved',
       submittedAt: FieldValue.serverTimestamp(),
       approvedAt: FieldValue.serverTimestamp(),
-      paymentGateway: 'RupantorPay',
+      paymentGateway: 'ZiniPay',
       currency: currency || 'BDT'
     };
 

@@ -1,10 +1,11 @@
 /**
- * Rupantorpay Payment Verification API
- * Verifies payment status using transaction ID
+ * ZiniPay Payment Verification API
+ * Verifies payment status using invoiceId
+ * Official Docs: https://zinipay.com/docs
  */
 
-const RUPANTORPAY_API_KEY = process.env.RUPANTORPAY_API_KEY;
-const VERIFY_API_URL = 'https://payment.rupantorpay.com/api/payment/verify-payment';
+const ZINIPAY_API_KEY = process.env.ZINIPAY_API_KEY;
+const VERIFY_API_URL = 'https://api.zinipay.com/v1/payment/verify';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -15,53 +16,67 @@ export default async function handler(req, res) {
     });
   }
 
-  if (!RUPANTORPAY_API_KEY) {
-    console.error("RUPANTORPAY_API_KEY is missing!");
+  if (!ZINIPAY_API_KEY) {
+    console.error("ZINIPAY_API_KEY is missing!");
     return res.status(500).json({ 
       success: false, 
       error: "Server configuration error: Payment service key missing." 
     });
   }
 
-  const { transaction_id } = req.body;
+  const { transaction_id, invoiceId } = req.body;
+  const paymentId = invoiceId || transaction_id;
 
-  if (!transaction_id) {
+  if (!paymentId) {
     return res.status(400).json({ 
       success: false, 
-      error: "Missing transaction_id in request body." 
+      error: "Missing invoiceId or transaction_id in request body." 
     });
   }
 
   try {
-    console.log('Verifying payment with transaction_id:', transaction_id);
+    console.log('Verifying payment with invoiceId:', paymentId);
     
     const response = await fetch(VERIFY_API_URL, {
       method: 'POST',
       headers: {
-        'X-API-KEY': RUPANTORPAY_API_KEY,
+        'zini-api-key': ZINIPAY_API_KEY,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ transaction_id })
+      body: JSON.stringify({ 
+        invoiceId: paymentId
+      })
     });
 
     const data = await response.json();
     
-    console.log('RupantorPay verification response:', JSON.stringify(data, null, 2));
+    console.log('ZiniPay verification response:', JSON.stringify(data, null, 2));
     console.log('Response status code:', response.status);
 
     if (data.status === 'COMPLETED') {
+      // Parse metadata if it's a string
+      let metadata = data.metadata || {};
+      if (typeof metadata === 'string') {
+        try {
+          metadata = JSON.parse(metadata);
+        } catch (e) {
+          console.error('Failed to parse metadata:', e);
+        }
+      }
+
       return res.status(200).json({
         success: true,
         verified: true,
         payment: {
-          fullname: data.fullname,
-          email: data.email,
+          fullname: data.customerName,
+          email: data.customerEmail,
           amount: data.amount,
-          transaction_id: data.transaction_id,
-          trx_id: data.trx_id,
-          currency: data.currency,
-          metadata: data.metadata,
-          payment_method: data.payment_method,
+          transaction_id: data.transactionId,
+          invoice_id: data.invoiceId,
+          trx_id: data.transactionId,
+          currency: data.currency || 'BDT',
+          metadata: metadata,
+          payment_method: data.paymentMethod,
           status: data.status
         }
       });

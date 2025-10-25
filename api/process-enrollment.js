@@ -1,12 +1,13 @@
 /**
  * Manual Payment Enrollment Processing
  * Used when webhook fails or for manual verification
+ * Official Docs: https://zinipay.com/docs
  */
 
 import { processPaymentAndEnrollUser } from './utils/process-payment.js';
 
-const RUPANTORPAY_API_KEY = process.env.RUPANTORPAY_API_KEY;
-const VERIFY_API_URL = 'https://payment.rupantorpay.com/api/payment/verify-payment';
+const ZINIPAY_API_KEY = process.env.ZINIPAY_API_KEY;
+const VERIFY_API_URL = 'https://api.zinipay.com/v1/payment/verify';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -17,35 +18,39 @@ export default async function handler(req, res) {
     });
   }
 
-  if (!RUPANTORPAY_API_KEY) {
-    console.error("RUPANTORPAY_API_KEY is missing!");
+  if (!ZINIPAY_API_KEY) {
+    console.error("ZINIPAY_API_KEY is missing!");
     return res.status(500).json({ 
       success: false, 
       error: "Server configuration error" 
     });
   }
 
-  const { transaction_id, userId } = req.body;
+  const { transaction_id, invoiceId, userId } = req.body;
+  const paymentId = invoiceId || transaction_id;
 
-  if (!transaction_id || !userId) {
+  if (!paymentId || !userId) {
     return res.status(400).json({ 
       success: false, 
-      error: "Missing transaction_id or userId in request body." 
+      error: "Missing invoiceId/transaction_id or userId in request body." 
     });
   }
 
   try {
-    // Verify payment with Rupantorpay
+    console.log('Processing enrollment for invoiceId:', paymentId, 'userId:', userId);
+
+    // Verify payment with ZiniPay
     const verifyResponse = await fetch(VERIFY_API_URL, {
       method: 'POST',
       headers: {
-        'X-API-KEY': RUPANTORPAY_API_KEY,
+        'zini-api-key': ZINIPAY_API_KEY,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ transaction_id })
+      body: JSON.stringify({ invoiceId: paymentId })
     });
 
     const verifyData = await verifyResponse.json();
+    console.log('ZiniPay verification response:', JSON.stringify(verifyData, null, 2));
 
     if (verifyData.status !== 'COMPLETED') {
       return res.status(400).json({
@@ -55,9 +60,17 @@ export default async function handler(req, res) {
       });
     }
 
-    // Extract payment data
-    const payment = verifyData;
-    const metadata = payment.metadata || {};
+    // Parse metadata if it's a string
+    let metadata = verifyData.metadata || {};
+    if (typeof metadata === 'string') {
+      try {
+        metadata = JSON.parse(metadata);
+      } catch (e) {
+        console.error('Failed to parse metadata:', e);
+        metadata = {};
+      }
+    }
+
     const courses = metadata.courses || [];
     const metadataUserId = metadata.userId;
 
@@ -79,25 +92,33 @@ export default async function handler(req, res) {
     // Process enrollment
     const result = await processPaymentAndEnrollUser({
       userId: metadataUserId,
-      userName: payment.fullname,
-      userEmail: payment.email,
-      transactionId: payment.transaction_id,
-      trxId: payment.trx_id,
-      paymentMethod: payment.payment_method,
+      userName: verifyData.customerName,
+      userEmail: verifyData.customerEmail,
+      transactionId: verifyData.transactionId,
+      invoiceId: verifyData.invoiceId,
+      trxId: verifyData.transactionId,
+      paymentMethod: verifyData.paymentMethod,
       courses,
-      subtotal: parseFloat(metadata.subtotal || payment.amount),
+      subtotal: parseFloat(metadata.subtotal || verifyData.amount),
       discount: parseFloat(metadata.discount || 0),
       couponCode: metadata.couponCode || '',
-      finalAmount: parseFloat(payment.amount),
-      currency: payment.currency || 'BDT'
+      finalAmount: parseFloat(verifyData.amount),
+      currency: verifyData.currency || 'BDT'
     });
 
     if (result.success) {
       return res.status(200).json({
         success: true,
+        verified: true,
         message: result.message,
         alreadyProcessed: result.alreadyProcessed,
-        coursesEnrolled: courses.length
+        coursesEnrolled: courses.length,
+        payment: {
+          transaction_id: verifyData.transactionId,
+          invoice_id: verifyData.invoiceId,
+          amount: verifyData.amount,
+          metadata: metadata
+        }
       });
     } else {
       return res.status(500).json({
