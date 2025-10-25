@@ -29,6 +29,7 @@ export default function ManageCourses() {
     publishStatus: "published",
     imageType: "upload",
     imageLink: "",
+    telegramLink: "",
   })
   const [imageFile, setImageFile] = useState(null)
   const [submitting, setSubmitting] = useState(false)
@@ -72,6 +73,7 @@ export default function ManageCourses() {
         publishStatus: course.publishStatus || "published",
         imageType: course.thumbnailURL ? "link" : "upload",
         imageLink: course.thumbnailURL || "",
+        telegramLink: course.telegramLink || "",
       })
     } else {
       setEditingCourse(null)
@@ -86,6 +88,7 @@ export default function ManageCourses() {
         publishStatus: "published",
         imageType: "upload",
         imageLink: "",
+        telegramLink: "",
       })
     }
     setImageFile(null)
@@ -128,6 +131,7 @@ export default function ManageCourses() {
         status: formData.status,
         publishStatus: formData.publishStatus,
         thumbnailURL: thumbnailURL || "",
+        telegramLink: formData.telegramLink || "",
         updatedAt: serverTimestamp(),
       }
 
@@ -324,6 +328,20 @@ export default function ManageCourses() {
                   className="w-full px-3 py-2 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
                   placeholder="Enter course description"
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1.5">Telegram Group Link</label>
+                <input
+                  type="url"
+                  value={formData.telegramLink}
+                  onChange={(e) => setFormData({ ...formData, telegramLink: e.target.value })}
+                  className="w-full px-3 py-2 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                  placeholder="https://t.me/your_group"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Students will see this link to join the course Telegram community
+                </p>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

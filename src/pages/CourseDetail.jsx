@@ -219,72 +219,33 @@ export default function CourseDetail() {
                   </div>
                 </div>
 
-                {course.type === "batch" && hasAccess && (
-                  <div className="border-t border-border pt-6 mb-6">
-                    <h3 className="text-xl font-semibold mb-4">Course Subjects</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      {["Mathematics", "Physics", "Chemistry", "Biology", "English", "History"].map(
-                        (subject, index) => (
-                          <div key={index} className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg">
-                            <BookOpen className="w-4 h-4 text-primary" />
-                            <span className="text-sm font-medium">{subject}</span>
-                          </div>
-                        ),
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* Course Features */}
-                <div className="border-t border-border pt-6">
-                  <h3 className="text-xl font-semibold mb-4">What you'll learn</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {[
-                      "Comprehensive course content",
-                      "Expert instructor guidance",
-                      "Practice exercises and materials",
-                      "Lifetime access to course",
-                      "Learn at your own pace",
-                      "Certificate of completion",
-                    ].map((feature, index) => (
-                      <div key={index} className="flex items-start gap-2">
-                        <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                        <span className="text-sm text-muted-foreground">{feature}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
                 {/* Teachers Section */}
                 {teachers.length > 0 && (
-                  <div className="border-t border-border pt-6 mt-6">
+                  <div className="border-t border-border pt-6">
                     <h3 className="text-xl font-semibold mb-4">Course Instructors</h3>
-                    <div className="grid grid-cols-1 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       {teachers.map((teacher) => (
                         <div
                           key={teacher.id}
-                          className="flex items-start gap-4 p-4 bg-muted/30 border border-border rounded-lg hover:bg-muted/50 transition-colors"
+                          className="flex items-center gap-3 p-3 bg-muted/30 border border-border rounded-lg hover:bg-muted/50 transition-colors"
                         >
                           <div className="flex-shrink-0">
                             {teacher.imageURL ? (
                               <img
                                 src={teacher.imageURL}
                                 alt={teacher.name}
-                                className="w-16 h-16 rounded-full object-cover border-2 border-primary/20"
+                                className="w-12 h-12 rounded-full object-cover border-2 border-primary/20"
                               />
                             ) : (
-                              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-                                <Users className="w-8 h-8 text-white" />
+                              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+                                <Users className="w-5 h-5 text-white" />
                               </div>
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h4 className="font-semibold text-base mb-1">{teacher.name}</h4>
-                            {teacher.expertise && (
-                              <p className="text-xs text-primary mb-2">{teacher.expertise}</p>
-                            )}
+                            <h4 className="font-semibold text-sm mb-0.5">{teacher.name}</h4>
                             {teacher.bio && (
-                              <p className="text-sm text-muted-foreground line-clamp-2">{teacher.bio}</p>
+                              <p className="text-xs text-muted-foreground line-clamp-1">{teacher.bio}</p>
                             )}
                           </div>
                         </div>

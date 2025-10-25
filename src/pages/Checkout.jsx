@@ -37,13 +37,14 @@ export default function Checkout() {
   }, [])
 
   useEffect(() => {
-    if (!isCouponLoaded || !isCartLoaded) return
+    if (!isCartLoaded) return
 
     if (!currentUser) {
       navigate("/login")
       return
     }
-    if (cartItems.length === 0) {
+
+    if (cartItems.length === 0 && isCouponLoaded) {
       sessionStorage.removeItem("appliedCoupon")
       navigate("/courses")
       return
@@ -71,7 +72,9 @@ export default function Checkout() {
       }
     }
 
-    fetchPurchasedCourses()
+    if (currentUser && cartItems.length > 0) {
+      fetchPurchasedCourses()
+    }
   }, [currentUser, cartItems, navigate, isCouponLoaded, isCartLoaded])
 
   const validateCoupon = useCallback(async () => {
