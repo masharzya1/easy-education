@@ -9,6 +9,9 @@ import { useExam } from "../contexts/ExamContext"
 import { toast } from "../hooks/use-toast"
 import { uploadImageToImgBB } from "../lib/imgbb"
 import ConfirmDialog from "../components/ConfirmDialog"
+import { isFirebaseId } from "../lib/slug"
+import { collection, query, where, getDocs } from "firebase/firestore"
+import { db } from "../lib/firebase"
 
 export default function ExamView() {
   const { examId } = useParams()
@@ -41,7 +44,21 @@ export default function ExamView() {
     try {
       setLoading(true)
 
-      const examData = await getExamById(examId)
+      let examData = null
+      let actualExamId = examId
+      
+      if (isFirebaseId(examId)) {
+        examData = await getExamById(examId)
+      } else {
+        const q = query(collection(db, "exams"), where("slug", "==", examId))
+        const snapshot = await getDocs(q)
+        if (!snapshot.empty) {
+          const examDoc = snapshot.docs[0]
+          actualExamId = examDoc.id
+          examData = { id: examDoc.id, ...examDoc.data() }
+        }
+      }
+      
       if (!examData) {
         toast({
           variant: "error",
@@ -52,10 +69,10 @@ export default function ExamView() {
         return
       }
 
-      const questionsData = await getQuestionsByExam(examId)
-      console.log("[v0] Fetched questions for exam:", examId, "Count:", questionsData.length)
+      const questionsData = await getQuestionsByExam(actualExamId)
+      console.log("[v0] Fetched questions for exam:", actualExamId, "Count:", questionsData.length)
 
-      const existingResult = await getExamResult(currentUser.uid, examId)
+      const existingResult = await getExamResult(currentUser.uid, actualExamId)
 
       if (existingResult && examData.isArchived) {
         setReviewMode(true)

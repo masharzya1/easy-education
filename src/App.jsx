@@ -9,6 +9,7 @@ import CartDrawer from "./components/CartDrawer"
 import FloatingCartButton from "./components/FloatingCartButton"
 import ProtectedRoute from "./components/ProtectedRoute"
 import PWAInstallPrompt from "./components/PWAInstallPrompt"
+import SettingsLoader from "./components/SettingsLoader"
 
 // Pages
 import Home from "./pages/Home"
@@ -49,6 +50,7 @@ function App() {
       <AuthProvider>
         <CartProvider>
           <ExamProvider>
+            <SettingsLoader />
             <div className="flex flex-col min-h-screen bg-background text-foreground">
               <Header />
               <main className="flex-1">

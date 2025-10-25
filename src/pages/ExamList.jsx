@@ -245,21 +245,33 @@ export default function ExamList() {
                           {isPassed ? "Passed!" : "Keep practicing!"}
                         </p>
                       </div>
-                      <div className="flex gap-2">
-                        {exam.isArchived && (
-                          <Link
-                            to={`/exam/${exam.id}`}
-                            className="flex-1 px-4 py-2 bg-gray-100 text-gray-900 rounded-lg hover:bg-gray-200 transition-colors text-center font-medium text-sm"
-                          >
-                            View Answers
-                          </Link>
-                        )}
+                      <div className="grid grid-cols-2 gap-2">
                         <Link
                           to={`/exam/${exam.id}/leaderboard`}
-                          className="flex-1 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-black transition-colors text-center font-medium text-sm flex items-center justify-center gap-1"
+                          className="px-3 py-2 bg-gray-100 text-gray-900 rounded-lg hover:bg-gray-200 transition-colors text-center font-medium text-xs flex items-center justify-center gap-1"
                         >
-                          <Trophy className="w-4 h-4" />
+                          <Trophy className="w-3 h-3" />
                           Leaderboard
+                        </Link>
+                        <Link
+                          to={`/exam/${exam.id}/solutions`}
+                          className="px-3 py-2 bg-gray-100 text-gray-900 rounded-lg hover:bg-gray-200 transition-colors text-center font-medium text-xs flex items-center justify-center gap-1"
+                        >
+                          <FileQuestion className="w-3 h-3" />
+                          Solutions
+                        </Link>
+                        <Link
+                          to={`/exam/${exam.id}/attempts`}
+                          className="px-3 py-2 bg-gray-100 text-gray-900 rounded-lg hover:bg-gray-200 transition-colors text-center font-medium text-xs flex items-center justify-center gap-1"
+                        >
+                          <Clock className="w-3 h-3" />
+                          My Attempts
+                        </Link>
+                        <Link
+                          to={`/exam/${exam.id}`}
+                          className="px-3 py-2 bg-gray-900 text-white rounded-lg hover:bg-black transition-colors text-center font-medium text-xs flex items-center justify-center gap-1"
+                        >
+                          Retake
                         </Link>
                       </div>
                     </div>

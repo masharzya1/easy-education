@@ -3,8 +3,8 @@ import { toast } from "../../hooks/use-toast"
 
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
-import { CreditCard, Check, X, Clock } from "lucide-react"
-import { collection, getDocs, updateDoc, doc, setDoc, serverTimestamp, query, orderBy } from "firebase/firestore"
+import { CreditCard, Check, X, Clock, Download, Trash2 } from "lucide-react"
+import { collection, getDocs, updateDoc, doc, setDoc, serverTimestamp, query, orderBy, deleteDoc } from "firebase/firestore"
 import { db } from "../../lib/firebase"
 import { sendPaymentConfirmationEmail } from "../../lib/email"
 import ConfirmDialog from "../../components/ConfirmDialog"
@@ -114,6 +114,78 @@ export default function ManagePayments() {
     })
   }
 
+  const handleDelete = async (paymentId) => {
+    setConfirmDialog({
+      isOpen: true,
+      title: "Delete Payment",
+      message: "Are you sure you want to permanently delete this rejected payment? This action cannot be undone.",
+      variant: "destructive",
+      onConfirm: async () => {
+        try {
+          await deleteDoc(doc(db, "payments", paymentId))
+
+          toast({
+            title: "Success",
+            description: "Payment deleted successfully!",
+          })
+          fetchPayments()
+        } catch (error) {
+          console.error("Error deleting payment:", error)
+          toast({
+            variant: "error",
+            title: "Error",
+            description: "Failed to delete payment",
+          })
+        }
+      }
+    })
+  }
+
+  const exportToCSV = () => {
+    const approvedPayments = payments.filter(p => p.status === "approved")
+    
+    if (approvedPayments.length === 0) {
+      toast({
+        variant: "error",
+        title: "No Data",
+        description: "No completed payments to export",
+      })
+      return
+    }
+
+    const headers = ["Name", "Email", "Sender Number", "Transaction ID", "Amount", "Courses", "Approved At"]
+    const rows = approvedPayments.map(payment => [
+      payment.userName,
+      payment.userEmail,
+      payment.senderNumber,
+      payment.transactionId,
+      payment.finalAmount,
+      payment.courses?.map(c => c.title).join("; ") || "",
+      payment.approvedAt?.toDate?.()?.toLocaleString() || ""
+    ])
+
+    const csvContent = [
+      headers.join(","),
+      ...rows.map(row => row.map(cell => `"${cell}"`).join(","))
+    ].join("\n")
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
+    const link = document.createElement("a")
+    const url = URL.createObjectURL(blob)
+    
+    link.setAttribute("href", url)
+    link.setAttribute("download", `completed_payments_${new Date().toISOString().split('T')[0]}.csv`)
+    link.style.visibility = "hidden"
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+
+    toast({
+      title: "Success",
+      description: `Exported ${approvedPayments.length} completed payments`,
+    })
+  }
+
   const filteredPayments = payments.filter((payment) => {
     if (filter === "all") return true
     return payment.status === filter
@@ -157,18 +229,27 @@ export default function ManagePayments() {
           <CreditCard className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
           Manage Payments
         </h1>
-        <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-          {["all", "pending", "approved", "rejected"].map((status) => (
-            <button
-              key={status}
-              onClick={() => setFilter(status)}
-              className={`px-3 sm:px-4 py-2 rounded-lg transition-colors capitalize text-xs sm:text-sm font-medium ${
-                filter === status ? "bg-primary text-primary-foreground" : "bg-muted hover:bg-muted/80"
-              }`}
-            >
-              {status} ({payments.filter((p) => status === "all" || p.status === status).length})
-            </button>
-          ))}
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          <div className="flex flex-wrap gap-2">
+            {["all", "pending", "approved", "rejected"].map((status) => (
+              <button
+                key={status}
+                onClick={() => setFilter(status)}
+                className={`px-3 sm:px-4 py-2 rounded-lg transition-colors capitalize text-xs sm:text-sm font-medium ${
+                  filter === status ? "bg-primary text-primary-foreground" : "bg-muted hover:bg-muted/80"
+                }`}
+              >
+                {status} ({payments.filter((p) => status === "all" || p.status === status).length})
+              </button>
+            ))}
+          </div>
+          <button
+            onClick={exportToCSV}
+            className="px-3 sm:px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors text-xs sm:text-sm font-medium flex items-center justify-center gap-2"
+          >
+            <Download className="w-4 h-4" />
+            Export Completed
+          </button>
         </div>
       </div>
 
@@ -252,6 +333,18 @@ export default function ManagePayments() {
                   >
                     <X className="w-4 h-4" />
                     Reject
+                  </button>
+                </div>
+              )}
+
+              {payment.status === "rejected" && (
+                <div className="flex flex-col sm:flex-row gap-2 pt-2 border-t border-border">
+                  <button
+                    onClick={() => handleDelete(payment.id)}
+                    className="flex-1 px-3 sm:px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors flex items-center justify-center gap-2 text-xs sm:text-sm font-medium"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Delete
                   </button>
                 </div>
               )}

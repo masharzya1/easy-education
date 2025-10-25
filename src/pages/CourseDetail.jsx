@@ -8,6 +8,7 @@ import { doc, getDoc, collection, query, where, getDocs } from "firebase/firesto
 import { db } from "../lib/firebase"
 import { useAuth } from "../contexts/AuthContext"
 import { useCart } from "../contexts/CartContext"
+import { isFirebaseId } from "../lib/slug"
 
 export default function CourseDetail() {
   const { courseId } = useParams()
@@ -33,9 +34,23 @@ export default function CourseDetail() {
 
   const fetchCourseData = async () => {
     try {
-      const courseDoc = await getDoc(doc(db, "courses", courseId))
-      if (courseDoc.exists()) {
-        const courseData = { id: courseDoc.id, ...courseDoc.data() }
+      let courseData = null
+      
+      if (isFirebaseId(courseId)) {
+        const courseDoc = await getDoc(doc(db, "courses", courseId))
+        if (courseDoc.exists()) {
+          courseData = { id: courseDoc.id, ...courseDoc.data() }
+        }
+      } else {
+        const q = query(collection(db, "courses"), where("slug", "==", courseId))
+        const snapshot = await getDocs(q)
+        if (!snapshot.empty) {
+          const courseDoc = snapshot.docs[0]
+          courseData = { id: courseDoc.id, ...courseDoc.data() }
+        }
+      }
+      
+      if (courseData) {
         setCourse(courseData)
 
         if (courseData.instructors && courseData.instructors.length > 0) {
@@ -61,7 +76,7 @@ export default function CourseDetail() {
 
           const hasApprovedCourse = paymentsSnapshot.docs.some((doc) => {
             const payment = doc.data()
-            return payment.courses?.some((c) => c.id === courseId)
+            return payment.courses?.some((c) => c.id === courseData.id)
           })
           setHasAccess(hasApprovedCourse)
 
@@ -74,7 +89,7 @@ export default function CourseDetail() {
 
           const hasPendingCourse = pendingPaymentSnapshot.docs.some((doc) => {
             const payment = doc.data()
-            return payment.courses?.some((c) => c.id === courseId)
+            return payment.courses?.some((c) => c.id === courseData.id)
           })
           setHasPendingPayment(hasPendingCourse)
         }
@@ -107,9 +122,9 @@ export default function CourseDetail() {
 
   const handleWatchNow = () => {
     if (course.type === "batch") {
-      navigate(`/course/${courseId}/subjects`)
+      navigate(`/course/${course.id}/subjects`)
     } else {
-      navigate(`/course/${courseId}/chapters`)
+      navigate(`/course/${course.id}/chapters`)
     }
   }
 
