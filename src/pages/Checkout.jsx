@@ -171,18 +171,29 @@ export default function Checkout() {
         clearCart()
         window.location.href = data.payment_url
       } else {
+        // Handle error - ensure it's always a string
+        const errorMessage = typeof data.error === 'string' 
+          ? data.error 
+          : (data.error?.message || data.message || "Failed to create payment link. Please try again.")
+        
         toast({
           variant: "error",
           title: "Payment Failed",
-          description: data.error || "Failed to create payment link. Please try again.",
+          description: errorMessage,
         })
       }
     } catch (error) {
       console.error("Error creating payment:", error)
+      
+      // Ensure error is always a string
+      const errorMessage = typeof error === 'string'
+        ? error
+        : (error?.message || "Failed to process payment request. Please try again.")
+      
       toast({
         variant: "error",
         title: "Payment Error",
-        description: "Failed to process payment request. Please try again.",
+        description: errorMessage,
       })
     } finally {
       setLoading(false)
