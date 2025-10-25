@@ -245,13 +245,11 @@ export default function CourseCard({ course, onAddToCart, showProgress = false }
               </button>
             </Link>
           ) : (
-            <button
-              onClick={handleAddToCart}
-              className="w-full px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-colors flex items-center justify-center gap-2 text-sm font-medium"
-            >
-              <ShoppingCart className="w-4 h-4" />
-              Add to Cart
-            </button>
+            <Link to={`/course/${course.id}`} onClick={(e) => e.stopPropagation()}>
+              <button className="w-full px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-colors flex items-center justify-center gap-2 text-sm font-medium">
+                Buy Now
+              </button>
+            </Link>
           )}
         </div>
       </div>
