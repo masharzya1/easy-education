@@ -53,8 +53,8 @@ export default async function handler(req, res) {
 
     const verifyResponseData = await verifyResponse.json();
 
-    // Check if verification was successful according to ZiniPay API format
-    if (verifyResponseData.status !== 'success' || !verifyResponseData.data) {
+    // Handle error responses
+    if (verifyResponseData.status === false) {
       console.log('Payment verification failed:', verifyResponseData);
       return res.status(200).json({ 
         success: true, 
@@ -62,7 +62,20 @@ export default async function handler(req, res) {
       });
     }
 
-    const verifyData = verifyResponseData.data;
+    // ZiniPay API returns data directly OR nested in 'data' field
+    let verifyData = verifyResponseData;
+    if (verifyResponseData.status === 'success' && verifyResponseData.data) {
+      verifyData = verifyResponseData.data;
+    }
+
+    // Check if payment data exists
+    if (!verifyData.invoiceId && !verifyData.transactionId) {
+      console.log('Invalid payment data received:', verifyResponseData);
+      return res.status(200).json({ 
+        success: true, 
+        message: "Webhook received but invalid payment data" 
+      });
+    }
 
     if (verifyData.status !== 'COMPLETED') {
       console.log('Payment not completed:', verifyData.status);

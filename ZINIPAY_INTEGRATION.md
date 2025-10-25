@@ -14,6 +14,32 @@ Add this in your environment settings (Vercel, Replit Secrets, etc.):
 
 ## Important Implementation Details
 
+### InvoiceId Generation (CRITICAL FIX)
+**CRITICAL:** ZiniPay requires a unique `invoiceId` or `order_id` when creating payments. Without this, ZiniPay will generate a payment URL but won't persist the invoice in their system, causing **404 errors** during manual verification.
+
+✅ **Correct Implementation:**
+```javascript
+const invoiceId = `INV-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+const paymentData = {
+  invoiceId: invoiceId,  // Required for invoice persistence
+  order_id: invoiceId,   // Alternative field (WordPress plugin compatibility)
+  amount: "100.00",
+  cus_name: "John Doe",
+  cus_email: "john@example.com",
+  // ... other fields
+};
+```
+
+❌ **Incorrect (causes 404 errors):**
+```javascript
+const paymentData = {
+  // Missing invoiceId/order_id - invoice won't be saved!
+  amount: "100.00",
+  cus_name: "John Doe",
+  // ...
+};
+```
+
 ### Metadata Handling
 **Critical:** Metadata must be sent as a JSON object, NOT a stringified string.
 
