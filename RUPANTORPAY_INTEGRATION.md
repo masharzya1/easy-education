@@ -3,6 +3,25 @@
 ## Overview
 This project integrates Rupantorpay payment gateway for course purchases. The integration follows the official API specifications from https://rupantorpay.readme.io/reference/get_new-endpoint
 
+## ✅ METADATA FIX APPLIED
+
+**Previous Issue:** Metadata was being double-stringified, causing userId and course data to be lost.
+
+**Solution Implemented:**
+- ✅ Metadata is now sent as a **JSON object** (not a stringified string)
+- ✅ Proper parsing of metadata in webhook and verification responses
+- ✅ Handles both string and object metadata formats for compatibility
+- ✅ Extensive logging for debugging metadata issues
+
+**Key Changes:**
+```javascript
+// ❌ OLD (INCORRECT - caused errors)
+metadata: JSON.stringify({ userId: "123", courses: [...] })
+
+// ✅ NEW (CORRECT - fixed)
+metadata: { userId: "123", courses: [...] }
+```
+
 ## Configuration
 
 ### Environment Variables (Vercel)
@@ -149,6 +168,18 @@ Go to Vercel → Your Project → Deployments → Functions → View logs
 - Verify your API key is correct
 - Check if you're using the correct environment (test vs live)
 - Contact Rupantorpay support to verify account activation
+
+### Error: "No userId found in payment metadata"
+**THIS IS NOW FIXED!** Previous versions had metadata handling issues. The current implementation:
+- ✅ Sends metadata as a JSON object (not string)
+- ✅ Properly parses both string and object metadata formats
+- ✅ Includes extensive logging to debug metadata issues
+- ✅ Validates metadata structure before enrollment
+
+If you still see this error:
+1. Check the console logs for "Parsed metadata:" output
+2. Verify metadata was included during payment creation
+3. Ensure userId is included in the metadata object
 
 ### Webhook not working
 - Ensure your Vercel deployment is live

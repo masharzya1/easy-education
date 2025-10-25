@@ -1,11 +1,13 @@
 /**
- * BangoPay BD Payment Verification API
- * Verifies payment status using order_id
- * Official Docs: https://bangopaybd.com/developers
+ * RupantorPay Payment Verification API
+ * Verifies payment status using transaction_id
+ * Official Docs: https://rupantorpay.readme.io/reference/verify-payment
+ * 
+ * CRITICAL FIX: Proper metadata parsing to handle both string and object formats
  */
 
-const BANGOPAY_API_KEY = process.env.BANGOPAY_API_KEY;
-const VERIFY_API_BASE_URL = 'https://bangopaybd.com/api/payment/verify';
+const RUPANTORPAY_API_KEY = process.env.RUPANTORPAY_API_KEY;
+const VERIFY_API_URL = 'https://payment.rupantorpay.com/api/verify';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -16,71 +18,78 @@ export default async function handler(req, res) {
     });
   }
 
-  if (!BANGOPAY_API_KEY) {
-    console.error("BANGOPAY_API_KEY is missing!");
+  if (!RUPANTORPAY_API_KEY) {
+    console.error("RUPANTORPAY_API_KEY is missing!");
     return res.status(500).json({ 
       success: false, 
       error: "Server configuration error: Payment service key missing." 
     });
   }
 
-  const { order_id, transaction_id } = req.body;
-  const paymentId = order_id || transaction_id;
+  const { transaction_id } = req.body;
 
-  if (!paymentId) {
+  if (!transaction_id) {
     return res.status(400).json({ 
       success: false, 
-      error: "Missing order_id or transaction_id in request body." 
+      error: "Missing transaction_id in request body." 
     });
   }
 
   try {
-    console.log('Verifying payment with order_id:', paymentId);
+    console.log('Verifying payment with transaction_id:', transaction_id);
     
-    const response = await fetch(`${VERIFY_API_BASE_URL}/${paymentId}`, {
-      method: 'GET',
+    const response = await fetch(VERIFY_API_URL, {
+      method: 'POST',
       headers: {
-        'Authorization': `Bearer ${BANGOPAY_API_KEY}`,
-        'Content-Type': 'application/json'
-      }
+        'Content-Type': 'application/json',
+        'X-API-KEY': RUPANTORPAY_API_KEY
+      },
+      body: JSON.stringify({ 
+        transaction_id: transaction_id
+      })
     });
 
     const paymentData = await response.json();
     
-    console.log('BangoPay verification response:', JSON.stringify(paymentData, null, 2));
+    console.log('RupantorPay verification response:', JSON.stringify(paymentData, null, 2));
     console.log('Response status code:', response.status);
 
-    if (paymentData.status === 'completed') {
+    if (paymentData.status === 'success' && paymentData.data) {
+      const data = paymentData.data;
+      
+      // CRITICAL FIX: Parse metadata properly - handle both string and object formats
       let metadata = {};
-      if (paymentData.metadata) {
-        try {
-          metadata = typeof paymentData.metadata === 'string' 
-            ? JSON.parse(paymentData.metadata) 
-            : paymentData.metadata;
-        } catch (e) {
-          console.error('Failed to parse metadata:', e);
+      if (data.metadata) {
+        if (typeof data.metadata === 'string') {
+          try {
+            metadata = JSON.parse(data.metadata);
+            console.log('✅ Metadata parsed from string:', metadata);
+          } catch (e) {
+            console.error('❌ Failed to parse metadata string:', e);
+            console.error('Raw metadata value:', data.metadata);
+          }
+        } else if (typeof data.metadata === 'object') {
+          metadata = data.metadata;
+          console.log('✅ Metadata is already an object:', metadata);
         }
       }
 
       console.log('✅ Payment verified successfully!');
-      console.log('Order ID:', paymentData.order_id);
-      console.log('Transaction ID:', paymentData.transaction_id);
-      console.log('Amount:', paymentData.amount);
-      console.log('Payment Method:', paymentData.payment_method);
+      console.log('Transaction ID:', data.transaction_id);
+      console.log('Amount:', data.amount);
+      console.log('Parsed metadata:', metadata);
 
       return res.status(200).json({
         success: true,
         verified: true,
         payment: {
-          fullname: metadata.fullname || paymentData.customer_name || 'N/A',
-          email: paymentData.customer_email || metadata.email || 'N/A',
-          amount: paymentData.amount,
-          transaction_id: paymentData.transaction_id,
-          order_id: paymentData.order_id,
-          trx_id: paymentData.transaction_id,
-          status: paymentData.status,
-          payment_method: paymentData.payment_method,
-          paid_at: paymentData.paid_at,
+          fullname: data.name || metadata.fullname || 'N/A',
+          email: data.email || metadata.email || 'N/A',
+          amount: data.amount,
+          transaction_id: data.transaction_id,
+          trx_id: data.transaction_id,
+          status: data.status || 'COMPLETED',
+          payment_method: data.payment_method || 'N/A',
           metadata: metadata
         }
       });

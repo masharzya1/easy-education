@@ -1,10 +1,12 @@
 /**
- * BangoPay BD Payment Creation API
- * Official Docs: https://bangopaybd.com/developers
+ * RupantorPay Payment Creation API
+ * Official Docs: https://rupantorpay.readme.io/reference/new-endpoint
+ * 
+ * CRITICAL FIX: Proper metadata handling to prevent double-stringification
  */
 
-const BANGOPAY_API_KEY = process.env.BANGOPAY_API_KEY;
-const PAYMENT_API_URL = 'https://bangopaybd.com/api/payment/create';
+const RUPANTORPAY_API_KEY = process.env.RUPANTORPAY_API_KEY;
+const PAYMENT_API_URL = 'https://payment.rupantorpay.com/api/create';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -15,8 +17,8 @@ export default async function handler(req, res) {
     });
   }
 
-  if (!BANGOPAY_API_KEY) {
-    console.error("BANGOPAY_API_KEY is missing!");
+  if (!RUPANTORPAY_API_KEY) {
+    console.error("RUPANTORPAY_API_KEY is missing!");
     return res.status(500).json({ 
       success: false, 
       error: "Server configuration error: Payment service key missing." 
@@ -37,23 +39,24 @@ export default async function handler(req, res) {
   const baseUrl = `${protocol}://${host}`;
 
   try {
+    // IMPORTANT: Do NOT stringify metadata here - it will be automatically 
+    // stringified when the whole paymentData object is converted to JSON
     const paymentData = {
-      amount: parseFloat(amount),
-      currency: "BDT",
-      description: `Course purchase by ${fullname}`,
+      name: fullname,
+      email: email,
+      amount: parseFloat(amount).toFixed(2),
       success_url: `${baseUrl}/payment-success`,
       cancel_url: `${baseUrl}/payment-cancel`,
-      fail_url: `${baseUrl}/payment-cancel`,
-      customer_email: email,
-      customer_phone: metadata?.phone || "",
-      metadata: JSON.stringify(metadata || {})
+      // Send metadata as object, NOT as stringified JSON
+      metadata: metadata || {}
     };
 
-    console.log('Creating BangoPay payment:', { 
+    console.log('Creating RupantorPay payment:', { 
       fullname, 
       email, 
       amount: paymentData.amount,
       baseUrl,
+      metadata_type: typeof metadata,
       metadata: metadata 
     });
 
@@ -61,28 +64,26 @@ export default async function handler(req, res) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${BANGOPAY_API_KEY}`
+        'X-API-KEY': RUPANTORPAY_API_KEY
       },
       body: JSON.stringify(paymentData)
     });
 
     const data = await response.json();
-    console.log('BangoPay create payment response:', JSON.stringify(data, null, 2));
+    console.log('RupantorPay create payment response:', JSON.stringify(data, null, 2));
     console.log('Response status code:', response.status);
 
     if (data.status === 'success' && data.payment_url) {
       console.log('✅ Payment created successfully');
       console.log('Payment URL:', data.payment_url);
-      console.log('Order ID:', data.order_id);
       
       return res.status(200).json({
         success: true,
         payment_url: data.payment_url,
-        order_id: data.order_id,
         message: "Payment link created successfully"
       });
     } else {
-      console.error('❌ BangoPay error response:', data);
+      console.error('❌ RupantorPay error response:', data);
       return res.status(400).json({
         success: false,
         error: data.message || data.error || "Failed to create payment link"
