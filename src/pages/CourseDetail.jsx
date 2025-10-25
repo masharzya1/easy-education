@@ -351,28 +351,6 @@ export default function CourseDetail() {
                       </>
                     )}
                   </div>
-
-                  <div className="pt-4 border-t border-border">
-                    <h4 className="font-semibold mb-3">This course includes:</h4>
-                    <div className="space-y-2 text-sm text-muted-foreground">
-                      <div className="flex items-center gap-2">
-                        <Play className="w-4 h-4 text-primary" />
-                        Video lectures
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <BookOpen className="w-4 h-4 text-primary" />
-                        Study materials
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Clock className="w-4 h-4 text-primary" />
-                        Lifetime access
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Check className="w-4 h-4 text-primary" />
-                        Certificate
-                      </div>
-                    </div>
-                  </div>
                 </div>
               )}
             </motion.div>
