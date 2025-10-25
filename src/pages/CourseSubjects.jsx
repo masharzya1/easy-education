@@ -202,48 +202,112 @@ export default function CourseSubjects() {
           <p className="text-muted-foreground">Select a subject to view chapters</p>
         </div>
 
-        {/* Telegram Join Section */}
-        {course?.telegramLink && (
-          <div className="bg-gradient-to-br from-blue-50/80 to-cyan-50/50 dark:from-blue-950/30 dark:to-cyan-950/20 border-2 border-blue-200 dark:border-blue-800 rounded-xl p-6 mb-8 shadow-lg">
-            <h2 className="text-xl font-bold mb-3 flex items-center gap-2">
-              <Send className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-              <span className="bg-gradient-to-r from-blue-600 to-cyan-600 dark:from-blue-400 dark:to-cyan-400 bg-clip-text text-transparent">
-                Join Telegram Community
-              </span>
-            </h2>
-            
-            <p className="text-sm text-muted-foreground mb-4">
-              Join our Telegram group to get updates, interact with instructors, and connect with fellow students.
-            </p>
-
-            <a
-              href={course.telegramLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block w-full md:w-auto md:inline-block py-3 px-6 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white rounded-lg transition-all font-medium text-center mb-6 shadow-md hover:shadow-lg"
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {exams.length > 0 && (
+            <motion.button
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0 }}
+              onClick={() => navigate(`/course/${courseId}/exams`)}
+              className="group relative bg-card border border-border rounded-xl p-6 hover:border-primary/50 hover:shadow-lg transition-all duration-300 text-left"
             >
-              <div className="flex items-center justify-center gap-2">
-                <Send className="w-5 h-5" />
-                <span>Join Telegram Group</span>
-              </div>
-            </a>
-
-            <div className="border-t border-blue-200 dark:border-blue-800 pt-4">
-              <h3 className="font-semibold mb-3 text-sm">Submit Your Telegram Information</h3>
-              
-              {telegramSubmitted ? (
-                <div className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg p-4 flex items-start gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="font-medium text-green-700 dark:text-green-300 text-sm mb-1">
-                      Information Submitted
-                    </p>
-                    <p className="text-xs text-green-600 dark:text-green-400">
-                      You have already submitted your Telegram information for this course.
-                    </p>
-                  </div>
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-secondary/5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="relative">
+                <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
+                  <FileQuestion className="w-6 h-6 text-primary" />
                 </div>
-              ) : (
+                <h3 className="text-xl font-bold mb-2 group-hover:text-primary transition-colors">Exams</h3>
+                <p className="text-sm text-muted-foreground">
+                  {exams.length} exam{exams.length !== 1 ? "s" : ""} available
+                </p>
+              </div>
+            </motion.button>
+          )}
+
+          {subjects.map((subject, index) => (
+            <motion.button
+              key={subject}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: (index + (exams.length > 0 ? 1 : 0)) * 0.1 }}
+              onClick={() => {
+                navigate(`/course/${courseId}/subjects/${encodeURIComponent(subject)}/chapters`)
+              }}
+              className="group relative bg-card border border-border rounded-xl p-6 hover:border-primary/50 hover:shadow-lg transition-all duration-300 text-left"
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-secondary/5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="relative">
+                <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
+                  <BookOpen className="w-6 h-6 text-primary" />
+                </div>
+                <h3 className="text-xl font-bold mb-2 group-hover:text-primary transition-colors">{subject}</h3>
+                <p className="text-sm text-muted-foreground">Click to view chapters</p>
+              </div>
+            </motion.button>
+          ))}
+
+          {hasArchive && (
+            <motion.button
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: (subjects.length + (exams.length > 0 ? 1 : 0)) * 0.1 }}
+              onClick={() => {
+                navigate(`/course/${courseId}/subjects/archive/chapters`)
+              }}
+              className="group relative bg-card border border-border rounded-xl p-6 hover:border-primary/50 hover:shadow-lg transition-all duration-300 text-left"
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-secondary/5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="relative">
+                <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
+                  <Archive className="w-6 h-6 text-primary" />
+                </div>
+                <h3 className="text-xl font-bold mb-2 group-hover:text-primary transition-colors">Archive</h3>
+                <p className="text-sm text-muted-foreground">Archived classes from previous batches</p>
+              </div>
+            </motion.button>
+          )}
+        </div>
+
+        {subjects.length === 0 && !hasArchive && (
+          <div className="text-center py-12 text-muted-foreground">
+            <p>No subjects or archived classes available for this course yet.</p>
+          </div>
+        )}
+
+        {/* Telegram Join Section */}
+        {course?.telegramLink && !telegramSubmitted && (
+          <div className="mt-8 max-w-4xl mx-auto">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-card border border-border rounded-xl p-6 shadow-lg"
+            >
+              <h2 className="text-xl font-bold mb-3 flex items-center gap-2">
+                <Send className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                <span className="bg-gradient-to-r from-blue-600 to-cyan-600 dark:from-blue-400 dark:to-cyan-400 bg-clip-text text-transparent">
+                  Join Telegram Community
+                </span>
+              </h2>
+              
+              <p className="text-sm text-muted-foreground mb-4">
+                Join our Telegram group to get updates, interact with instructors, and connect with fellow students.
+              </p>
+
+              <a
+                href={course.telegramLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block w-full md:w-auto md:inline-block py-3 px-6 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white rounded-lg transition-all font-medium text-center mb-6 shadow-md hover:shadow-lg"
+              >
+                <div className="flex items-center justify-center gap-2">
+                  <Send className="w-5 h-5" />
+                  <span>Join Telegram Group</span>
+                </div>
+              </a>
+
+              <div className="border-t border-border pt-4">
+                <h3 className="font-semibold mb-3 text-sm">Submit Your Telegram Information</h3>
+                
                 <form onSubmit={handleTelegramSubmit} className="space-y-3">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
@@ -319,80 +383,8 @@ export default function CourseSubjects() {
                     )}
                   </button>
                 </form>
-              )}
-            </div>
-          </div>
-        )}
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {exams.length > 0 && (
-            <motion.button
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0 }}
-              onClick={() => navigate(`/course/${courseId}/exams`)}
-              className="group relative bg-card border border-border rounded-xl p-6 hover:border-primary/50 hover:shadow-lg transition-all duration-300 text-left"
-            >
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-secondary/5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity" />
-              <div className="relative">
-                <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
-                  <FileQuestion className="w-6 h-6 text-primary" />
-                </div>
-                <h3 className="text-xl font-bold mb-2 group-hover:text-primary transition-colors">Exams</h3>
-                <p className="text-sm text-muted-foreground">
-                  {exams.length} exam{exams.length !== 1 ? "s" : ""} available
-                </p>
               </div>
-            </motion.button>
-          )}
-
-          {subjects.map((subject, index) => (
-            <motion.button
-              key={subject}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: (index + (exams.length > 0 ? 1 : 0)) * 0.1 }}
-              onClick={() => {
-                navigate(`/course/${courseId}/subjects/${encodeURIComponent(subject)}/chapters`)
-              }}
-              className="group relative bg-card border border-border rounded-xl p-6 hover:border-primary/50 hover:shadow-lg transition-all duration-300 text-left"
-            >
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-secondary/5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity" />
-              <div className="relative">
-                <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
-                  <BookOpen className="w-6 h-6 text-primary" />
-                </div>
-                <h3 className="text-xl font-bold mb-2 group-hover:text-primary transition-colors">{subject}</h3>
-                <p className="text-sm text-muted-foreground">Click to view chapters</p>
-              </div>
-            </motion.button>
-          ))}
-
-          {hasArchive && (
-            <motion.button
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: (subjects.length + (exams.length > 0 ? 1 : 0)) * 0.1 }}
-              onClick={() => {
-                navigate(`/course/${courseId}/subjects/archive/chapters`)
-              }}
-              className="group relative bg-card border border-border rounded-xl p-6 hover:border-primary/50 hover:shadow-lg transition-all duration-300 text-left"
-            >
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-secondary/5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity" />
-              <div className="relative">
-                <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
-                  <Archive className="w-6 h-6 text-primary" />
-                </div>
-                <h3 className="text-xl font-bold mb-2 group-hover:text-primary transition-colors">Archive</h3>
-                <p className="text-sm text-muted-foreground">Archived classes from previous batches</p>
-              </div>
-            </motion.button>
-          )}
-        </div>
-
-        {subjects.length === 0 && !hasArchive && (
-          <div className="text-center py-12 text-muted-foreground">
-            <p>No subjects or archived classes available for this course yet.</p>
+            </motion.div>
           </div>
         )}
       </div>

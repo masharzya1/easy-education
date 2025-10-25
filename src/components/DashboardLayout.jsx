@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Menu, X, BookOpen, CreditCard, User, Home, Settings, LogOut, BarChart3 } from "lucide-react"
+import { Menu, X, BookOpen, CreditCard, User, Home, LogOut, BarChart3 } from "lucide-react"
 import { Link, useLocation } from "react-router-dom"
 import { useAuth } from "../contexts/AuthContext"
 
@@ -15,9 +15,8 @@ export default function DashboardLayout({ children }) {
     { name: "Overview", path: "/dashboard", icon: Home },
     { name: "My Courses", path: "/my-courses", icon: BookOpen },
     { name: "Payment History", path: "/payment-history", icon: CreditCard },
-    { name: "Analytics", path: "/dashboard/analytics", icon: BarChart3 },
+    { name: "Analytics", path: "/analytics", icon: BarChart3 },
     { name: "Profile", path: "/profile", icon: User },
-    { name: "Settings", path: "/dashboard/settings", icon: Settings },
   ]
 
   const handleSignOut = async () => {
