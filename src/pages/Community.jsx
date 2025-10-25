@@ -24,7 +24,7 @@ import { db } from "../lib/firebase"
 import { useAuth } from "../contexts/AuthContext"
 
 export default function Community() {
-  const { currentUser, userProfile } = useAuth()
+  const { currentUser, userProfile, isAdmin } = useAuth()
   const [posts, setPosts] = useState([])
   const [newPostContent, setNewPostContent] = useState("")
   const [newPostImage, setNewPostImage] = useState(null)
@@ -512,10 +512,11 @@ export default function Community() {
                   </div>
                 </div>
 
-                {currentUser?.uid === post.authorId && (
+                {(currentUser?.uid === post.authorId || isAdmin) && (
                   <button
                     onClick={() => handleDeletePost(post.id)}
                     className="p-2 hover:bg-muted rounded-lg transition-colors"
+                    title={isAdmin && currentUser?.uid !== post.authorId ? "Admin: Delete post" : "Delete post"}
                   >
                     <Trash2 className="w-4 h-4 text-red-500" />
                   </button>

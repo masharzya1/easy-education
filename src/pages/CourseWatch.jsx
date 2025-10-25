@@ -23,6 +23,7 @@ import { useAuth } from "../contexts/AuthContext"
 import { useExam } from "../contexts/ExamContext"
 import CustomVideoPlayer from "../components/CustomVideoPlayer"
 import ExamCard from "../components/ExamCard"
+import Breadcrumb from "../components/Breadcrumb"
 import { toast as showGlobalToast } from "../hooks/use-toast"
 
 export default function CourseWatch() {
@@ -402,9 +403,17 @@ export default function CourseWatch() {
     )
   }
 
+  const breadcrumbItems = [
+    { label: "Home", href: "/" },
+    { label: "Courses", href: "/courses" },
+    { label: course?.title || "Loading...", href: `/course/${courseId}` },
+    { label: "Watch" }
+  ]
+
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6">
+        <Breadcrumb items={breadcrumbItems} />
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
           {/* Main Content - Video Player */}
           <div className="lg:col-span-2 space-y-4 sm:space-y-6">
@@ -532,28 +541,6 @@ export default function CourseWatch() {
                         <ExternalLink className="w-3.5 h-3.5 opacity-60 group-hover:opacity-100 transition-opacity" />
                       </a>
                     )
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {exams.length > 0 && (
-              <div className="bg-card border border-border rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-lg">
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-lg sm:text-xl font-bold flex items-center gap-2">
-                    <FileQuestion className="w-5 h-5 text-primary" />
-                    Course Exams
-                  </h2>
-                  <Link
-                    to={`/course/${courseId}/exams`}
-                    className="text-sm text-primary hover:underline"
-                  >
-                    View All
-                  </Link>
-                </div>
-                <div className="space-y-4">
-                  {exams.slice(0, 3).map((exam) => (
-                    <ExamCard key={exam.id} exam={exam} classId={currentClass?.id} />
                   ))}
                 </div>
               </div>

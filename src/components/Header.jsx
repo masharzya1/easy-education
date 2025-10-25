@@ -404,7 +404,7 @@ export default function Header() {
                   <Link
                     to="/login"
                     onClick={() => setSidebarOpen(false)}
-                    className="block w-full px-4 py-3 bg-primary hover:bg-primary/90 text-white rounded-lg smooth-transition text-center font-medium hover:scale-[1.02] active:scale-[0.98]"
+                    className="block w-full px-4 py-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg smooth-transition text-center font-medium hover:scale-[1.02] active:scale-[0.98]"
                   >
                     Login
                   </Link>

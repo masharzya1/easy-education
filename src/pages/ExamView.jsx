@@ -362,19 +362,27 @@ export default function ExamView() {
               transition={{ delay: index * 0.05 }}
               className="bg-card border border-border rounded-lg p-6"
             >
-              <div className="flex items-start gap-3 mb-4">
-                <span className="flex-shrink-0 w-8 h-8 bg-primary/10 text-primary rounded-full flex items-center justify-center font-bold">
-                  {index + 1}
-                </span>
-                <div className="flex-1">
-                  {question.questionText && <p className="text-base mb-2">{question.questionText}</p>}
-                  {question.questionImageUrl && (
+              <div className="mb-4">
+                {question.questionImageUrl ? (
+                  <div className="relative w-full mb-3">
                     <img
                       src={question.questionImageUrl || "/placeholder.svg"}
                       alt="Question"
-                      className="max-w-full rounded-lg mb-3"
+                      className="w-full rounded-lg"
                     />
-                  )}
+                    <span className="absolute top-2 left-2 w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center font-bold shadow-lg">
+                      {index + 1}
+                    </span>
+                  </div>
+                ) : (
+                  <div className="flex items-start gap-3 mb-2">
+                    <span className="flex-shrink-0 w-8 h-8 bg-primary/10 text-primary rounded-full flex items-center justify-center font-bold">
+                      {index + 1}
+                    </span>
+                  </div>
+                )}
+                <div className="flex-1">
+                  {question.questionText && <p className="text-base mb-2">{question.questionText}</p>}
                   <span className="text-sm text-muted-foreground">
                     ({question.marks} mark{question.marks !== 1 ? "s" : ""})
                   </span>
@@ -461,39 +469,64 @@ export default function ExamView() {
                             </div>
                           </div>
                           <div className="flex-1 z-10">
-                            <div className="flex items-center gap-3 mb-1">
-                              <span
-                                className={`font-bold text-sm px-3 py-1 rounded-lg transition-all duration-300 ${
-                                  answers[question.id] === optIndex
-                                    ? "bg-gradient-to-br from-primary to-primary/90 text-primary-foreground shadow-sm"
-                                    : "bg-gradient-to-br from-muted to-muted/80 text-muted-foreground group-hover:from-primary/20 group-hover:to-primary/10"
-                                }`}
-                              >
-                                {String.fromCharCode(65 + optIndex)}
-                              </span>
-                              {option && (
-                                <span
-                                  className={`text-base font-medium transition-colors ${
+                            {question.optionImages?.[optIndex] ? (
+                              <div className="relative w-full">
+                                <motion.img
+                                  whileHover={{ scale: 1.02 }}
+                                  src={question.optionImages[optIndex]}
+                                  alt={`Option ${String.fromCharCode(65 + optIndex)}`}
+                                  className={`w-full rounded-xl border-2 transition-all duration-300 ${
                                     answers[question.id] === optIndex
-                                      ? "text-foreground"
-                                      : "text-muted-foreground group-hover:text-foreground"
+                                      ? "border-primary shadow-md"
+                                      : "border-border group-hover:border-primary/40"
+                                  }`}
+                                />
+                                <span
+                                  className={`absolute top-2 left-2 font-bold text-sm px-3 py-1 rounded-lg shadow-lg transition-all duration-300 ${
+                                    answers[question.id] === optIndex
+                                      ? "bg-gradient-to-br from-primary to-primary/90 text-primary-foreground shadow-sm"
+                                      : "bg-gradient-to-br from-muted to-muted/80 text-muted-foreground group-hover:from-primary/20 group-hover:to-primary/10"
                                   }`}
                                 >
-                                  {option}
+                                  {String.fromCharCode(65 + optIndex)}
                                 </span>
-                              )}
-                            </div>
-                            {question.optionImages?.[optIndex] && (
-                              <motion.img
-                                whileHover={{ scale: 1.02 }}
-                                src={question.optionImages[optIndex]}
-                                alt={`Option ${String.fromCharCode(65 + optIndex)}`}
-                                className={`max-w-sm rounded-xl mt-3 border-2 transition-all duration-300 ${
-                                  answers[question.id] === optIndex
-                                    ? "border-primary shadow-md"
-                                    : "border-border group-hover:border-primary/40"
-                                }`}
-                              />
+                                {option && (
+                                  <div className="mt-2">
+                                    <span
+                                      className={`text-base font-medium transition-colors ${
+                                        answers[question.id] === optIndex
+                                          ? "text-foreground"
+                                          : "text-muted-foreground group-hover:text-foreground"
+                                      }`}
+                                    >
+                                      {option}
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-3 mb-1">
+                                <span
+                                  className={`font-bold text-sm px-3 py-1 rounded-lg transition-all duration-300 ${
+                                    answers[question.id] === optIndex
+                                      ? "bg-gradient-to-br from-primary to-primary/90 text-primary-foreground shadow-sm"
+                                      : "bg-gradient-to-br from-muted to-muted/80 text-muted-foreground group-hover:from-primary/20 group-hover:to-primary/10"
+                                  }`}
+                                >
+                                  {String.fromCharCode(65 + optIndex)}
+                                </span>
+                                {option && (
+                                  <span
+                                    className={`text-base font-medium transition-colors ${
+                                      answers[question.id] === optIndex
+                                        ? "text-foreground"
+                                        : "text-muted-foreground group-hover:text-foreground"
+                                    }`}
+                                  >
+                                    {option}
+                                  </span>
+                                )}
+                              </div>
                             )}
                           </div>
                         </motion.label>
@@ -572,7 +605,7 @@ export default function ExamView() {
         </div>
 
         {!reviewMode && (
-          <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t border-border p-4">
+          <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t border-border p-4 z-50">
             <div className="max-w-4xl mx-auto flex gap-3">
               <button
                 onClick={() => {
@@ -585,7 +618,7 @@ export default function ExamView() {
                     onConfirm: () => navigate(-1),
                   })
                 }}
-                className="px-6 py-3 bg-muted hover:bg-muted/80 rounded-lg transition-colors font-medium"
+                className="px-6 py-3 bg-muted hover:bg-muted/80 rounded-lg transition-colors font-medium relative z-10"
                 disabled={submitting}
               >
                 Exit
@@ -593,7 +626,7 @@ export default function ExamView() {
               <button
                 onClick={handleSubmit}
                 disabled={submitting}
-                className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg transition-colors font-medium disabled:opacity-50"
+                className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg transition-colors font-medium disabled:opacity-50 relative z-10"
               >
                 <Send className="w-5 h-5" />
                 {submitting ? "Submitting..." : "Submit Exam"}
