@@ -79,7 +79,26 @@ POST /api/verify-payment
 }
 ```
 
-**Response:**
+**ZiniPay API Response Format:**
+The ZiniPay API returns data in a nested structure:
+```json
+{
+  "status": "success",
+  "data": {
+    "transactionId": "OVKPXW165414",
+    "invoiceId": "553ca0ac-28c0-41f7-adc0-6243910b1e1b",
+    "amount": "100.00",
+    "currency": "BDT",
+    "paymentMethod": "bkash",
+    "status": "COMPLETED",
+    "customerName": "John Doe",
+    "customerEmail": "john@example.com",
+    "metadata": { ... }
+  }
+}
+```
+
+**Our API Response:**
 ```json
 {
   "success": true,

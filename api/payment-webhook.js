@@ -45,16 +45,30 @@ export default async function handler(req, res) {
         'zini-api-key': ZINIPAY_API_KEY,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ invoiceId: paymentId })
+      body: JSON.stringify({ 
+        invoiceId: paymentId,
+        apiKey: ZINIPAY_API_KEY
+      })
     });
 
-    const verifyData = await verifyResponse.json();
+    const verifyResponseData = await verifyResponse.json();
 
-    if (verifyData.status !== 'COMPLETED') {
-      console.log('Payment verification failed:', verifyData);
+    // Check if verification was successful according to ZiniPay API format
+    if (verifyResponseData.status !== 'success' || !verifyResponseData.data) {
+      console.log('Payment verification failed:', verifyResponseData);
       return res.status(200).json({ 
         success: true, 
         message: "Webhook received but verification failed" 
+      });
+    }
+
+    const verifyData = verifyResponseData.data;
+
+    if (verifyData.status !== 'COMPLETED') {
+      console.log('Payment not completed:', verifyData.status);
+      return res.status(200).json({ 
+        success: true, 
+        message: "Webhook received but payment not completed" 
       });
     }
 
