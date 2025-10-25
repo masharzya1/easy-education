@@ -26,11 +26,10 @@ export default function PaymentSuccess() {
     // ZiniPay returns both invoiceId and transactionId
     const invoiceId = searchParams.get('invoiceId') || searchParams.get('invoice_id')
     const transactionId = searchParams.get('transactionId') || searchParams.get('transaction_id')
-    const paymentId = invoiceId || transactionId
     const status = searchParams.get('status')
 
-    if (!paymentId) {
-      setError("No payment ID found")
+    if (!invoiceId && !transactionId) {
+      setError("No payment ID found in redirect URL")
       setLoading(false)
       setVerifying(false)
       return
@@ -43,29 +42,35 @@ export default function PaymentSuccess() {
       return
     }
 
-    verifyAndProcessPayment(paymentId, invoiceId)
+    verifyAndProcessPayment(invoiceId, transactionId)
   }, [currentUser, searchParams, navigate])
 
-  const verifyAndProcessPayment = async (paymentId, invoiceId) => {
+  const verifyAndProcessPayment = async (invoiceId, transactionId) => {
     try {
       setVerifying(true)
 
+      console.log('[PaymentSuccess] Verifying payment with:', { invoiceId, transactionId });
+
+      // Send both IDs to the backend, preferring invoiceId but including transactionId for backward compatibility
       const enrollmentResponse = await fetch('/api/process-enrollment', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ 
-          transaction_id: paymentId,
-          invoiceId: invoiceId || paymentId,
+          invoiceId: invoiceId || transactionId,
+          transaction_id: transactionId || invoiceId,
           userId: currentUser.uid
         })
       })
 
       const enrollmentData = await enrollmentResponse.json()
+      console.log('[PaymentSuccess] Enrollment response:', enrollmentData);
 
       if (!enrollmentData.success || !enrollmentData.verified) {
-        setError(enrollmentData.error || "Payment verification failed")
+        const errorMessage = enrollmentData.error || "Payment verification failed";
+        console.error('[PaymentSuccess] Verification failed:', errorMessage);
+        setError(errorMessage)
         setVerifying(false)
         setLoading(false)
         return
