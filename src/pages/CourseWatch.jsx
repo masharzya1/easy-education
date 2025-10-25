@@ -42,6 +42,7 @@ export default function CourseWatch() {
   const [exams, setExams] = useState([])
   const [showExams, setShowExams] = useState(false)
   const [telegramId, setTelegramId] = useState("")
+  const [telegramMobile, setTelegramMobile] = useState("")
   const [telegramSubmitted, setTelegramSubmitted] = useState(false)
   const [submittingTelegram, setSubmittingTelegram] = useState(false)
   
@@ -87,7 +88,7 @@ export default function CourseWatch() {
 
   const handleTelegramSubmit = async (e) => {
     e.preventDefault()
-    if (!currentUser || !telegramId.trim() || telegramSubmitted) return
+    if (!currentUser || !telegramId.trim() || !telegramMobile.trim() || telegramSubmitted) return
 
     setSubmittingTelegram(true)
 
@@ -97,6 +98,7 @@ export default function CourseWatch() {
         userName: currentUser.displayName || currentUser.email,
         userEmail: currentUser.email,
         telegramId: telegramId.trim(),
+        telegramMobile: telegramMobile.trim(),
         courseId: courseId,
         courseName: course?.title || "",
         submittedAt: serverTimestamp()
@@ -104,12 +106,13 @@ export default function CourseWatch() {
 
       setTelegramSubmitted(true)
       setTelegramId("")
+      setTelegramMobile("")
       showGlobalToast({
         title: "Success!",
-        description: "Telegram ID submitted successfully!",
+        description: "Telegram information submitted successfully!",
       })
     } catch (error) {
-      console.error("Error submitting telegram ID:", error)
+      console.error("Error submitting telegram info:", error)
       showGlobalToast({
         variant: "destructive",
         title: "Error",
@@ -664,13 +667,27 @@ export default function CourseWatch() {
 
                       <div>
                         <label className="block text-xs font-medium text-muted-foreground mb-1.5">
-                          তোমার টেলিগ্রাম আইডির নাম লিখো। Mobile Number সহ। [যেই আইডি থেকে রিকুয়েস্ট পাঠানো হয়েছে]
+                          তোমার টেলিগ্রাম আইডির নাম লিখো [যেই আইডি থেকে রিকুয়েস্ট পাঠানো হয়েছে]
                         </label>
                         <input
                           type="text"
                           value={telegramId}
                           onChange={(e) => setTelegramId(e.target.value)}
-                          placeholder="Example: Shakib (01912345678)"
+                          placeholder="Example: Shakib"
+                          required
+                          className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-medium text-muted-foreground mb-1.5">
+                          Mobile Number
+                        </label>
+                        <input
+                          type="tel"
+                          value={telegramMobile}
+                          onChange={(e) => setTelegramMobile(e.target.value)}
+                          placeholder="01912345678"
                           required
                           className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
@@ -678,7 +695,7 @@ export default function CourseWatch() {
 
                       <button
                         type="submit"
-                        disabled={submittingTelegram || !telegramId.trim()}
+                        disabled={submittingTelegram || !telegramId.trim() || !telegramMobile.trim()}
                         className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-white rounded-lg transition-colors font-medium text-sm flex items-center justify-center gap-2"
                       >
                         {submittingTelegram ? (

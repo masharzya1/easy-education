@@ -18,6 +18,7 @@ import {
   Menu,
   X,
   FileQuestion,
+  Send,
 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import AdminOverview from "./AdminOverview"
@@ -36,6 +37,7 @@ import ManageChapters from "./ManageChapters"
 import ManageExams from "./ManageExams"
 import ManageExamQuestions from "./ManageExamQuestions"
 import ViewExamSubmissions from "./ViewExamSubmissions"
+import ManageTelegramSubmissions from "./ManageTelegramSubmissions"
 
 export default function AdminDashboard() {
   const location = useLocation()
@@ -56,6 +58,7 @@ export default function AdminDashboard() {
     { name: "Announcements", path: "/admin/announcements", icon: Megaphone },
     { name: "Coupons", path: "/admin/coupons", icon: Tag },
     { name: "Payments", path: "/admin/payments", icon: CreditCard },
+    { name: "Telegram Subs", path: "/admin/telegram", icon: Send },
     { name: "Settings", path: "/admin/settings", icon: Settings },
     { name: "Rankings", path: "/admin/rankings", icon: BarChart3 },
   ]
@@ -134,6 +137,7 @@ export default function AdminDashboard() {
               <Route path="announcements" element={<ManageAnnouncements />} />
               <Route path="coupons" element={<ManageCoupons />} />
               <Route path="payments" element={<ManagePayments />} />
+              <Route path="telegram" element={<ManageTelegramSubmissions />} />
               <Route path="settings" element={<WebsiteSettings />} />
               <Route path="rankings" element={<Rankings />} />
             </Routes>
