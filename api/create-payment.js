@@ -43,8 +43,9 @@ export default async function handler(req, res) {
       fullname: fullname,
       email: email,
       amount: String(parseFloat(amount).toFixed(2)),
-      success_url: `${baseUrl}/payment-success`,
-      cancel_url: `${baseUrl}/payment-cancel`,
+      // ✅ FIXED: Changed to /checkout-complete instead of /payment-success
+      success_url: `${baseUrl}/checkout-complete`,
+      cancel_url: `${baseUrl}/checkout`,
       webhook_url: `${baseUrl}/api/payment-webhook`,
       metadata: metadata || {}
     };
@@ -71,7 +72,6 @@ export default async function handler(req, res) {
     console.log('RupantorPay create payment response:', JSON.stringify(data, null, 2));
     console.log('Response status code:', response.status);
     
-    // ✅ FIX: Check for BOTH status: 1 AND status: true
     if ((data.status === 1 || data.status === true) && data.payment_url) {
       console.log('✅ Payment created successfully');
       console.log('Payment URL:', data.payment_url);
