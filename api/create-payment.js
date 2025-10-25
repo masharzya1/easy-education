@@ -38,16 +38,12 @@ export default async function handler(req, res) {
   const baseUrl = `${protocol}://${host}`;
 
   try {
-    // Generate a unique invoice ID for this payment
-    const invoiceId = `INV-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
-    
-    // Prepare payment data according to ZiniPay API specs
+    // Prepare payment data according to ZiniPay official documentation
+    // Note: ZiniPay generates the invoiceId and returns it to us
     const paymentData = {
-      invoiceId: invoiceId,  // CRITICAL: Required for ZiniPay to persist the invoice
-      order_id: invoiceId,   // Alternative field name (WordPress plugin uses this)
-      amount: parseFloat(amount).toFixed(2),
       cus_name: fullname,
       cus_email: email,
+      amount: parseFloat(amount).toString(),
       redirect_url: `${baseUrl}/payment-success`,
       cancel_url: `${baseUrl}/payment-cancel`,
       webhook_url: `${baseUrl}/api/payment-webhook`,
@@ -55,7 +51,6 @@ export default async function handler(req, res) {
     };
 
     console.log('Creating ZiniPay payment:', { 
-      invoiceId,
       fullname, 
       email, 
       amount: paymentData.amount,
@@ -75,18 +70,16 @@ export default async function handler(req, res) {
     const data = await response.json();
     console.log('ZiniPay create payment response:', JSON.stringify(data, null, 2));
     console.log('Response status code:', response.status);
-    console.log('Generated invoiceId:', invoiceId);
     console.log('Metadata sent:', JSON.stringify(metadata, null, 2));
 
     // Check for successful response
     if (data.status === true && data.payment_url) {
-      console.log('✅ Payment created successfully. InvoiceId:', invoiceId);
+      console.log('✅ Payment created successfully');
       console.log('Payment URL:', data.payment_url);
       
       return res.status(200).json({
         success: true,
         payment_url: data.payment_url,
-        invoiceId: invoiceId,  // Return invoiceId for frontend tracking
         message: data.message || "Payment link created successfully"
       });
     } else {

@@ -49,48 +49,33 @@ export default async function handler(req, res) {
       })
     });
 
-    const responseData = await response.json();
+    const paymentData = await response.json();
     
-    console.log('ZiniPay verification response:', JSON.stringify(responseData, null, 2));
+    console.log('ZiniPay verification response:', JSON.stringify(paymentData, null, 2));
     console.log('Response status code:', response.status);
 
-    // Handle error responses (status: false)
-    if (responseData.status === false) {
-      return res.status(400).json({
-        success: false,
-        verified: false,
-        error: responseData.message || "Payment verification failed"
-      });
-    }
-
-    // ZiniPay API returns data directly OR nested in 'data' field
-    // Handle both formats for compatibility
-    let data = responseData;
-    if (responseData.status === 'success' && responseData.data) {
-      data = responseData.data;
-    }
+    // According to ZiniPay official example:
+    // Status is at root level: paymentData.status
+    // Data is nested: paymentData.data.*
     
-    // Check if payment data exists
-    if (!data.invoiceId && !data.transactionId) {
-      return res.status(400).json({
-        success: false,
-        verified: false,
-        error: responseData.message || "Invalid payment data received"
-      });
-    }
-
-    // Parse metadata if it's a string
-    let metadata = data.metadata || {};
-    if (typeof metadata === 'string') {
-      try {
-        metadata = JSON.parse(metadata);
-      } catch (e) {
-        console.error('Failed to parse metadata:', e);
+    if (paymentData.status === 'COMPLETED') {
+      // Payment is verified successfully
+      const data = paymentData.data || {};
+      
+      // Parse metadata if it's a string
+      let metadata = data.metadata || {};
+      if (typeof metadata === 'string') {
+        try {
+          metadata = JSON.parse(metadata);
+        } catch (e) {
+          console.error('Failed to parse metadata:', e);
+        }
       }
-    }
 
-    // Check if payment is completed
-    if (data.status === 'COMPLETED') {
+      console.log('✅ Payment verified successfully!');
+      console.log('Transaction ID:', data.transactionId);
+      console.log('Amount:', data.amount);
+
       return res.status(200).json({
         success: true,
         verified: true,
@@ -104,10 +89,10 @@ export default async function handler(req, res) {
           currency: data.currency || 'BDT',
           metadata: metadata,
           payment_method: data.paymentMethod,
-          status: data.status
+          status: paymentData.status
         }
       });
-    } else if (data.status === 'PENDING') {
+    } else if (paymentData.status === 'PENDING') {
       return res.status(200).json({
         success: true,
         verified: false,
@@ -115,10 +100,12 @@ export default async function handler(req, res) {
         message: "Payment is still pending"
       });
     } else {
+      // Verification failed or other status
+      console.error('❌ Payment verification failed:', paymentData.message);
       return res.status(400).json({
         success: false,
         verified: false,
-        error: `Payment status is ${data.status}`
+        error: paymentData.message || "Payment verification failed"
       });
     }
   } catch (error) {

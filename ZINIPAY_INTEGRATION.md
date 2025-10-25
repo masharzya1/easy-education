@@ -14,31 +14,14 @@ Add this in your environment settings (Vercel, Replit Secrets, etc.):
 
 ## Important Implementation Details
 
-### InvoiceId Generation (CRITICAL FIX)
-**CRITICAL:** ZiniPay requires a unique `invoiceId` or `order_id` when creating payments. Without this, ZiniPay will generate a payment URL but won't persist the invoice in their system, causing **404 errors** during manual verification.
+### Official ZiniPay API Format
+This integration follows the **exact official ZiniPay API documentation** provided by ZiniPay.
 
-✅ **Correct Implementation:**
-```javascript
-const invoiceId = `INV-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
-const paymentData = {
-  invoiceId: invoiceId,  // Required for invoice persistence
-  order_id: invoiceId,   // Alternative field (WordPress plugin compatibility)
-  amount: "100.00",
-  cus_name: "John Doe",
-  cus_email: "john@example.com",
-  // ... other fields
-};
-```
-
-❌ **Incorrect (causes 404 errors):**
-```javascript
-const paymentData = {
-  // Missing invoiceId/order_id - invoice won't be saved!
-  amount: "100.00",
-  cus_name: "John Doe",
-  // ...
-};
-```
+**Key Points:**
+- ZiniPay **generates** the `invoiceId` automatically when you create a payment
+- ZiniPay returns the `invoiceId` in the redirect URL after payment
+- You use that `invoiceId` to verify the payment
+- Response format: `{ status: "COMPLETED", data: { transactionId, amount, ... } }`
 
 ### Metadata Handling
 **Critical:** Metadata must be sent as a JSON object, NOT a stringified string.
@@ -72,7 +55,7 @@ POST /api/create-payment
 {
   "fullname": "John Doe",
   "email": "john@example.com",
-  "amount": "100.00",
+  "amount": "100",
   "metadata": {
     "userId": "user123",
     "courses": [
@@ -81,6 +64,22 @@ POST /api/create-payment
     "subtotal": 100,
     "discount": 0,
     "couponCode": ""
+  }
+}
+```
+
+**What gets sent to ZiniPay:**
+```json
+{
+  "cus_name": "John Doe",
+  "cus_email": "john@example.com",
+  "amount": "100",
+  "redirect_url": "https://yourdomain.com/payment-success",
+  "cancel_url": "https://yourdomain.com/payment-cancel",
+  "webhook_url": "https://yourdomain.com/api/payment-webhook",
+  "metadata": {
+    "userId": "user123",
+    "courses": [...]
   }
 }
 ```
@@ -105,21 +104,21 @@ POST /api/verify-payment
 }
 ```
 
-**ZiniPay API Response Format:**
-The ZiniPay API returns data in a nested structure:
+**ZiniPay API Response Format (Official):**
+According to ZiniPay's official documentation, the response structure is:
 ```json
 {
-  "status": "success",
+  "status": "COMPLETED",
   "data": {
     "transactionId": "OVKPXW165414",
     "invoiceId": "553ca0ac-28c0-41f7-adc0-6243910b1e1b",
     "amount": "100.00",
     "currency": "BDT",
     "paymentMethod": "bkash",
-    "status": "COMPLETED",
     "customerName": "John Doe",
     "customerEmail": "john@example.com",
-    "metadata": { ... }
+    "metadata": { ... },
+    "createdAt": "2023-09-15T14:23:45Z"
   }
 }
 ```
