@@ -22,7 +22,7 @@ The platform is built using React 18.2.0 with Vite, styled with TailwindCSS and 
 
 ### External Dependencies
 - **Firebase**: Used for Authentication (Firebase Auth) and Database (Firestore).
-- **RupantorPay**: Payment gateway for automated payment processing (API key stored in RUPANTORPAY_API_KEY secret).
+- **ZiniPay**: Payment gateway for automated payment processing (API key stored in ZINIPAY_API_KEY secret). Migrated from RupantorPay on October 25, 2025.
 - **imgbb.com API**: For image uploads, particularly for exam questions and options.
 - **SendGrid**: Integrated for sending email notifications (requires API key setup).
 - **React Router DOM**: For client-side routing.
@@ -37,8 +37,23 @@ The application now uses an Express.js server that serves both the Vite developm
 - **Production**: Serves built static files from /dist directory
 - **API Routes**: RESTful endpoints for payment processing, image uploads, and enrollment
 
-### Recent Changes (October 24, 2025)
-1. **Complete RupantorPay Integration with Automatic Enrollment**
+### Recent Changes (October 25, 2025)
+1. **Migrated from RupantorPay to ZiniPay Payment Gateway**
+   - Updated all API endpoints to use ZiniPay API (https://api.zinipay.com/v1/payment/*)
+   - Changed authentication from `X-API-KEY` to `zini-api-key` header
+   - Implemented dual ID system (invoiceId + transactionId) for better payment tracking
+   - Fixed metadata handling to properly stringify on creation and parse on verification
+   - Resolved all three payment issues:
+     * Payment link creation failures (metadata now properly stringified)
+     * "Transaction ID not found" errors (support for both invoiceId and transactionId)
+     * "userId not found in metadata" errors (proper metadata parsing throughout flow)
+   - Created comprehensive ZiniPay integration documentation (ZINIPAY_INTEGRATION.md)
+   - Enhanced error handling and logging for better debugging
+   - Updated frontend to handle ZiniPay redirect parameters correctly
+   - Environment variable changed from RUPANTORPAY_API_KEY to ZINIPAY_API_KEY
+
+### Previous Changes (October 24, 2025)
+1. **Payment Integration Infrastructure**
    - Created Express server to handle API routes and serve Vite app
    - Implemented server-side payment processing with Firebase Admin SDK
    - Created shared payment processing utility (api/utils/process-payment.js) for idempotent enrollment
