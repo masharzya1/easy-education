@@ -1,4 +1,4 @@
-import { initializeApp, getApps, cert } from 'firebase-admin/app';
+import { initializeApp, getApps, cert, applicationDefault } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 
 let db;
@@ -14,7 +14,20 @@ function initializeFirebase() {
         credential: cert(serviceAccount)
       });
     } else {
-      initializeApp();
+      try {
+        // Try to use Application Default Credentials (ADC)
+        initializeApp({
+          credential: applicationDefault(),
+          projectId: 'easy-educat'
+        });
+      } catch (error) {
+        // If ADC is not available, initialize with project ID only
+        // This will work for Firestore operations in some environments
+        console.warn('Firebase Admin SDK initialized with limited credentials. Some operations may fail.');
+        initializeApp({
+          projectId: 'easy-educat'
+        });
+      }
     }
   }
   db = getFirestore();

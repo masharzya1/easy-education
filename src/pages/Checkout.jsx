@@ -152,6 +152,49 @@ export default function Checkout() {
         couponCode: appliedCoupon?.code || "",
       }
 
+      // If total is 0 (100% discount), directly enroll user without payment
+      if (finalTotal === 0) {
+        const enrollResponse = await fetch('/api/process-enrollment', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            userId: currentUser.uid,
+            userName: userProfile?.name || currentUser.displayName || "User",
+            userEmail: userProfile?.email || currentUser.email,
+            transaction_id: `FREE_${Date.now()}_${currentUser.uid}`,
+            courses: metadata.courses,
+            subtotal: metadata.subtotal,
+            discount: metadata.discount,
+            couponCode: metadata.couponCode,
+            finalAmount: 0,
+            paymentMethod: 'Free Coupon',
+            skipPaymentVerification: true
+          })
+        })
+
+        const enrollData = await enrollResponse.json()
+
+        if (enrollData.success) {
+          clearCart()
+          toast({
+            variant: "success",
+            title: "Enrolled Successfully!",
+            description: "You have been enrolled in the course(s) for free!",
+          })
+          navigate('/checkout-complete', { 
+            state: { 
+              courses: metadata.courses,
+              isFreeEnrollment: true 
+            } 
+          })
+        } else {
+          throw new Error(enrollData.error || "Failed to process free enrollment")
+        }
+        return
+      }
+
       const response = await fetch('/api/create-payment', {
         method: 'POST',
         headers: {
@@ -334,6 +377,11 @@ export default function Checkout() {
                         <Loader2 className="w-5 h-5 animate-spin" />
                         Processing...
                       </>
+                    ) : total === 0 ? (
+                      <>
+                        <CreditCard className="w-5 h-5" />
+                        Enroll Now
+                      </>
                     ) : (
                       <>
                         <CreditCard className="w-5 h-5" />
@@ -343,7 +391,7 @@ export default function Checkout() {
                   </button>
 
                   <p className="text-xs text-center text-muted-foreground">
-                    By proceeding, you agree to our terms and conditions. Your payment is secured by ZiniPay.
+                    By proceeding, you agree to our terms and conditions. Your payment is secured by RupantorPay.
                   </p>
                 </div>
               </div>

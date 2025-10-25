@@ -192,6 +192,20 @@ export default function CourseCard({ course, onAddToCart, showProgress = false }
             </span>
           </div>
 
+          {/* Price Display */}
+          <div className="mb-3">
+            {course.price && course.price > 0 ? (
+              <div className="flex items-center gap-2">
+                <span className="text-2xl font-bold text-primary">৳{course.price}</span>
+                {course.originalPrice && course.originalPrice > course.price && (
+                  <span className="text-sm text-muted-foreground line-through">৳{course.originalPrice}</span>
+                )}
+              </div>
+            ) : (
+              <span className="text-2xl font-bold text-green-600 dark:text-green-400">Free</span>
+            )}
+          </div>
+
           {loading ? (
             <div className="w-full h-10 flex items-center justify-center border border-border rounded-lg text-muted-foreground text-sm">
               Loading Status...
