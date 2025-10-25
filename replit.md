@@ -38,6 +38,8 @@ The application now uses an Express.js server that serves both the Vite developm
 - **API Routes**: RESTful endpoints for payment processing, image uploads, and enrollment
 
 ### Recent Changes (October 25, 2025)
+
+**Session 1: Payment Gateway Migration**
 1. **Migrated to RupantorPay Payment Gateway with Metadata Fix**
    - Updated all API endpoints to use RupantorPay API (https://payment.rupantorpay.com/api/*)
    - Authentication via `X-API-KEY` header
@@ -53,6 +55,34 @@ The application now uses an Express.js server that serves both the Vite developm
    - Updated RUPANTORPAY_INTEGRATION.md with metadata fix documentation
    - Enhanced error handling throughout payment flow
    - Environment variable: RUPANTORPAY_API_KEY
+
+**Session 2: Checkout Coupon Fix, Teacher Display & Course Card Improvements**
+2. **Checkout Page Reload Fix**
+   - Fixed issue where 100% discount coupon was lost on page reload
+   - Implemented sessionStorage persistence for applied coupons
+   - Added cart loading state (isLoaded) to CartContext to prevent premature redirects
+   - Checkout now waits for both cart and coupon data to load before validating
+   - Session coupon is properly cleared after successful enrollment or payment
+   - Prevents redirect to /courses when checkout page is reloaded with valid cart
+
+3. **Teacher Display in Course Details**
+   - Added comprehensive teacher information display on CourseDetail page
+   - Teachers are fetched from Firestore based on course.instructors array
+   - Displays in horizontal card layout with teacher picture, name, expertise, and bio
+   - Teacher cards show profile image (left side), name/expertise/description (right side)
+   - Section only appears when course has assigned teachers
+   - Supports up to 10 teachers per course query
+
+4. **Course Card UI Enhancement**
+   - Changed "Add to Cart" button to "Buy Now" button on all course cards
+   - Buy Now button navigates directly to course details page for purchase flow
+   - Price display maintained and prominently shown on course cards
+   - Consistent across both home page and courses page
+   - Simplifies user journey from browsing to course details
+
+5. **Express.js Downgrade**
+   - Downgraded Express from v5.1.0 to v4.x for better ES module compatibility
+   - Fixed ERR_MODULE_NOT_FOUND errors in development environment
 
 ### Previous Changes (October 24, 2025)
 1. **Payment Integration Infrastructure**
