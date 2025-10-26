@@ -75,6 +75,28 @@ The project is ready for development. All dependencies are installed and the ser
 
 ## Recent Work Completed (October 26, 2025 - Latest Session)
 
+### Session 3: UI & Image Enhancements ✅
+**Completed Tasks (3, 5, 9):**
+
+1. **Task 3: Archived Classes Tab System** ✓
+   - Added tab toggle between "Active Classes" and "Archived Classes" in ManageClasses.jsx
+   - Archived classes now show with orange "Archived" badge
+   - Fixed order calculation bug for new classes (always uses active class count regardless of current tab)
+   - Users can now view and manage archived classes separately
+
+2. **Task 5: Class Image Upload/Link** ✓
+   - Added dual image options to class management (upload to ImgBB + image link)
+   - Implemented toggle between "Upload Image" and "Image Link" in class form
+   - Added image preview for link-based images
+   - Follows same pattern as Subjects and Chapters
+
+3. **Task 9: Image Display in UI** ✓
+   - Added image display to class cards in CourseClasses.jsx
+   - Images show at top of card (48px height, full width) when imageURL exists
+   - Implemented proper fallback: shows Play icon if no image or image fails to load
+   - Added lazy loading (`loading="lazy"`) for performance
+   - Error handling with state tracking to show fallback on broken image URLs
+
 ### Session 2: Core Admin Features ✅ 
 **Completed Tasks (1-4, 13):**
 
@@ -85,15 +107,14 @@ The project is ready for development. All dependencies are installed and the ser
 
 2. **Fixed Class Creation Filtering** ✓
    - Fixed course-based subject selection in ManageClasses.jsx
-   - Subjects now filter by selected course (lines 774-787)
-   - Chapters filter by selected subjects (batch courses) or course (non-batch) (lines 825-842)
+   - Subjects now filter by selected course
+   - Chapters filter by selected subjects (batch courses) or course (non-batch)
    - Resolves issue where all subjects/chapters were showing instead of filtered list
 
 3. **Added Order Fields to Exams and Questions** ✓
-   - Exams: Added order field with auto-increment and descending sort (ManageExams.jsx)
-   - Questions: Added order field with auto-increment and descending sort (ManageExamQuestions.jsx)  
+   - Exams: Added order field with auto-increment and descending sort
+   - Questions: Added order field with auto-increment and descending sort
    - Updated ExamContext.jsx to sort questions by order (descending) with createdAt fallback
-   - UI includes order input fields with helpful placeholder text
    - Latest items now display first across all admin panels
 
 4. **Enabled Multiple Course Selection for Subjects** ✓
