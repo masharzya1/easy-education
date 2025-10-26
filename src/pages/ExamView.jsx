@@ -78,14 +78,6 @@ export default function ExamView() {
 
       const existingResult = await getExamResult(currentUser.uid, resolvedExamId)
 
-      if (existingResult && examData.isArchived) {
-        setReviewMode(true)
-        setUserResult(existingResult)
-        setHasStarted(true)
-        const answersMap = existingResult.answers || {}
-        setAnswers(answersMap)
-      }
-
       if (questionsData.length === 0) {
         console.warn("[v0] No questions found for exam:", examId)
         toast({

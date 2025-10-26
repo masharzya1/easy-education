@@ -79,7 +79,7 @@ export default function ExamResult() {
               navigate(-1)
             }
           }}
-          className="flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6 transition-colors"
+          className="relative z-50 flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Exams
