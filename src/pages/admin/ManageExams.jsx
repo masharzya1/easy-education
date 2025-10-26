@@ -25,6 +25,7 @@ export default function ManageExams() {
     courseId: "",
     duration: 60,
     passingScore: 70,
+    order: 0,
   })
 
   const { createExam, updateExam, deleteExam } = useExam()
@@ -36,7 +37,7 @@ export default function ManageExams() {
   const fetchData = async () => {
     try {
       setLoading(true)
-      const examsSnapshot = await getDocs(query(collection(db, "exams"), orderBy("createdAt", "desc")))
+      const examsSnapshot = await getDocs(collection(db, "exams"))
       const examsData = await Promise.all(
         examsSnapshot.docs.map(async (examDoc) => {
           const exam = { id: examDoc.id, ...examDoc.data() }
@@ -51,6 +52,20 @@ export default function ManageExams() {
           return exam
         })
       )
+      // Sort by order (descending), fallback to createdAt if order doesn't exist or is 0
+      examsData.sort((a, b) => {
+        const orderA = a.order || null
+        const orderB = b.order || null
+        // If both have order, sort by order
+        if (orderA !== null && orderB !== null) {
+          return orderB - orderA
+        }
+        // If only one has order, it comes first
+        if (orderA !== null) return -1
+        if (orderB !== null) return 1
+        // If neither has order, sort by createdAt descending
+        return (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)
+      })
       setExams(examsData)
 
       const coursesSnapshot = await getDocs(collection(db, "courses"))
@@ -103,6 +118,7 @@ export default function ManageExams() {
         courseId: "",
         duration: 60,
         passingScore: 70,
+        order: 0,
       })
       fetchData()
     } catch (error) {
@@ -123,6 +139,7 @@ export default function ManageExams() {
       courseId: exam.courseId,
       duration: exam.duration || 60,
       passingScore: exam.passingScore || 70,
+      order: exam.order ?? 0,
     })
     setShowModal(true)
   }
@@ -197,12 +214,14 @@ export default function ManageExams() {
 
       for (const name of names) {
         try {
+          const maxOrder = exams.length > 0 ? Math.max(...exams.map(e => e.order ?? 0)) : 0
           await createExam({
             title: name,
             description: "",
             courseId: bulkCourseId,
             duration: 60,
             passingScore: 70,
+            order: maxOrder + successCount + 1,
           })
           successCount++
         } catch (err) {
@@ -259,12 +278,14 @@ export default function ManageExams() {
           <button
             onClick={() => {
               setEditingExam(null)
+              const maxOrder = exams.length > 0 ? Math.max(...exams.map(e => e.order ?? 0)) : 0
               setFormData({
                 title: "",
                 description: "",
                 courseId: "",
                 duration: 60,
                 passingScore: 70,
+                order: maxOrder + 1,
               })
               setShowModal(true)
             }}
@@ -425,6 +446,20 @@ export default function ManageExams() {
                     max="100"
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">Order</label>
+                <input
+                  type="number"
+                  value={formData.order}
+                  onChange={(e) => setFormData({ ...formData, order: parseInt(e.target.value) || 0 })}
+                  className="w-full px-3 py-2 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  placeholder="Auto-calculated if empty"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Exams are displayed in descending order (highest first). Auto-incremented for new exams.
+                </p>
               </div>
 
               <div className="flex gap-2 pt-4">

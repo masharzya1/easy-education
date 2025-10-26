@@ -73,54 +73,70 @@ To enable all features, you need to configure the following API keys using Repli
 ## Development Setup Complete
 The project is ready for development. All dependencies are installed and the server is running. Add the required API keys to enable payment and image upload features.
 
-## Recent Work Completed (October 26, 2025)
+## Recent Work Completed (October 26, 2025 - Latest Session)
 
-### Completed Feature Tasks ✅
+### Session 2: Core Admin Features ✅ 
+**Completed Tasks (1-4, 13):**
+
+1. **Verified Image Upload/Link for Subjects and Chapters** ✓
+   - Subjects and Chapters already have dual image options (upload to ImgBB or image URL)
+   - Both ManageSubjects.jsx and ManageChapters.jsx fully functional
+   - UI includes toggle between "Upload Image" and "Image Link"
+
+2. **Fixed Class Creation Filtering** ✓
+   - Fixed course-based subject selection in ManageClasses.jsx
+   - Subjects now filter by selected course (lines 774-787)
+   - Chapters filter by selected subjects (batch courses) or course (non-batch) (lines 825-842)
+   - Resolves issue where all subjects/chapters were showing instead of filtered list
+
+3. **Added Order Fields to Exams and Questions** ✓
+   - Exams: Added order field with auto-increment and descending sort (ManageExams.jsx)
+   - Questions: Added order field with auto-increment and descending sort (ManageExamQuestions.jsx)  
+   - Updated ExamContext.jsx to sort questions by order (descending) with createdAt fallback
+   - UI includes order input fields with helpful placeholder text
+   - Latest items now display first across all admin panels
+
+4. **Enabled Multiple Course Selection for Subjects** ✓
+   - Subjects can now be assigned to multiple courses (courseIds array)
+   - Updated ManageSubjects.jsx with multi-select UI (pill-based selection)
+   - Maintains backwards compatibility by saving both courseIds[] and legacy courseId
+   - Updated all consumers: ManageSubjects, ManageChapters, ManageClasses filtering
+   - Bulk creation also supports multi-course architecture
+
+13. **Footer Layout Verification** ✓
+    - Confirmed footer already has correct layout (Contact → Support → Follow Us)
+    - No changes needed - already properly structured
+
+### Previous Session: Initial Features ✅
 1. **Image Upload/Link for Subjects and Chapters**
-   - Added dual option: upload to ImgBB or provide image URL
-   - Implemented in both ManageSubjects.jsx and ManageChapters.jsx
-   - UI includes toggle between "Upload Image" and "Image Link" options
-
-2. **Order Field for Teachers**
-   - Added order field to control display sequence
-   - Teachers now sort descending by order (latest first)
-   - Form includes order input with auto-increment functionality
-
+2. **Order Field for Teachers**  
 3. **Firebase Rules Fix - Community Features**
-   - **CRITICAL FIX**: Changed posts and comments to allow public reading
-   - Previous rules required sign-in to read, preventing community features from working
-   - File updated: `firestore.rules` (lines 73-97)
-   - Community posts and comments now visible to all users
-
 4. **Footer & Menu Verification**
-   - Confirmed footer has all correct contact information
-   - Admin menu already in correct order
 
-### Remaining Work (See TASK_STATUS.md for details)
+### Remaining Work
 
 #### High Priority 🔴
-- **Task 4**: Complete order field implementation for Exams and Questions
-- **Task 10**: Fix checkout page reload and 100% discount coupon issues
-- **Task 14-16**: Fix exam submission errors (critical for functionality)
-- **Task 19**: Fix dark mode on Analytics/Exams/Exam View pages
+- **Task 5**: Show archived classes in Manage Classes with badge or separate tab
+- **Task 12**: Fix exam submission error when CQ box has text or image upload (CRITICAL)
+- **Task 14**: Fix dark mode on Analytics, Exams, and Exam View pages
 
 #### Medium Priority 🟡
-- **Task 2**: Add course-based filtering for subjects/chapters in class creation
-- **Task 6**: Enable multiple course selection for subjects
-- **Task 7**: Show archived classes with badge/separate tab
-- **Task 8**: Add image upload/link options to class management
-- **Task 9**: Implement lazy loading for images (performance)
+- **Task 6**: Add image upload/link options to Class management
+- **Task 7**: Implement lazy loading for images (performance optimization)
+- **Task 11**: Fix archived exams retake issue and increase "back to exam" button z-index
 
 #### Lower Priority 🟢
-- **Task 11**: Fix archived class display issues
-- **Task 12**: Fix routing inconsistency (slug vs ID)
-- **Task 13**: Ensure images display properly in UI
+- **Task 8**: Fix archived class issues (prevent subjects nesting, fix chapter display)
+- **Task 9**: Fix routing inconsistency: continue course button (slug vs ID-based routing)
+- **Task 10**: Ensure images display properly in UI for Chapters, Subjects, Classes
 
-### Important Files Modified
-1. `src/pages/admin/ManageChapters.jsx` - Image type/link fields, form handlers
-2. `src/pages/admin/ManageTeachers.jsx` - Order field, sorting, UI input
-3. `firestore.rules` - Public reading for posts/comments (CRITICAL FIX)
-4. `TASK_STATUS.md` - Comprehensive task tracking document (NEW)
+### Important Files Modified (Latest Session)
+1. `src/pages/admin/ManageClasses.jsx` - Course-based subject/chapter filtering
+2. `src/pages/admin/ManageSubjects.jsx` - Multiple course selection, backwards compatibility
+3. `src/pages/admin/ManageChapters.jsx` - CourseIds array support in filtering
+4. `src/pages/admin/ManageExams.jsx` - Order field, auto-increment, sorting
+5. `src/pages/admin/ManageExamQuestions.jsx` - Order field, auto-increment, sorting
+6. `src/contexts/ExamContext.jsx` - Question sorting by order
 
 ### Next Steps for Continued Development
 1. Read `TASK_STATUS.md` for full task details and implementation guidance

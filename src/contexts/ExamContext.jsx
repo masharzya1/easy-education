@@ -152,6 +152,20 @@ export function ExamProvider({ children }) {
       const q = query(collection(db, "examQuestions"), where("examId", "==", examId))
       const snapshot = await getDocs(q)
       const questions = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
+      // Sort by order (descending), fallback to createdAt if order doesn't exist or is 0
+      questions.sort((a, b) => {
+        const orderA = a.order || null
+        const orderB = b.order || null
+        // If both have order, sort by order
+        if (orderA !== null && orderB !== null) {
+          return orderB - orderA
+        }
+        // If only one has order, it comes first
+        if (orderA !== null) return -1
+        if (orderB !== null) return 1
+        // If neither has order, sort by createdAt descending
+        return (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)
+      })
       console.log("[v0] Found", questions.length, "questions for exam", examId)
       return questions
     } catch (error) {

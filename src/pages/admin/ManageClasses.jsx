@@ -768,11 +768,19 @@ export default function ManageClasses() {
                       className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                     >
                       <option value="">Add subject...</option>
-                      {subjects.map((subject) => (
-                        <option key={subject.id} value={subject.title}>
-                          {subject.title}
-                        </option>
-                      ))}
+                      {subjects
+                        .filter((subject) => {
+                          // Support both old courseId and new courseIds array
+                          if (subject.courseIds && Array.isArray(subject.courseIds)) {
+                            return subject.courseIds.includes(selectedCourse)
+                          }
+                          return subject.courseId === selectedCourse
+                        })
+                        .map((subject) => (
+                          <option key={subject.id} value={subject.title}>
+                            {subject.title}
+                          </option>
+                        ))}
                     </select>
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">Click to add multiple subjects</p>
@@ -817,11 +825,23 @@ export default function ManageClasses() {
                     className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                   >
                     <option value="">Add chapter...</option>
-                    {chapters.map((chapter) => (
-                      <option key={chapter.id} value={chapter.title}>
-                        {chapter.title}
-                      </option>
-                    ))}
+                    {chapters
+                      .filter((chapter) => {
+                        // For batch courses, filter chapters by selected subjects
+                        if (selectedCourseData?.type === "batch" && formData.subject.length > 0) {
+                          const selectedSubjectIds = subjects
+                            .filter(s => formData.subject.includes(s.title))
+                            .map(s => s.id)
+                          return selectedSubjectIds.includes(chapter.subjectId)
+                        }
+                        // For non-batch courses, filter by selected course
+                        return chapter.courseId === selectedCourse
+                      })
+                      .map((chapter) => (
+                        <option key={chapter.id} value={chapter.title}>
+                          {chapter.title}
+                        </option>
+                      ))}
                   </select>
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">Click to add multiple chapters</p>

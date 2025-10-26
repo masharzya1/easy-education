@@ -25,7 +25,7 @@ export default function ManageSubjects() {
     imageUrl: "",
     imageType: "upload",
     imageLink: "",
-    courseId: "",
+    courseIds: [],
     order: 0,
   })
 
@@ -142,7 +142,7 @@ export default function ManageSubjects() {
         imageUrl: subject.imageUrl || "",
         imageType: subject.imageUrl?.startsWith("http") ? "link" : "upload",
         imageLink: subject.imageUrl || "",
-        courseId: subject.courseId || "",
+        courseIds: Array.isArray(subject.courseIds) ? subject.courseIds : subject.courseId ? [subject.courseId] : [],
         order: subject.order || 0,
       })
     } else {
@@ -153,7 +153,7 @@ export default function ManageSubjects() {
         imageUrl: "",
         imageType: "upload",
         imageLink: "",
-        courseId: "",
+        courseIds: [],
         order: maxOrder + 1,
       })
     }
@@ -168,7 +168,7 @@ export default function ManageSubjects() {
       imageUrl: "",
       imageType: "upload",
       imageLink: "",
-      courseId: "",
+      courseIds: [],
       order: 0,
     })
   }
@@ -176,11 +176,11 @@ export default function ManageSubjects() {
   const handleSubmit = async (e) => {
     e.preventDefault()
 
-    if (!formData.courseId) {
+    if (!formData.courseIds || formData.courseIds.length === 0) {
       toast({
         variant: "error",
         title: "Validation Error",
-        description: "Please select a course for this subject.",
+        description: "Please select at least one course for this subject.",
       })
       return
     }
@@ -196,7 +196,8 @@ export default function ManageSubjects() {
       const dataToSave = {
         title: formData.title,
         imageUrl: finalImageUrl,
-        courseId: formData.courseId,
+        courseIds: formData.courseIds,
+        courseId: formData.courseIds[0] || "", // Legacy field for backwards compatibility
         order: formData.order,
       }
 
@@ -300,7 +301,8 @@ export default function ManageSubjects() {
       for (const subject of validSubjects) {
         await addDoc(collection(db, "subjects"), {
           title: subject.title,
-          courseId: selectedCourse,
+          courseIds: [selectedCourse],
+          courseId: selectedCourse, // Legacy field for backwards compatibility
           order: currentOrder++,
           createdAt: serverTimestamp(),
         })
@@ -328,7 +330,13 @@ export default function ManageSubjects() {
 
   const batchCourses = courses.filter(c => c.type === "batch")
   const filteredSubjects = selectedCourse 
-    ? subjects.filter(s => s.courseId === selectedCourse)
+    ? subjects.filter(s => {
+        // Support both old courseId and new courseIds array
+        if (s.courseIds && Array.isArray(s.courseIds)) {
+          return s.courseIds.includes(selectedCourse)
+        }
+        return s.courseId === selectedCourse
+      })
     : subjects
 
   return (
@@ -559,20 +567,50 @@ export default function ManageSubjects() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">Course *</label>
-                <select
-                  value={formData.courseId}
-                  onChange={(e) => setFormData({ ...formData, courseId: e.target.value })}
-                  required
-                  className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                >
-                  <option value="">Select a batch course...</option>
-                  {courses.filter(c => c.type === "batch").map((course) => (
-                    <option key={course.id} value={course.id}>
-                      {course.title}
-                    </option>
-                  ))}
-                </select>
+                <label className="block text-sm font-medium mb-2">Courses *</label>
+                <div className="space-y-2">
+                  <div className="flex flex-wrap gap-2 p-2 bg-background border border-border rounded-lg min-h-[50px]">
+                    {formData.courseIds.map((courseId, idx) => {
+                      const course = courses.find(c => c.id === courseId)
+                      return (
+                        <div
+                          key={idx}
+                          className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm flex items-center gap-2"
+                        >
+                          {course?.title || courseId}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const updated = formData.courseIds.filter((_, i) => i !== idx)
+                              setFormData({ ...formData, courseIds: updated })
+                            }}
+                            className="text-primary hover:text-primary/70"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      )
+                    })}
+                  </div>
+                  <select
+                    onChange={(e) => {
+                      const value = e.target.value
+                      if (value && !formData.courseIds.includes(value)) {
+                        setFormData({ ...formData, courseIds: [...formData.courseIds, value] })
+                      }
+                      e.target.value = ""
+                    }}
+                    className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  >
+                    <option value="">Add course...</option>
+                    {courses.filter(c => c.type === "batch").map((course) => (
+                      <option key={course.id} value={course.id}>
+                        {course.title}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-muted-foreground">Click to add multiple courses</p>
+                </div>
               </div>
 
               <div>

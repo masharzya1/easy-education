@@ -33,6 +33,7 @@ export default function ManageExamQuestions() {
     optionImages: ["", "", "", ""],
     correctAnswer: 0,
     marks: 1,
+    order: 0,
   })
 
   const { getExamById, getQuestionsByExam, addQuestion, updateQuestion, deleteQuestion } = useExam()
@@ -140,6 +141,7 @@ export default function ManageExamQuestions() {
         questionText: formData.questionText,
         questionImageUrl: formData.questionImageUrl,
         marks: formData.marks,
+        order: formData.order,
       }
 
       if (formData.type === "mcq") {
@@ -177,6 +179,7 @@ export default function ManageExamQuestions() {
   }
 
   const resetForm = () => {
+    const maxOrder = questions.length > 0 ? Math.max(...questions.map(q => q.order ?? 0)) : 0
     setFormData({
       type: "mcq",
       questionText: "",
@@ -185,6 +188,7 @@ export default function ManageExamQuestions() {
       optionImages: ["", "", "", ""],
       correctAnswer: 0,
       marks: 1,
+      order: maxOrder + 1,
     })
     setQuestionType("mcq")
   }
@@ -200,6 +204,7 @@ export default function ManageExamQuestions() {
       optionImages: question.optionImages || ["", "", "", ""],
       correctAnswer: question.correctAnswer || 0,
       marks: question.marks || 1,
+      order: question.order ?? 0,
     })
     setShowModal(true)
   }
@@ -661,15 +666,28 @@ export default function ManageExamQuestions() {
                 </>
               )}
 
-              <div>
-                <label className="block text-sm font-medium mb-2">Marks</label>
-                <input
-                  type="number"
-                  value={formData.marks}
-                  onChange={(e) => setFormData({ ...formData, marks: parseInt(e.target.value) || 1 })}
-                  className="w-full px-3 py-2 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                  min="1"
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Marks</label>
+                  <input
+                    type="number"
+                    value={formData.marks}
+                    onChange={(e) => setFormData({ ...formData, marks: parseInt(e.target.value) || 1 })}
+                    className="w-full px-3 py-2 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                    min="1"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Order</label>
+                  <input
+                    type="number"
+                    value={formData.order}
+                    onChange={(e) => setFormData({ ...formData, order: parseInt(e.target.value) || 0 })}
+                    className="w-full px-3 py-2 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                    placeholder="Auto-calculated"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">Display order (highest first)</p>
+                </div>
               </div>
 
               <div className="flex gap-2 pt-4">

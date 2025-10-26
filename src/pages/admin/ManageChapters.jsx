@@ -357,7 +357,13 @@ export default function ManageChapters() {
 
   const selectedCourseData = courses.find(c => c.id === selectedCourse)
   const isBatchCourse = selectedCourseData?.type === "batch"
-  const courseSubjects = subjects.filter(s => s.courseId === selectedCourse)
+  const courseSubjects = subjects.filter(s => {
+    // Support both old courseId and new courseIds array
+    if (s.courseIds && Array.isArray(s.courseIds)) {
+      return s.courseIds.includes(selectedCourse)
+    }
+    return s.courseId === selectedCourse
+  })
   const filteredChapters = selectedCourse 
     ? chapters.filter(c => c.courseId === selectedCourse)
     : chapters
@@ -638,7 +644,13 @@ export default function ManageChapters() {
                     className="w-full px-3 py-2 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
                   >
                     <option value="">All subjects / No specific subject</option>
-                    {subjects.filter(s => s.courseId === formData.courseId).map((subject) => (
+                    {subjects.filter(s => {
+                      // Support both old courseId and new courseIds array
+                      if (s.courseIds && Array.isArray(s.courseIds)) {
+                        return s.courseIds.includes(formData.courseId)
+                      }
+                      return s.courseId === formData.courseId
+                    }).map((subject) => (
                       <option key={subject.id} value={subject.id}>
                         {subject.title}
                       </option>
