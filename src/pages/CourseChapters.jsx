@@ -195,12 +195,16 @@ export default function CourseChapters() {
           const allChapters = []
           classesData.forEach((cls) => {
             if (Array.isArray(cls.chapter)) {
-              allChapters.push(...cls.chapter)
-            } else {
-              allChapters.push(cls.chapter || "General")
+              cls.chapter.forEach((ch) => {
+                if (ch && ch !== "archive") allChapters.push(ch)
+              })
+            } else if (cls.chapter && cls.chapter !== "archive") {
+              allChapters.push(cls.chapter)
+            } else if (!cls.chapter) {
+              allChapters.push("General")
             }
           })
-          const uniqueChapters = [...new Set(allChapters)].sort()
+          const uniqueChapters = [...new Set(allChapters)].filter(ch => ch !== "archive").sort()
           setChapters(uniqueChapters)
           setSubjects([])
           
@@ -224,12 +228,16 @@ export default function CourseChapters() {
           const allChapters = []
           classesData.forEach((cls) => {
             if (Array.isArray(cls.chapter)) {
-              allChapters.push(...cls.chapter)
-            } else {
-              allChapters.push(cls.chapter || "General")
+              cls.chapter.forEach((ch) => {
+                if (ch && ch !== "archive") allChapters.push(ch)
+              })
+            } else if (cls.chapter && cls.chapter !== "archive") {
+              allChapters.push(cls.chapter)
+            } else if (!cls.chapter) {
+              allChapters.push("General")
             }
           })
-          const uniqueChapters = [...new Set(allChapters)].sort()
+          const uniqueChapters = [...new Set(allChapters)].filter(ch => ch !== "archive").sort()
           setChapters(uniqueChapters)
           setSubjects([])
           
@@ -246,12 +254,16 @@ export default function CourseChapters() {
           const allChapters = []
           classesData.forEach((cls) => {
             if (Array.isArray(cls.chapter)) {
-              allChapters.push(...cls.chapter)
-            } else {
-              allChapters.push(cls.chapter || "General")
+              cls.chapter.forEach((ch) => {
+                if (ch && ch !== "archive") allChapters.push(ch)
+              })
+            } else if (cls.chapter && cls.chapter !== "archive") {
+              allChapters.push(cls.chapter)
+            } else if (!cls.chapter) {
+              allChapters.push("General")
             }
           })
-          const uniqueChapters = [...new Set(allChapters)].sort()
+          const uniqueChapters = [...new Set(allChapters)].filter(ch => ch !== "archive").sort()
           setChapters(uniqueChapters)
           setSubjects([])
           
