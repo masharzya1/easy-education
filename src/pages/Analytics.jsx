@@ -161,24 +161,24 @@ export default function Analytics() {
         <div className="mb-12">
           <button
             onClick={() => navigate("/dashboard")}
-            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6 transition-colors font-medium"
+            className="flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6 transition-colors font-medium"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to Dashboard
           </button>
           <div>
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">Exam Analytics</h1>
-            <p className="text-gray-600">Track your exam performance and see areas for improvement</p>
+            <h1 className="text-4xl font-bold text-foreground mb-2">Exam Analytics</h1>
+            <p className="text-muted-foreground">Track your exam performance and see areas for improvement</p>
           </div>
         </div>
 
         {examResults.length === 0 ? (
-          <div className="text-center py-16 bg-gray-50 border border-gray-200 rounded-lg">
-            <FileQuestion className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-600 mb-6">You haven't taken any exams yet.</p>
+          <div className="text-center py-16 bg-muted/30 border border-border rounded-lg">
+            <FileQuestion className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+            <p className="text-muted-foreground mb-6">You haven't taken any exams yet.</p>
             <Link
               to="/courses"
-              className="inline-block px-6 py-3 bg-black text-white rounded-full hover:bg-gray-900 transition-colors font-medium"
+              className="inline-block px-6 py-3 bg-primary text-primary-foreground rounded-full hover:bg-primary/90 transition-colors font-medium"
             >
               Browse Courses
             </Link>
@@ -186,18 +186,18 @@ export default function Analytics() {
         ) : (
           <>
             {/* Filters */}
-            <div className="bg-white border border-gray-200 rounded-lg p-6 mb-8">
+            <div className="bg-card border border-border rounded-lg p-6 mb-8">
               <div className="flex items-center gap-2 mb-4">
-                <Filter className="w-5 h-5 text-gray-900" />
-                <h2 className="text-lg font-bold text-gray-900">Filters</h2>
+                <Filter className="w-5 h-5 text-foreground" />
+                <h2 className="text-lg font-bold text-foreground">Filters</h2>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-900 mb-2">Filter by Course</label>
+                  <label className="block text-sm font-medium text-foreground mb-2">Filter by Course</label>
                   <select
                     value={courseFilter}
                     onChange={(e) => setCourseFilter(e.target.value)}
-                    className="w-full px-4 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 text-gray-900"
+                    className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
                   >
                     <option value="all">All Courses</option>
                     {uniqueCourses.map((course) => (
@@ -208,11 +208,11 @@ export default function Analytics() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-900 mb-2">Filter by Date</label>
+                  <label className="block text-sm font-medium text-foreground mb-2">Filter by Date</label>
                   <select
                     value={dateFilter}
                     onChange={(e) => setDateFilter(e.target.value)}
-                    className="w-full px-4 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 text-gray-900"
+                    className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
                   >
                     <option value="all">All Time</option>
                     <option value="week">Last 7 Days</option>
@@ -227,7 +227,7 @@ export default function Analytics() {
                     setCourseFilter("all")
                     setDateFilter("all")
                   }}
-                  className="mt-4 text-sm text-gray-600 hover:text-gray-900 transition-colors font-medium"
+                  className="mt-4 text-sm text-muted-foreground hover:text-foreground transition-colors font-medium"
                 >
                   Clear all filters
                 </button>
@@ -239,15 +239,15 @@ export default function Analytics() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0 }}
-                className="bg-white border border-gray-200 rounded-lg p-6 hover:border-gray-300 hover:shadow-md transition-all"
+                className="bg-card border border-border rounded-lg p-6 hover:border-primary/50 hover:shadow-md transition-all"
               >
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-                    <FileQuestion className="w-6 h-6 text-gray-900" />
+                  <div className="w-12 h-12 bg-muted rounded-lg flex items-center justify-center">
+                    <FileQuestion className="w-6 h-6 text-foreground" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600 font-medium">Total Exams</p>
-                    <p className="text-3xl font-bold text-gray-900">{stats.totalExams}</p>
+                    <p className="text-sm text-muted-foreground font-medium">Total Exams</p>
+                    <p className="text-3xl font-bold text-foreground">{stats.totalExams}</p>
                   </div>
                 </div>
               </motion.div>
@@ -256,15 +256,15 @@ export default function Analytics() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
-                className="bg-white border border-gray-200 rounded-lg p-6 hover:border-gray-300 hover:shadow-md transition-all"
+                className="bg-card border border-border rounded-lg p-6 hover:border-primary/50 hover:shadow-md transition-all"
               >
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-                    <TrendingUp className="w-6 h-6 text-gray-900" />
+                  <div className="w-12 h-12 bg-muted rounded-lg flex items-center justify-center">
+                    <TrendingUp className="w-6 h-6 text-foreground" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600 font-medium">Average Score</p>
-                    <p className="text-3xl font-bold text-gray-900">{stats.averageScore}%</p>
+                    <p className="text-sm text-muted-foreground font-medium">Average Score</p>
+                    <p className="text-3xl font-bold text-foreground">{stats.averageScore}%</p>
                   </div>
                 </div>
               </motion.div>
@@ -273,15 +273,15 @@ export default function Analytics() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="bg-white border border-gray-200 rounded-lg p-6 hover:border-gray-300 hover:shadow-md transition-all"
+                className="bg-card border border-border rounded-lg p-6 hover:border-primary/50 hover:shadow-md transition-all"
               >
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-                    <Award className="w-6 h-6 text-gray-900" />
+                  <div className="w-12 h-12 bg-muted rounded-lg flex items-center justify-center">
+                    <Award className="w-6 h-6 text-foreground" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600 font-medium">Passed Exams</p>
-                    <p className="text-3xl font-bold text-gray-900">{stats.passedExams}</p>
+                    <p className="text-sm text-muted-foreground font-medium">Passed Exams</p>
+                    <p className="text-3xl font-bold text-foreground">{stats.passedExams}</p>
                   </div>
                 </div>
               </motion.div>
@@ -290,15 +290,15 @@ export default function Analytics() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
-                className="bg-white border border-gray-200 rounded-lg p-6 hover:border-gray-300 hover:shadow-md transition-all"
+                className="bg-card border border-border rounded-lg p-6 hover:border-primary/50 hover:shadow-md transition-all"
               >
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-                    <CheckCircle className="w-6 h-6 text-gray-900" />
+                  <div className="w-12 h-12 bg-muted rounded-lg flex items-center justify-center">
+                    <CheckCircle className="w-6 h-6 text-foreground" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600 font-medium">Pass Rate</p>
-                    <p className="text-3xl font-bold text-gray-900">{stats.passRate}%</p>
+                    <p className="text-sm text-muted-foreground font-medium">Pass Rate</p>
+                    <p className="text-3xl font-bold text-foreground">{stats.passRate}%</p>
                   </div>
                 </div>
               </motion.div>
@@ -310,35 +310,35 @@ export default function Analytics() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4 }}
-                className="bg-white border border-gray-200 rounded-lg p-6 mb-8"
+                className="bg-card border border-border rounded-lg p-6 mb-8"
               >
                 <div className="flex items-center gap-2 mb-6">
-                  <TrendingUp className="w-5 h-5 text-gray-900" />
-                  <h2 className="text-2xl font-bold text-gray-900">Performance Trends</h2>
-                  <span className="text-sm text-gray-600 ml-auto">Last {chartData.length} exams</span>
+                  <TrendingUp className="w-5 h-5 text-foreground" />
+                  <h2 className="text-2xl font-bold text-foreground">Performance Trends</h2>
+                  <span className="text-sm text-muted-foreground ml-auto">Last {chartData.length} exams</span>
                 </div>
                 <div className="w-full h-64">
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={chartData}>
                       <defs>
                         <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#000000" stopOpacity={0.2} />
-                          <stop offset="95%" stopColor="#000000" stopOpacity={0} />
+                          <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                          <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
                         </linearGradient>
                       </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                      <XAxis dataKey="date" stroke="#6b7280" fontSize={12} />
-                      <YAxis stroke="#6b7280" fontSize={12} domain={[0, 100]} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                      <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} domain={[0, 100]} />
                       <Tooltip
                         contentStyle={{
-                          backgroundColor: "#ffffff",
-                          border: "1px solid #e5e7eb",
+                          backgroundColor: "hsl(var(--card))",
+                          border: "1px solid hsl(var(--border))",
                           borderRadius: "8px",
                           padding: "8px 12px",
                         }}
-                        labelStyle={{ color: "#000000" }}
+                        labelStyle={{ color: "hsl(var(--foreground))" }}
                       />
-                      <Area type="monotone" dataKey="score" stroke="#000000" strokeWidth={2} fill="url(#colorScore)" />
+                      <Area type="monotone" dataKey="score" stroke="hsl(var(--primary))" strokeWidth={2} fill="url(#colorScore)" />
                     </AreaChart>
                   </ResponsiveContainer>
                 </div>
@@ -347,11 +347,11 @@ export default function Analytics() {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2 space-y-4">
-                <h2 className="text-2xl font-bold text-gray-900">Exam History</h2>
+                <h2 className="text-2xl font-bold text-foreground">Exam History</h2>
                 {filteredResults.length === 0 ? (
-                  <div className="text-center py-12 bg-gray-50 border border-gray-200 rounded-lg">
-                    <FileQuestion className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-600">No exams match the selected filters.</p>
+                  <div className="text-center py-12 bg-muted/30 border border-border rounded-lg">
+                    <FileQuestion className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground">No exams match the selected filters.</p>
                   </div>
                 ) : (
                   filteredResults.map((result, index) => {
@@ -366,15 +366,15 @@ export default function Analytics() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.05 }}
-                        className="bg-white border border-gray-200 rounded-lg p-6 hover:border-gray-300 hover:shadow-md transition-all cursor-pointer"
+                        className="bg-card border border-border rounded-lg p-6 hover:border-primary/50 hover:shadow-md transition-all cursor-pointer"
                         onClick={() => setSelectedResult(result)}
                       >
                         <div className="flex justify-between items-start mb-4">
                           <div className="flex-1">
-                            <h3 className="text-xl font-bold text-gray-900 mb-1">
+                            <h3 className="text-xl font-bold text-foreground mb-1">
                               {result.examTitle || "Untitled Exam"}
                             </h3>
-                            <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
                               <BookOpen className="w-4 h-4" />
                               <span>{result.courseName}</span>
                             </div>
@@ -385,7 +385,7 @@ export default function Analytics() {
                               </div>
                             )}
                             {hasCQAnswers && result.cqGraded && (
-                              <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-gray-100 border border-gray-200 rounded-full text-gray-700 text-xs font-medium">
+                              <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-muted border border-border rounded-full text-foreground text-xs font-medium">
                                 <CheckCircle className="w-3.5 h-3.5" />
                                 <span>CQ Graded: {result.cqScore?.toFixed(1) || 0}%</span>
                               </div>
@@ -393,19 +393,19 @@ export default function Analytics() {
                           </div>
                           <div
                             className={`px-4 py-2 rounded-lg ${
-                              passed ? "bg-gray-100 text-gray-900" : "bg-gray-100 text-gray-900"
+                              passed ? "bg-muted text-foreground" : "bg-muted text-foreground"
                             }`}
                           >
                             <div className="text-2xl font-bold">
                               {result.totalScore !== undefined ? result.totalScore.toFixed(1) : result.score}%
                             </div>
-                            <div className="text-xs text-gray-600">
+                            <div className="text-xs text-muted-foreground">
                               {cqPending ? "MCQ Only" : passed ? "Passed" : "Failed"}
                             </div>
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-4 text-sm text-gray-600">
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
                           <div className="flex items-center gap-1">
                             <Clock className="w-4 h-4" />
                             <span>{result.examDuration || "N/A"} mins</span>
@@ -424,18 +424,18 @@ export default function Analytics() {
                           <motion.div
                             initial={{ opacity: 0, height: 0 }}
                             animate={{ opacity: 1, height: "auto" }}
-                            className="mt-4 pt-4 border-t border-gray-200 space-y-4"
+                            className="mt-4 pt-4 border-t border-border space-y-4"
                           >
                             {result.wrongAnswers && result.wrongAnswers.length > 0 && (
                               <div>
-                                <h4 className="font-semibold mb-3 flex items-center gap-2 text-gray-900">
+                                <h4 className="font-semibold mb-3 flex items-center gap-2 text-foreground">
                                   <XCircle className="w-5 h-5 text-red-600" />
                                   Mistakes ({result.wrongAnswers.length})
                                 </h4>
                                 <div className="space-y-3">
                                   {result.wrongAnswers.map((mistake, idx) => (
                                     <div key={idx} className="bg-red-50 border border-red-200 rounded-lg p-3">
-                                      <p className="font-medium text-gray-900 mb-2">{mistake.questionText}</p>
+                                      <p className="font-medium text-foreground mb-2">{mistake.questionText}</p>
                                       <div className="space-y-1 text-sm">
                                         <div className="flex items-center gap-2">
                                           <XCircle className="w-4 h-4 text-red-600" />
@@ -458,7 +458,7 @@ export default function Analytics() {
 
                             {result.cqAnswers && result.cqAnswers.length > 0 && result.cqGraded && (
                               <div>
-                                <h4 className="font-semibold mb-3 flex items-center gap-2 text-gray-900">
+                                <h4 className="font-semibold mb-3 flex items-center gap-2 text-foreground">
                                   <CheckCircle className="w-5 h-5 text-green-600" />
                                   Creative Questions ({result.cqAnswers.length})
                                 </h4>
@@ -466,7 +466,7 @@ export default function Analytics() {
                                   {result.cqAnswers.map((cq, idx) => (
                                     <div key={idx} className="bg-blue-50 border border-blue-200 rounded-lg p-3">
                                       <div className="flex justify-between items-start mb-2">
-                                        <p className="font-medium text-gray-900 flex-1">
+                                        <p className="font-medium text-foreground flex-1">
                                           Q{idx + 1}. {cq.questionText}
                                         </p>
                                         <div className="text-sm font-bold text-green-600">
@@ -474,7 +474,7 @@ export default function Analytics() {
                                         </div>
                                       </div>
                                       {cq.textAnswer && (
-                                        <div className="text-sm text-gray-600 mt-2 p-2 bg-white rounded border border-gray-200">
+                                        <div className="text-sm text-muted-foreground mt-2 p-2 bg-background rounded border border-border">
                                           <strong>Your Answer:</strong> {cq.textAnswer}
                                         </div>
                                       )}
@@ -485,7 +485,7 @@ export default function Analytics() {
                                               key={imgIdx}
                                               src={img || "/placeholder.svg"}
                                               alt={`Answer ${imgIdx + 1}`}
-                                              className="rounded border border-gray-200 w-full h-24 object-cover"
+                                              className="rounded border border-border w-full h-24 object-cover"
                                             />
                                           ))}
                                         </div>
@@ -504,30 +504,30 @@ export default function Analytics() {
               </div>
 
               <div className="space-y-4">
-                <h2 className="text-2xl font-bold text-gray-900">Quick Stats</h2>
-                <div className="bg-white border border-gray-200 rounded-lg p-6">
-                  <h3 className="font-semibold text-gray-900 mb-4">Performance Breakdown</h3>
+                <h2 className="text-2xl font-bold text-foreground">Quick Stats</h2>
+                <div className="bg-card border border-border rounded-lg p-6">
+                  <h3 className="font-semibold text-foreground mb-4">Performance Breakdown</h3>
                   <div className="space-y-3">
                     <div>
                       <div className="flex justify-between text-sm mb-1">
-                        <span className="text-gray-600">Passed</span>
-                        <span className="font-medium text-gray-900">{stats.passedExams}</span>
+                        <span className="text-muted-foreground">Passed</span>
+                        <span className="font-medium text-foreground">{stats.passedExams}</span>
                       </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div className="w-full bg-muted rounded-full h-2">
                         <div
-                          className="bg-gray-900 h-2 rounded-full transition-all"
+                          className="bg-primary h-2 rounded-full transition-all"
                           style={{ width: `${stats.passRate}%` }}
                         ></div>
                       </div>
                     </div>
                     <div>
                       <div className="flex justify-between text-sm mb-1">
-                        <span className="text-gray-600">Failed</span>
-                        <span className="font-medium text-gray-900">{stats.totalExams - stats.passedExams}</span>
+                        <span className="text-muted-foreground">Failed</span>
+                        <span className="font-medium text-foreground">{stats.totalExams - stats.passedExams}</span>
                       </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div className="w-full bg-muted rounded-full h-2">
                         <div
-                          className="bg-gray-400 h-2 rounded-full transition-all"
+                          className="bg-muted-foreground h-2 rounded-full transition-all"
                           style={{ width: `${100 - stats.passRate}%` }}
                         ></div>
                       </div>
@@ -535,14 +535,14 @@ export default function Analytics() {
                   </div>
                 </div>
 
-                <div className="bg-white border border-gray-200 rounded-lg p-6">
-                  <h3 className="font-semibold text-gray-900 mb-2">Keep Going!</h3>
-                  <p className="text-sm text-gray-600 mb-4">
+                <div className="bg-card border border-border rounded-lg p-6">
+                  <h3 className="font-semibold text-foreground mb-2">Keep Going!</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
                     You're making great progress. Keep practicing to improve your scores!
                   </p>
                   <Link
                     to="/courses"
-                    className="block w-full px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-900 transition-colors text-center font-medium"
+                    className="block w-full px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors text-center font-medium"
                   >
                     Browse Courses
                   </Link>
