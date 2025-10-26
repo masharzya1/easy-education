@@ -1,5 +1,6 @@
 import { collection, addDoc, getDocs, query, where, serverTimestamp } from 'firebase/firestore'
 import { db } from './firebase'
+import { notifyAdminsOfEnrollment } from './notifications'
 
 export async function enrollInFreeCourse(userId, userEmail, userName, course) {
   try {
@@ -60,6 +61,18 @@ export async function enrollInFreeCourse(userId, userEmail, userName, course) {
     }
 
     await addDoc(collection(db, 'payments'), paymentData)
+    
+    notifyAdminsOfEnrollment({
+      userId,
+      userName,
+      userEmail,
+      courses: [{
+        id: course.id,
+        title: course.title,
+      }],
+      finalAmount: 0,
+      isFreeEnrollment: true,
+    }).catch(err => console.error('Failed to notify admins:', err))
     
     return { success: true, message: 'Successfully enrolled in free course!' }
   } catch (error) {

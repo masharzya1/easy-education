@@ -138,10 +138,18 @@ export default function ManageCourses() {
       }
 
       if (editingCourse) {
+        if (!editingCourse.slug) {
+          courseData.slug = generateSlug(formData.title, editingCourse.id)
+        } else {
+          courseData.slug = editingCourse.slug
+        }
         await updateDoc(doc(db, "courses", editingCourse.id), courseData)
       } else {
         courseData.createdAt = serverTimestamp()
-        await addDoc(collection(db, "courses"), courseData)
+        const docRef = await addDoc(collection(db, "courses"), courseData)
+        await updateDoc(doc(db, "courses", docRef.id), {
+          slug: generateSlug(formData.title, docRef.id)
+        })
       }
 
       await fetchData()

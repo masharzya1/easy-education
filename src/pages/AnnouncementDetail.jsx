@@ -2,8 +2,9 @@ import { useState, useEffect } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { motion } from "framer-motion"
 import { ArrowLeft, Calendar, Megaphone } from "lucide-react"
-import { doc, getDoc } from "firebase/firestore"
+import { doc, getDoc, collection, query, where, getDocs } from "firebase/firestore"
 import { db } from "../lib/firebase"
+import { isFirebaseId } from "../lib/slug"
 
 export default function AnnouncementDetail() {
   const { id } = useParams()
@@ -17,11 +18,25 @@ export default function AnnouncementDetail() {
 
   const fetchAnnouncement = async () => {
     try {
-      const docRef = doc(db, "announcements", id)
-      const docSnap = await getDoc(docRef)
+      let announcementData = null
       
-      if (docSnap.exists()) {
-        setAnnouncement({ id: docSnap.id, ...docSnap.data() })
+      if (isFirebaseId(id)) {
+        const docRef = doc(db, "announcements", id)
+        const docSnap = await getDoc(docRef)
+        if (docSnap.exists()) {
+          announcementData = { id: docSnap.id, ...docSnap.data() }
+        }
+      } else {
+        const q = query(collection(db, "announcements"), where("slug", "==", id))
+        const querySnapshot = await getDocs(q)
+        if (!querySnapshot.empty) {
+          const docSnap = querySnapshot.docs[0]
+          announcementData = { id: docSnap.id, ...docSnap.data() }
+        }
+      }
+      
+      if (announcementData) {
+        setAnnouncement(announcementData)
       } else {
         alert("Announcement not found")
         navigate("/announcements")

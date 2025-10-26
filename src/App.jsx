@@ -39,6 +39,7 @@ import ExamResult from "./pages/ExamResult"
 import ExamSolutions from "./pages/ExamSolutions"
 import ExamAttempts from "./pages/ExamAttempts"
 import Analytics from "./pages/Analytics"
+import NotFound from "./pages/NotFound"
 
 console.log("[v0] App.jsx loaded")
 
@@ -179,6 +180,7 @@ function App() {
                       </ProtectedRoute>
                     }
                   />
+                  <Route path="*" element={<NotFound />} />
                 </Routes>
               </main>
               <CartDrawer />

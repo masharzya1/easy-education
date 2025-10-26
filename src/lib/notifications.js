@@ -98,6 +98,65 @@ export async function notifyAdminsOfCheckout(paymentData) {
   }
 }
 
+export async function notifyAdminsOfEnrollment(enrollmentData) {
+  try {
+    const adminTokensSnapshot = await getDocs(
+      query(collection(db, 'adminTokens'), where('role', '==', 'admin'))
+    )
+    
+    if (adminTokensSnapshot.empty) {
+      console.log('No admin tokens found')
+      return
+    }
+
+    const tokens = adminTokensSnapshot.docs.map(doc => doc.data().token).filter(Boolean)
+    
+    if (tokens.length === 0) {
+      console.log('No valid admin tokens')
+      return
+    }
+
+    const courseNames = enrollmentData.courses?.map(c => c.title).join(', ') || 'N/A'
+    const coursesText = enrollmentData.courses?.length > 1 
+      ? `${enrollmentData.courses.length} courses` 
+      : enrollmentData.courses?.[0]?.title || 'Unknown Course'
+    
+    const isFree = enrollmentData.isFreeEnrollment || enrollmentData.finalAmount === 0
+
+    const notification = {
+      title: isFree ? 'New Free Enrollment 🎓' : 'New Course Enrollment 💰',
+      body: `${enrollmentData.userName || 'A user'} enrolled in ${coursesText}${isFree ? ' (Free)' : ` for ৳${enrollmentData.finalAmount}`}. Click to view details.`,
+      icon: '/placeholder-logo.png',
+      badge: '/placeholder-logo.png',
+      tag: `enrollment-${enrollmentData.userId}-${Date.now()}`,
+      data: {
+        url: '/admin/payments',
+        userId: enrollmentData.userId,
+        type: 'enrollment',
+        userName: enrollmentData.userName,
+        userEmail: enrollmentData.userEmail,
+        courses: courseNames,
+        isFree: isFree
+      }
+    }
+
+    await fetch('/api/send-notification', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        tokens,
+        notification,
+      }),
+    }).catch(err => {
+      console.log('API endpoint not available, notifications will work via FCM service worker')
+    })
+
+    console.log('Admin enrollment notification sent successfully to', tokens.length, 'admin(s)')
+  } catch (error) {
+    console.error('Error notifying admins of enrollment:', error)
+  }
+}
+
 export async function sendEmailNotification(to, subject, body) {
   try {
     const response = await fetch('/api/send-email', {

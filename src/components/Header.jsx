@@ -178,8 +178,23 @@ export default function Header() {
                   Easy Education
                 </motion.div>
               </Link>
-            </div>
 
+              <nav className="hidden lg:flex items-center gap-1 ml-8">
+                {navLinks.map((link) => {
+                  const Icon = link.icon
+                  return (
+                    <Link
+                      key={link.path}
+                      to={link.path}
+                      className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-primary/10 transition-colors font-medium text-sm"
+                    >
+                      <Icon className="w-4 h-4" />
+                      <span>{link.name}</span>
+                    </Link>
+                  )
+                })}
+              </nav>
+            </div>
 
             <div className="flex items-center gap-2">
               {showInstallButton && (

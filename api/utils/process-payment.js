@@ -1,7 +1,9 @@
 import { initializeApp, getApps, cert, applicationDefault } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
+import { getMessaging } from 'firebase-admin/messaging';
 
 let db;
+let messaging;
 
 function initializeFirebase() {
   if (getApps().length === 0) {
@@ -31,6 +33,75 @@ function initializeFirebase() {
     }
   }
   db = getFirestore();
+  try {
+    messaging = getMessaging();
+  } catch (error) {
+    console.warn('Firebase Messaging not initialized:', error.message);
+  }
+}
+
+async function notifyAdminsOfEnrollment(enrollmentData) {
+  if (!db) {
+    initializeFirebase();
+  }
+  
+  try {
+    const adminTokensSnapshot = await db
+      .collection('adminTokens')
+      .where('role', '==', 'admin')
+      .get();
+    
+    if (adminTokensSnapshot.empty) {
+      console.log('No admin tokens found for notification');
+      return;
+    }
+
+    const tokens = adminTokensSnapshot.docs
+      .map(doc => doc.data().token)
+      .filter(Boolean);
+    
+    if (tokens.length === 0) {
+      console.log('No valid admin tokens for notification');
+      return;
+    }
+
+    const courseNames = enrollmentData.courses?.map(c => c.title).join(', ') || 'N/A';
+    const coursesText = enrollmentData.courses?.length > 1 
+      ? `${enrollmentData.courses.length} courses` 
+      : enrollmentData.courses?.[0]?.title || 'Unknown Course';
+    
+    const isFree = enrollmentData.isFreeEnrollment || enrollmentData.finalAmount === 0;
+
+    const message = {
+      notification: {
+        title: isFree ? 'New Free Enrollment 🎓' : 'New Course Enrollment 💰',
+        body: `${enrollmentData.userName || 'A user'} enrolled in ${coursesText}${isFree ? ' (Free)' : ` for ৳${enrollmentData.finalAmount}`}. Click to view details.`,
+      },
+      data: {
+        url: '/admin/payments',
+        userId: enrollmentData.userId || '',
+        type: 'enrollment',
+        userName: enrollmentData.userName || '',
+        userEmail: enrollmentData.userEmail || '',
+        courses: courseNames,
+        isFree: String(isFree)
+      },
+      tokens: tokens
+    };
+
+    if (messaging) {
+      const response = await messaging.sendEachForMulticast(message);
+      console.log(`Admin enrollment notification sent successfully to ${response.successCount}/${tokens.length} admin(s)`);
+      
+      if (response.failureCount > 0) {
+        console.log('Failed tokens:', response.responses.filter(r => !r.success).map((r, i) => ({ token: tokens[i], error: r.error })));
+      }
+    } else {
+      console.log('Firebase Messaging not available, skipping admin notification');
+    }
+  } catch (error) {
+    console.error('Error notifying admins of enrollment:', error);
+  }
 }
 
 export async function processPaymentAndEnrollUser(paymentData) {
@@ -107,6 +178,19 @@ export async function processPaymentAndEnrollUser(paymentData) {
       
       await batch.commit();
       console.log(`Successfully enrolled user ${userId} in ${courses.length} course(s)`);
+      
+      try {
+        await notifyAdminsOfEnrollment({
+          userId,
+          userName,
+          userEmail,
+          courses,
+          finalAmount,
+          isFreeEnrollment: finalAmount === 0
+        });
+      } catch (notifyError) {
+        console.error('Failed to notify admins:', notifyError);
+      }
     }
 
     return {

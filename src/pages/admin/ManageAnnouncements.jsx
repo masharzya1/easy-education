@@ -14,6 +14,7 @@ import {
 } from "firebase/firestore"
 import { db } from "../../lib/firebase"
 import { uploadImageToImgBB } from "../../lib/imgbb"
+import { generateSlug } from "../../lib/slug"
 import ConfirmDialog from "../../components/ConfirmDialog"
 
 export default function ManageAnnouncements() {
@@ -82,13 +83,20 @@ export default function ManageAnnouncements() {
       }
 
       if (editingId) {
+        const currentAnnouncement = announcements.find(a => a.id === editingId)
+        if (!currentAnnouncement?.slug) {
+          announcementData.slug = generateSlug(formData.title, editingId)
+        }
         await updateDoc(doc(db, "announcements", editingId), announcementData)
         toast({
           title: "Success",
           description: "Announcement updated successfully!",
         })
       } else {
-        await addDoc(collection(db, "announcements"), announcementData)
+        const docRef = await addDoc(collection(db, "announcements"), announcementData)
+        await updateDoc(doc(db, "announcements", docRef.id), {
+          slug: generateSlug(formData.title, docRef.id)
+        })
         toast({
           title: "Success",
           description: "Announcement created successfully!",

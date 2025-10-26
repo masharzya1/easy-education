@@ -72,7 +72,13 @@ export default function ExamResult() {
     <div className="min-h-screen bg-background py-8 px-4">
       <div className="max-w-4xl mx-auto">
         <button
-          onClick={() => navigate('/exams')}
+          onClick={() => {
+            if (exam?.courseId) {
+              navigate(`/course/${exam.courseId}/exams`)
+            } else {
+              navigate(-1)
+            }
+          }}
           className="flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />

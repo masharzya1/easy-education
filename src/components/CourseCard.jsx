@@ -149,9 +149,11 @@ export default function CourseCard({ course, onAddToCart, showProgress = false }
     return text.length > maxLength ? text.substring(0, maxLength) + "..." : text
   }
 
+  const courseUrl = `/course/${course.slug || course.id}`
+  
   return (
-    <Link to={`/course/${course.id}`}>
-      <div className="bg-card border border-border rounded-xl overflow-hidden hover:border-primary hover:shadow-lg transition-all group relative">
+    <Link to={courseUrl}>
+      <div className="bg-card border border-border rounded-xl overflow-hidden hover:border-primary hover:shadow-lg transition-all group relative h-full flex flex-col">
         <div className="aspect-video bg-gradient-to-br from-primary/20 to-secondary/20 relative overflow-hidden">
           {course.thumbnailURL ? (
             <img
@@ -178,7 +180,7 @@ export default function CourseCard({ course, onAddToCart, showProgress = false }
             </div>
           )}
         </div>
-        <div className="p-5">
+        <div className="p-5 flex flex-col flex-1">
           <h3 className="font-semibold text-lg mb-2 line-clamp-2 group-hover:text-primary transition-colors">
             {course.title}
           </h3>
@@ -192,7 +194,7 @@ export default function CourseCard({ course, onAddToCart, showProgress = false }
           </div>
 
           {/* Price Display */}
-          <div className="mb-3">
+          <div className="mb-3 mt-auto">
             {course.price && course.price > 0 ? (
               <div className="flex items-center gap-2">
                 <span className="text-2xl font-bold text-primary">৳{course.price}</span>
@@ -214,7 +216,7 @@ export default function CourseCard({ course, onAddToCart, showProgress = false }
               <div className="mb-3">
                 <ProgressBar progress={progress} showLabel={true} showPercentage={true} animated={false} />
               </div>
-              <Link to={course.type === "batch" ? `/course/${course.id}/subjects` : `/course/${course.id}/chapters`} onClick={(e) => e.stopPropagation()}>
+              <Link to={course.type === "batch" ? `/course/${course.slug || course.id}/subjects` : `/course/${course.slug || course.id}/chapters`} onClick={(e) => e.stopPropagation()}>
                 <button className="w-full px-4 py-2 bg-green-500/20 text-green-700 dark:text-green-400 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm font-medium hover:bg-green-500/30">
                   <Check className="w-4 h-4" />
                   Continue Course
@@ -238,13 +240,13 @@ export default function CourseCard({ course, onAddToCart, showProgress = false }
               Remove from Cart
             </button>
           ) : !course.price || course.price === 0 || course.price === "0" || course.price === null ? (
-            <Link to={`/course/${course.id}`} onClick={(e) => e.stopPropagation()}>
+            <Link to={courseUrl} onClick={(e) => e.stopPropagation()}>
               <button className="w-full px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-colors flex items-center justify-center gap-2 text-sm font-medium">
                 Enroll Free
               </button>
             </Link>
           ) : (
-            <Link to={`/course/${course.id}`} onClick={(e) => e.stopPropagation()}>
+            <Link to={courseUrl} onClick={(e) => e.stopPropagation()}>
               <button className="w-full px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-colors flex items-center justify-center gap-2 text-sm font-medium">
                 Buy Now
               </button>

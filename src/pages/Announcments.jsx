@@ -60,7 +60,7 @@ export default function Announcements() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
                 >
-                  <Link to={`/announcements/${announcement.id}`}>
+                  <Link to={`/announcements/${announcement.slug || announcement.id}`}>
                     <div className="bg-card border border-border rounded-xl p-6 hover:border-primary hover:shadow-lg transition-all group h-full">
                       <h3 className="font-semibold text-lg mb-3 line-clamp-2 group-hover:text-primary transition-colors">
                         {announcement.title}
