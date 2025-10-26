@@ -971,6 +971,72 @@ export default function ManageClasses() {
                 ) : null}
               </div>
 
+              {/* Class Image Upload/Link */}
+              <div>
+                <label className="block text-xs font-medium mb-2">Class Image</label>
+                <div className="flex gap-2 mb-2">
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, imageType: "upload" })}
+                    className={`flex-1 py-1.5 px-3 text-xs rounded transition-colors font-medium ${
+                      formData.imageType === "upload"
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted hover:bg-muted/80"
+                    }`}
+                  >
+                    Upload Image
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, imageType: "link" })}
+                    className={`flex-1 py-1.5 px-3 text-xs rounded transition-colors font-medium ${
+                      formData.imageType === "link"
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted hover:bg-muted/80"
+                    }`}
+                  >
+                    Image Link
+                  </button>
+                </div>
+
+                {formData.imageType === "upload" ? (
+                  <div>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => setImageFile(e.target.files[0])}
+                      className="w-full px-3 py-1.5 text-xs bg-background border border-border rounded focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">Upload image to ImgBB (JPG, PNG, GIF)</p>
+                  </div>
+                ) : (
+                  <div>
+                    <input
+                      type="url"
+                      value={formData.imageLink}
+                      onChange={(e) => setFormData({ ...formData, imageLink: e.target.value })}
+                      placeholder="https://example.com/image.jpg"
+                      className="w-full px-3 py-1.5 text-xs bg-background border border-border rounded focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">Paste direct image URL</p>
+                  </div>
+                )}
+
+                {/* Image Preview */}
+                {(editingClass?.imageURL || formData.imageLink) && formData.imageType === "link" && (
+                  <div className="mt-2">
+                    <img
+                      src={formData.imageLink || editingClass?.imageURL}
+                      alt="Class preview"
+                      className="w-32 h-32 object-cover rounded border border-border"
+                      onError={(e) => {
+                        e.target.style.display = "none"
+                      }}
+                    />
+                  </div>
+                )}
+              </div>
+
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <label className="block text-xs font-medium">Resource Links</label>
