@@ -27,6 +27,7 @@ export default function ManageChapters() {
     imageUrl: "",
     courseId: "",
     subjectId: "",
+    order: 0,
   })
 
   useEffect(() => {
@@ -62,6 +63,7 @@ export default function ManageChapters() {
     try {
       const snapshot = await getDocs(collection(db, "chapters"))
       const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
+      data.sort((a, b) => (b.order || 0) - (a.order || 0))
       setChapters(data)
     } catch (error) {
       console.error("Error fetching chapters:", error)
@@ -152,14 +154,17 @@ export default function ManageChapters() {
         imageUrl: chapter.imageUrl || "",
         courseId: chapter.courseId || "",
         subjectId: chapter.subjectId || "",
+        order: chapter.order || 0,
       })
     } else {
       setEditingChapter(null)
+      const maxOrder = chapters.length > 0 ? Math.max(...chapters.map(c => c.order || 0)) : 0
       setFormData({
         title: "",
         imageUrl: "",
         courseId: "",
         subjectId: "",
+        order: maxOrder + 1,
       })
     }
     setShowModal(true)
@@ -173,6 +178,7 @@ export default function ManageChapters() {
       imageUrl: "",
       courseId: "",
       subjectId: "",
+      order: 0,
     })
   }
 
@@ -285,11 +291,15 @@ export default function ManageChapters() {
 
     setSubmitting(true)
     try {
+      const maxOrder = chapters.length > 0 ? Math.max(...chapters.map(c => c.order || 0)) : 0
+      let currentOrder = maxOrder + 1
+      
       const selectedCourseData = courses.find(c => c.id === selectedCourse)
       for (const chapter of validChapters) {
         const chapterData = {
           title: chapter.title,
           courseId: selectedCourse,
+          order: currentOrder++,
           createdAt: serverTimestamp(),
         }
         
@@ -613,6 +623,20 @@ export default function ManageChapters() {
                   </select>
                 </div>
               )}
+
+              <div>
+                <label className="block text-sm font-medium mb-1.5">Order</label>
+                <input
+                  type="number"
+                  value={formData.order}
+                  onChange={(e) => setFormData({ ...formData, order: parseInt(e.target.value) || 0 })}
+                  className="w-full px-3 py-2 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                  placeholder="Auto-calculated if empty"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Chapters are displayed in descending order (highest first). Auto-incremented for new chapters.
+                </p>
+              </div>
 
               <div>
                 <label className="block text-sm font-medium mb-1.5">Chapter Image</label>
