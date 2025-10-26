@@ -18,13 +18,12 @@ export default function ManageChapters() {
   const [editingChapter, setEditingChapter] = useState(null)
   const [selectedCourse, setSelectedCourse] = useState("")
   const [selectedSubject, setSelectedSubject] = useState("")
-  const [bulkChapters, setBulkChapters] = useState([{ title: "", description: "" }])
+  const [bulkChapters, setBulkChapters] = useState([{ title: "" }])
   const [submitting, setSubmitting] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [confirmDialog, setConfirmDialog] = useState({ isOpen: false, title: "", message: "", onConfirm: () => {} })
   const [formData, setFormData] = useState({
     title: "",
-    description: "",
     imageUrl: "",
     courseId: "",
     subjectId: "",
@@ -150,7 +149,6 @@ export default function ManageChapters() {
       setEditingChapter(chapter)
       setFormData({
         title: chapter.title,
-        description: chapter.description || "",
         imageUrl: chapter.imageUrl || "",
         courseId: chapter.courseId || "",
         subjectId: chapter.subjectId || "",
@@ -159,7 +157,6 @@ export default function ManageChapters() {
       setEditingChapter(null)
       setFormData({
         title: "",
-        description: "",
         imageUrl: "",
         courseId: "",
         subjectId: "",
@@ -173,7 +170,6 @@ export default function ManageChapters() {
     setEditingChapter(null)
     setFormData({
       title: "",
-      description: "",
       imageUrl: "",
       courseId: "",
       subjectId: "",
@@ -250,7 +246,7 @@ export default function ManageChapters() {
   }
 
   const handleBulkAdd = (index) => {
-    setBulkChapters([...bulkChapters.slice(0, index + 1), { title: "", description: "" }, ...bulkChapters.slice(index + 1)])
+    setBulkChapters([...bulkChapters.slice(0, index + 1), { title: "" }, ...bulkChapters.slice(index + 1)])
   }
 
   const handleBulkRemove = (index) => {
@@ -293,7 +289,6 @@ export default function ManageChapters() {
       for (const chapter of validChapters) {
         const chapterData = {
           title: chapter.title,
-          description: chapter.description,
           courseId: selectedCourse,
           createdAt: serverTimestamp(),
         }
@@ -306,7 +301,7 @@ export default function ManageChapters() {
       }
 
       await fetchChapters()
-      setBulkChapters([{ title: "", description: "" }])
+      setBulkChapters([{ title: "" }])
       setSelectedCourse("")
       setSelectedSubject("")
       setShowBulkForm(false)
@@ -421,13 +416,6 @@ export default function ManageChapters() {
                       onChange={(e) => handleBulkChange(index, "title", e.target.value)}
                       className="w-full px-3 py-2 bg-card border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
                     />
-                    <textarea
-                      placeholder="Chapter description (optional)"
-                      value={chapter.description}
-                      onChange={(e) => handleBulkChange(index, "description", e.target.value)}
-                      rows={2}
-                      className="w-full px-3 py-2 bg-card border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary resize-none text-sm"
-                    />
                   </div>
                   <div className="flex flex-col gap-2">
                     <button
@@ -458,7 +446,7 @@ export default function ManageChapters() {
                 type="button"
                 onClick={() => {
                   setShowBulkForm(false)
-                  setBulkChapters([{ title: "", description: "" }])
+                  setBulkChapters([{ title: "" }])
                   setSelectedCourse("")
                   setSelectedSubject("")
                 }}
@@ -523,8 +511,7 @@ export default function ManageChapters() {
                 </div>
               )}
               <div className="p-3 sm:p-4">
-                <h3 className="font-semibold text-sm sm:text-base mb-1">{chapter.title}</h3>
-                <p className="text-xs sm:text-sm text-muted-foreground mb-3 line-clamp-2">{chapter.description}</p>
+                <h3 className="font-semibold text-sm sm:text-base mb-3">{chapter.title}</h3>
                 {chapter.courseId && (
                   <p className="text-xs text-primary mb-2">
                     Course: {courses.find(c => c.id === chapter.courseId)?.title || "Unknown"}
@@ -626,17 +613,6 @@ export default function ManageChapters() {
                   </select>
                 </div>
               )}
-
-              <div>
-                <label className="block text-sm font-medium mb-1.5">Description</label>
-                <textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  rows={3}
-                  className="w-full px-3 py-2 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary resize-none text-sm"
-                  placeholder="Enter chapter description (optional)"
-                />
-              </div>
 
               <div>
                 <label className="block text-sm font-medium mb-1.5">Chapter Image</label>

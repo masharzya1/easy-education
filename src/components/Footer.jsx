@@ -32,21 +32,33 @@ export default function Footer() {
             </div>
           </div>
 
+          {/* Contact */}
+          <div>
+            <h4 className="font-semibold mb-4">Contact</h4>
+            <div className="flex flex-col gap-2">
+              <a
+                href="mailto:easyeducation556644@gmail.com"
+                className="text-muted-foreground hover:text-primary transition-colors text-sm flex items-center gap-2"
+              >
+                <Mail className="w-4 h-4" />
+                easyeducation556644@gmail.com
+              </a>
+              <a
+                href="tel:+880969752197"
+                className="text-muted-foreground hover:text-primary transition-colors text-sm flex items-center gap-2"
+              >
+                <Mail className="w-4 h-4" />
+                +880969752197
+              </a>
+            </div>
+          </div>
+
           {/* Support */}
           <div>
             <h4 className="font-semibold mb-4">Support</h4>
             <div className="flex flex-col gap-2">
               <a
-                href="https://bondipathshala.com.bd/contact"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-muted-foreground hover:text-primary transition-colors text-sm flex items-center gap-2"
-              >
-                <Mail className="w-4 h-4" />
-                Contact
-              </a>
-              <a
-                href="https://t.me/YOUR_BOT_USERNAME"
+                href="https://t.me/Chatbox67_bot"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-muted-foreground hover:text-primary transition-colors text-sm flex items-center gap-2"
@@ -55,7 +67,7 @@ export default function Footer() {
                 Support Bot
               </a>
               <a
-                href="https://t.me/YOUR_SUPPORT_ID"
+                href="https://t.me/eesupport01"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-muted-foreground hover:text-primary transition-colors text-sm flex items-center gap-2"
@@ -71,7 +83,7 @@ export default function Footer() {
             <h4 className="font-semibold mb-4">Follow Us</h4>
             <div className="flex flex-col gap-3">
               <a
-                href="https://t.me/YOUR_CHANNEL"
+                href="https://t.me/Easy_Education_01"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 p-2 bg-muted hover:bg-primary hover:text-primary-foreground rounded-lg transition-colors text-sm"
@@ -80,22 +92,22 @@ export default function Footer() {
                 <span>Telegram Channel</span>
               </a>
               <a
-                href="https://youtube.com/@YOUR_CHANNEL_1"
+                href="https://youtube.com/@easyeducation19"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 p-2 bg-muted hover:bg-primary hover:text-primary-foreground rounded-lg transition-colors text-sm"
               >
                 <Youtube className="w-5 h-5" />
-                <span>YouTube Channel 1</span>
+                <span>YouTube 01</span>
               </a>
               <a
-                href="https://youtube.com/@YOUR_CHANNEL_2"
+                href="https://youtube.com/@easyeducation-01"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 p-2 bg-muted hover:bg-primary hover:text-primary-foreground rounded-lg transition-colors text-sm"
               >
                 <Youtube className="w-5 h-5" />
-                <span>YouTube Channel 2</span>
+                <span>YouTube 02</span>
               </a>
             </div>
           </div>

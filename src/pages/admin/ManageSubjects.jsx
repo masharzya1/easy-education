@@ -16,13 +16,12 @@ export default function ManageSubjects() {
   const [showBulkForm, setShowBulkForm] = useState(false)
   const [editingSubject, setEditingSubject] = useState(null)
   const [selectedCourse, setSelectedCourse] = useState("")
-  const [bulkSubjects, setBulkSubjects] = useState([{ title: "", description: "" }])
+  const [bulkSubjects, setBulkSubjects] = useState([{ title: "" }])
   const [submitting, setSubmitting] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [confirmDialog, setConfirmDialog] = useState({ isOpen: false, title: "", message: "", onConfirm: () => {} })
   const [formData, setFormData] = useState({
     title: "",
-    description: "",
     imageUrl: "",
     courseId: "",
   })
@@ -136,7 +135,6 @@ export default function ManageSubjects() {
       setEditingSubject(subject)
       setFormData({
         title: subject.title,
-        description: subject.description || "",
         imageUrl: subject.imageUrl || "",
         courseId: subject.courseId || "",
       })
@@ -144,7 +142,6 @@ export default function ManageSubjects() {
       setEditingSubject(null)
       setFormData({
         title: "",
-        description: "",
         imageUrl: "",
         courseId: "",
       })
@@ -157,7 +154,6 @@ export default function ManageSubjects() {
     setEditingSubject(null)
     setFormData({
       title: "",
-      description: "",
       imageUrl: "",
       courseId: "",
     })
@@ -231,7 +227,7 @@ export default function ManageSubjects() {
   }
 
   const handleBulkAdd = (index) => {
-    setBulkSubjects([...bulkSubjects.slice(0, index + 1), { title: "", description: "" }, ...bulkSubjects.slice(index + 1)])
+    setBulkSubjects([...bulkSubjects.slice(0, index + 1), { title: "" }, ...bulkSubjects.slice(index + 1)])
   }
 
   const handleBulkRemove = (index) => {
@@ -273,14 +269,13 @@ export default function ManageSubjects() {
       for (const subject of validSubjects) {
         await addDoc(collection(db, "subjects"), {
           title: subject.title,
-          description: subject.description,
           courseId: selectedCourse,
           createdAt: serverTimestamp(),
         })
       }
 
       await fetchSubjects()
-      setBulkSubjects([{ title: "", description: "" }])
+      setBulkSubjects([{ title: "" }])
       setSelectedCourse("")
       setShowBulkForm(false)
       toast({
@@ -374,13 +369,6 @@ export default function ManageSubjects() {
                       onChange={(e) => handleBulkChange(index, "title", e.target.value)}
                       className="w-full px-3 py-2 bg-card border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
                     />
-                    <textarea
-                      placeholder="Subject description (optional)"
-                      value={subject.description}
-                      onChange={(e) => handleBulkChange(index, "description", e.target.value)}
-                      rows={2}
-                      className="w-full px-3 py-2 bg-card border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary resize-none text-sm"
-                    />
                   </div>
                   <div className="flex flex-col gap-2">
                     <button
@@ -418,7 +406,7 @@ export default function ManageSubjects() {
                 type="button"
                 onClick={() => {
                   setShowBulkForm(false)
-                  setBulkSubjects([{ title: "", description: "" }])
+                  setBulkSubjects([{ title: "" }])
                   setSelectedCourse("")
                 }}
                 className="px-6 py-3 bg-muted hover:bg-muted/80 rounded-lg transition-colors"
@@ -478,7 +466,6 @@ export default function ManageSubjects() {
               )}
               <div className="p-6">
                 <h3 className="font-semibold text-lg mb-2">{subject.title}</h3>
-                <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{subject.description}</p>
                 {subject.courseId && (
                   <p className="text-xs text-primary mb-3">
                     Course: {courses.find(c => c.id === subject.courseId)?.title || "Unknown"}
@@ -554,16 +541,6 @@ export default function ManageSubjects() {
                     </option>
                   ))}
                 </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">Description</label>
-                <textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  rows={3}
-                  className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary resize-none"
-                />
               </div>
 
               <div>
