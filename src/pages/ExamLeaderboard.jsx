@@ -41,9 +41,20 @@ export default function ExamLeaderboard() {
       const resultsSnapshot = await getDocs(resultsQuery)
       const results = resultsSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
 
-      // Fetch user data for all results
+      // Group results by userId and keep only the first attempt (oldest submission)
+      const userFirstAttempts = new Map()
+      results.forEach((result) => {
+        const userId = result.userId
+        const existingAttempt = userFirstAttempts.get(userId)
+        
+        if (!existingAttempt || (result.submittedAt && existingAttempt.submittedAt && result.submittedAt.seconds < existingAttempt.submittedAt.seconds)) {
+          userFirstAttempts.set(userId, result)
+        }
+      })
+
+      // Fetch user data for first attempts only
       const leaderboardData = await Promise.all(
-        results.map(async (result) => {
+        Array.from(userFirstAttempts.values()).map(async (result) => {
           const userDoc = await getDoc(doc(db, "users", result.userId))
           const userData = userDoc.exists() ? userDoc.data() : { name: "Unknown User" }
 

@@ -22,6 +22,7 @@ export default function ManageSubjects() {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
+    imageUrl: "",
   })
 
   useEffect(() => {
@@ -60,12 +61,14 @@ export default function ManageSubjects() {
       setFormData({
         title: subject.title,
         description: subject.description || "",
+        imageUrl: subject.imageUrl || "",
       })
     } else {
       setEditingSubject(null)
       setFormData({
         title: "",
         description: "",
+        imageUrl: "",
       })
     }
     setShowModal(true)
@@ -439,6 +442,27 @@ export default function ManageSubjects() {
                   rows={3}
                   className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary resize-none"
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">Image URL (optional)</label>
+                <input
+                  type="url"
+                  value={formData.imageUrl}
+                  onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+                  className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  placeholder="https://example.com/image.jpg"
+                />
+                {formData.imageUrl && (
+                  <div className="mt-2">
+                    <img 
+                      src={formData.imageUrl} 
+                      alt="Preview" 
+                      className="w-full h-32 object-cover rounded-lg border border-border"
+                      onError={(e) => e.target.style.display = 'none'}
+                    />
+                  </div>
+                )}
               </div>
 
               <div className="flex gap-3 pt-4">
