@@ -416,8 +416,9 @@ export default function CourseChapters() {
 
             <div className="border-t border-blue-200 dark:border-blue-800 pt-3">
               <h3 className="font-semibold mb-2.5 text-xs md:text-sm">Submit Your Telegram Information</h3>
-               <p className="block text-xs font-medium text-muted-foreground mb-1.5">
-টেলিগ্ রাম গ্ রুপে জয়েন রিকুয়েষ্ ট দেওয়ার আগে নিচের ফর্ মটা সাবমিট করে তারপর রিকুয়েষ্ ট দিবে, ফর্ মটা একবারের বেশি সাবমিট করা যাবেনা তাই সঠিক ইনফর্ মেশন দিয়ে সাবমিট করবে। আর রিকুয়েষ্ ট দেওয়ার পর অপেক্ ষা করবে আমরা সময় মতো তো মাকে গ্ রুপে এড করে নিবো।</p>
+              <p className="block text-xs font-medium text-muted-foreground mb-1.5">
+টেলিগ্রাম গ্রুপে জয়েন রিকুয়েষ্ট দেওয়ার আগে নিচের ফর্মটা সাবমিট করে তারপর রিকুয়েষ্ট দিবে, ফর্মটা একবারের বেশি সাবমিট করা যাবেনা তাই সঠিক ইনফর্মেশন দিয়ে সাবমিট করবে। আর রিকুয়েষ্ট দেওয়ার পর অপেক্ষা করবে আমরা সময় মতো তোমাকে গ্রুপে এড করে নিবো।</p>
+              
               {telegramSubmitted ? (
                 <div className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg p-3 flex items-start gap-2.5">
                   <CheckCircle2 className="w-4 h-4 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
