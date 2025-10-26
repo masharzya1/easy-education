@@ -18,7 +18,7 @@ export default function Footer() {
 
           {/* Quick Links */}
           <div>
-            <h4 className="font-semibold mb-4">তথ্য সমূহ</h4>
+            <h4 className="font-semibold mb-4">Quick Links</h4>
             <div className="flex flex-col gap-2">
               <Link to="/" className="text-muted-foreground hover:text-primary transition-colors text-sm">
                 Home
@@ -98,19 +98,12 @@ export default function Footer() {
                 </a>
             </div>
           </div>
-
-          {/* Follow Us */}
-          <div>
-            <h4 className="font-semibold mb-4">Follow Us</h4>
-            <div className="flex flex-col gap-2">
-
-            </div>
-          </div>
+          
         </div>
 
         <div className="mt-8 pt-8 border-t border-border text-center text-muted-foreground text-sm grid grid-2">
           <p>Easy Education © All rights reserved</p>
-          <p>Developed by: <a href= "https://t.me/@hermanoMayorBot">Hermano Mayor</a></p>
+          <p>Developed by: <a href= "https://t.me/">Hermano Mayor</a></p>
         </div>
       </div>
     </footer>
