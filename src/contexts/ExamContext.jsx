@@ -213,7 +213,7 @@ export function ExamProvider({ children }) {
           questionId: q.id,
           questionText: q.questionText,
           correctAnswer: q.correctAnswer,
-          userAnswer: answers[q.id],
+          userAnswer: answers[q.id] !== undefined ? answers[q.id] : null,
           options: q.options,
         }))
 
