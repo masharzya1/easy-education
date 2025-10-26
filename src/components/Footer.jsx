@@ -32,10 +32,10 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Contact, Support, Follow Us */}
+          {/* Contact */}
           <div>
             <h4 className="font-semibold mb-4">Contact</h4>
-            <div className="flex flex-col gap-2 mb-6">
+            <div className="flex flex-col gap-2">
               <a
                 href="mailto:easyeducation556644@gmail.com"
                 className="text-muted-foreground hover:text-primary transition-colors text-sm flex items-center gap-2"
@@ -50,66 +50,58 @@ export default function Footer() {
                 <Mail className="w-4 h-4" />
                 +880969752197
               </a>
+              <a
+                href="https://t.me/Chatbox67_bot"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-muted-foreground hover:text-primary transition-colors text-sm flex items-center gap-2"
+              >
+                <MessageCircle className="w-4 h-4" />
+                Support Bot
+              </a>
+              <a
+                href="https://t.me/eesupport01"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-muted-foreground hover:text-primary transition-colors text-sm flex items-center gap-2"
+              >
+                <Send className="w-4 h-4" />
+                Support ID
+              </a>
             </div>
+          </div>
+        </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <div>
-                <h4 className="font-semibold mb-3">Support</h4>
-                <div className="flex flex-col gap-2">
-                  <a
-                    href="https://t.me/Chatbox67_bot"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-muted-foreground hover:text-primary transition-colors text-sm flex items-center gap-2"
-                  >
-                    <MessageCircle className="w-4 h-4" />
-                    Support Bot
-                  </a>
-                  <a
-                    href="https://t.me/eesupport01"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-muted-foreground hover:text-primary transition-colors text-sm flex items-center gap-2"
-                  >
-                    <Send className="w-4 h-4" />
-                    Support ID
-                  </a>
-                </div>
-              </div>
-
-              <div>
-                <h4 className="font-semibold mb-3">Follow Us</h4>
-                <div className="flex flex-col gap-2">
-                  <a
-                    href="https://t.me/Easy_Education_01"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-muted-foreground hover:text-primary transition-colors text-sm flex items-center gap-2"
-                  >
-                    <Send className="w-4 h-4" />
-                    Telegram
-                  </a>
-                  <a
-                    href="https://youtube.com/@easyeducation19"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-muted-foreground hover:text-primary transition-colors text-sm flex items-center gap-2"
-                  >
-                    <Youtube className="w-4 h-4" />
-                    YouTube 01
-                  </a>
-                  <a
-                    href="https://youtube.com/@easyeducation-01"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-muted-foreground hover:text-primary transition-colors text-sm flex items-center gap-2"
-                  >
-                    <Youtube className="w-4 h-4" />
-                    YouTube 02
-                  </a>
-                </div>
-              </div>
-            </div>
+        <div className="mt-8">
+          <h4 className="font-semibold mb-4">Follow Us</h4>
+          <div className="flex flex-wrap gap-4">
+            <a
+              href="https://t.me/Easy_Education_01"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-muted-foreground hover:text-primary transition-colors text-sm flex items-center gap-2"
+            >
+              <Send className="w-4 h-4" />
+              Telegram
+            </a>
+            <a
+              href="https://youtube.com/@easyeducation19"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-muted-foreground hover:text-primary transition-colors text-sm flex items-center gap-2"
+            >
+              <Youtube className="w-4 h-4" />
+              YouTube 01
+            </a>
+            <a
+              href="https://youtube.com/@easyeducation-01"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-muted-foreground hover:text-primary transition-colors text-sm flex items-center gap-2"
+            >
+              <Youtube className="w-4 h-4" />
+              YouTube 02
+            </a>
           </div>
         </div>
 
