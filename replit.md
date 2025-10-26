@@ -75,8 +75,8 @@ The project is ready for development. All dependencies are installed and the ser
 
 ## Recent Work Completed (October 26, 2025 - Latest Session)
 
-### Session 3: UI & Image Enhancements ✅
-**Completed Tasks (3, 5, 9):**
+### Session 3: UI & Image Enhancements + Critical Bug Fix ✅
+**Completed Tasks (3, 5, 9, 11):**
 
 1. **Task 3: Archived Classes Tab System** ✓
    - Added tab toggle between "Active Classes" and "Archived Classes" in ManageClasses.jsx
@@ -96,6 +96,13 @@ The project is ready for development. All dependencies are installed and the ser
    - Implemented proper fallback: shows Play icon if no image or image fails to load
    - Added lazy loading (`loading="lazy"`) for performance
    - Error handling with state tracking to show fallback on broken image URLs
+
+4. **Task 11: CRITICAL - Fixed Exam Submission Error with CQ Answers** ✓
+   - **Root cause**: wrongAnswers filter was checking ALL questions (MCQ + CQ) against correctAnswer field
+   - **Problem**: CQ questions don't have correctAnswer field → undefined comparison → submission failed
+   - **Solution**: Modified wrongAnswers filter in ExamContext.jsx to only check MCQ questions (line 211: `if (q.type !== "mcq") return false`)
+   - **Result**: Exam submissions now work perfectly with CQ text answers and image uploads
+   - **Files changed**: `src/contexts/ExamContext.jsx` (lines 208-221)
 
 ### Session 2: Core Admin Features ✅ 
 **Completed Tasks (1-4, 13):**
@@ -134,22 +141,18 @@ The project is ready for development. All dependencies are installed and the ser
 3. **Firebase Rules Fix - Community Features**
 4. **Footer & Menu Verification**
 
-### Remaining Work
+### Remaining Work (5 Tasks)
 
 #### High Priority 🔴
-- **Task 5**: Show archived classes in Manage Classes with badge or separate tab
-- **Task 12**: Fix exam submission error when CQ box has text or image upload (CRITICAL)
-- **Task 14**: Fix dark mode on Analytics, Exams, and Exam View pages
+- **Task 13**: Fix dark mode on Analytics, Exams, and Exam View pages
+- **Task 10**: Fix archived exams retake issue and increase "back to exam" button z-index
 
 #### Medium Priority 🟡
-- **Task 6**: Add image upload/link options to Class management
-- **Task 7**: Implement lazy loading for images (performance optimization)
-- **Task 11**: Fix archived exams retake issue and increase "back to exam" button z-index
+- **Task 6**: Implement lazy loading for images (performance optimization) - Partially done
 
 #### Lower Priority 🟢
-- **Task 8**: Fix archived class issues (prevent subjects nesting, fix chapter display)
-- **Task 9**: Fix routing inconsistency: continue course button (slug vs ID-based routing)
-- **Task 10**: Ensure images display properly in UI for Chapters, Subjects, Classes
+- **Task 7**: Fix archived class issues (prevent subjects nesting, fix chapter display)
+- **Task 8**: Fix routing inconsistency: continue course button (slug vs ID-based routing)
 
 ### Important Files Modified (Latest Session)
 1. `src/pages/admin/ManageClasses.jsx` - Course-based subject/chapter filtering
