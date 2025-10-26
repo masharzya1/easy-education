@@ -84,6 +84,7 @@ export default function ViewExamResults() {
         User: user?.name || user?.displayName || user?.email || "Unknown",
         Email: user?.email || "",
         Exam: exam?.title || "Unknown Exam",
+        ExamStatus: exam?.isArchived ? "Archived" : "Active",
         Score: result.totalScore || result.score || 0,
         MCQScore: result.mcqScore || 0,
         CQScore: result.cqScore || 0,
@@ -305,12 +306,19 @@ export default function ViewExamResults() {
                     <tr key={result.id} className="border-b border-border hover:bg-muted/50 transition-colors">
                       <td className="p-3">
                         <div>
-                          <p className="font-medium">{user?.displayName || "Unknown"}</p>
+                          <p className="font-medium">{user?.name || user?.displayName || "Unknown"}</p>
                           <p className="text-xs text-muted-foreground">{user?.email || ""}</p>
                         </div>
                       </td>
                       <td className="p-3">
-                        <p className="font-medium">{exam?.title || "Unknown Exam"}</p>
+                        <div>
+                          <p className="font-medium">{exam?.title || "Unknown Exam"}</p>
+                          {exam?.isArchived && (
+                            <span className="inline-block mt-1 px-2 py-0.5 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 text-xs rounded-full">
+                              Archived
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="p-3 text-center">
                         <span

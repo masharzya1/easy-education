@@ -266,7 +266,17 @@ export function ExamProvider({ children }) {
       const snapshot = await getDocs(q)
       if (!snapshot.empty) {
         const results = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
-        results.sort((a, b) => (b.totalScore || b.score) - (a.totalScore || a.score))
+        results.sort((a, b) => {
+          const attemptA = a.attemptNumber || 1
+          const attemptB = b.attemptNumber || 1
+          if (attemptA !== attemptB) {
+            return attemptA - attemptB
+          }
+          if (a.submittedAt && b.submittedAt) {
+            return a.submittedAt.seconds - b.submittedAt.seconds
+          }
+          return 0
+        })
         return results[0]
       }
       return null

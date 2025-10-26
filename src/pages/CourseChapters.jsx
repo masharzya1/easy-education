@@ -187,12 +187,18 @@ export default function CourseChapters() {
           setSubjects(uniqueSubjects)
           setChapters([])
           
-          const subjectsQuery = query(collection(db, "subjects"), where("courseId", "==", resolvedCourseId))
-          const subjectsSnapshot = await getDocs(subjectsQuery)
-          const fetchedSubjects = subjectsSnapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-          }))
+          const subjectsSnapshot = await getDocs(collection(db, "subjects"))
+          const fetchedSubjects = subjectsSnapshot.docs
+            .map((doc) => ({
+              id: doc.id,
+              ...doc.data(),
+            }))
+            .filter((s) => {
+              if (s.courseIds && Array.isArray(s.courseIds)) {
+                return s.courseIds.includes(resolvedCourseId) || s.courseIds.includes('archive')
+              }
+              return s.courseId === resolvedCourseId
+            })
           setSubjectData(fetchedSubjects)
         } else if (isArchiveSubject && subject) {
           const decodedSubject = decodeURIComponent(subject)
@@ -220,12 +226,18 @@ export default function CourseChapters() {
           setChapters(uniqueChapters)
           setSubjects([])
           
-          const chaptersQuery = query(collection(db, "chapters"), where("courseId", "==", resolvedCourseId))
-          const chaptersSnapshot = await getDocs(chaptersQuery)
-          const fetchedChapters = chaptersSnapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-          }))
+          const chaptersSnapshot = await getDocs(collection(db, "chapters"))
+          const fetchedChapters = chaptersSnapshot.docs
+            .map((doc) => ({
+              id: doc.id,
+              ...doc.data(),
+            }))
+            .filter((c) => {
+              if (c.courseIds && Array.isArray(c.courseIds)) {
+                return c.courseIds.includes(resolvedCourseId) || c.courseIds.includes('archive')
+              }
+              return c.courseId === resolvedCourseId
+            })
           setChapterData(fetchedChapters)
         } else if (subject) {
           const decodedSubject = decodeURIComponent(subject)
@@ -253,12 +265,18 @@ export default function CourseChapters() {
           setChapters(uniqueChapters)
           setSubjects([])
           
-          const chaptersQuery = query(collection(db, "chapters"), where("courseId", "==", resolvedCourseId))
-          const chaptersSnapshot = await getDocs(chaptersQuery)
-          const fetchedChapters = chaptersSnapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-          }))
+          const chaptersSnapshot = await getDocs(collection(db, "chapters"))
+          const fetchedChapters = chaptersSnapshot.docs
+            .map((doc) => ({
+              id: doc.id,
+              ...doc.data(),
+            }))
+            .filter((c) => {
+              if (c.courseIds && Array.isArray(c.courseIds)) {
+                return c.courseIds.includes(resolvedCourseId) || c.courseIds.includes('archive')
+              }
+              return c.courseId === resolvedCourseId
+            })
           setChapterData(fetchedChapters)
         } else {
           const filteredClasses = classesData.filter((cls) => !isClassArchived(cls))
@@ -279,12 +297,18 @@ export default function CourseChapters() {
           setChapters(uniqueChapters)
           setSubjects([])
           
-          const chaptersQuery = query(collection(db, "chapters"), where("courseId", "==", resolvedCourseId))
-          const chaptersSnapshot = await getDocs(chaptersQuery)
-          const fetchedChapters = chaptersSnapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-          }))
+          const chaptersSnapshot = await getDocs(collection(db, "chapters"))
+          const fetchedChapters = chaptersSnapshot.docs
+            .map((doc) => ({
+              id: doc.id,
+              ...doc.data(),
+            }))
+            .filter((c) => {
+              if (c.courseIds && Array.isArray(c.courseIds)) {
+                return c.courseIds.includes(resolvedCourseId) || c.courseIds.includes('archive')
+              }
+              return c.courseId === resolvedCourseId
+            })
           setChapterData(fetchedChapters)
         }
 

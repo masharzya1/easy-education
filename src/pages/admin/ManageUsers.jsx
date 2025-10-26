@@ -330,10 +330,10 @@ export default function ManageUsers() {
                     <td className="px-3 sm:px-6 py-3 sm:py-4">
                       <span
                         className={`px-2 sm:px-3 py-1 rounded-full text-[10px] sm:text-xs font-medium whitespace-nowrap ${
-                          user.isAdmin ? "bg-primary/10 text-primary" : "bg-muted-foreground/10 text-muted-foreground"
+                          user.role === "admin" ? "bg-primary/10 text-primary" : "bg-muted-foreground/10 text-muted-foreground"
                         }`}
                       >
-                        {user.isAdmin ? "admin" : "user"}
+                        {user.role === "admin" ? "admin" : "user"}
                       </span>
                     </td>
                     <td className="px-3 sm:px-6 py-3 sm:py-4">
@@ -351,7 +351,7 @@ export default function ManageUsers() {
                     </td>
                     <td className="px-3 sm:px-6 py-3 sm:py-4">
                       <div className="flex items-center justify-end gap-1 sm:gap-2">
-                        {user.isAdmin ? (
+                        {user.role === "admin" ? (
                           <button
                             onClick={() => handleDemoteToUser(user.id)}
                             className="p-1.5 sm:p-2 hover:bg-muted rounded-lg transition-colors"
