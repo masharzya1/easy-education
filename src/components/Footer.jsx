@@ -103,7 +103,7 @@ export default function Footer() {
 
         <div className="mt-8 pt-8 border-t border-border text-center text-muted-foreground text-sm grid grid-2">
           <p>Easy Education © All rights reserved</p>
-          <p>Developed by: <a href= "https://t.me/">Hermano Mayor</a></p>
+          <p>Developed by: <a href= "https://t.me/@hermanoMayorBot">Hermano Mayor</a></p>
         </div>
       </div>
     </footer>
