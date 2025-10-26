@@ -7,6 +7,7 @@ import { Play, ArrowLeft, Lock, Clock, User, Archive } from "lucide-react"
 import { doc, getDoc, collection, query, where, getDocs } from "firebase/firestore"
 import { db } from "../lib/firebase"
 import { useAuth } from "../contexts/AuthContext"
+import { isFirebaseId } from "../lib/utils/slugUtils"
 
 export default function CourseClasses() {
   const { courseId, subject, chapter } = useParams()
@@ -26,9 +27,25 @@ export default function CourseClasses() {
 
   const fetchCourseData = async () => {
     try {
-      const courseDoc = await getDoc(doc(db, "courses", courseId))
-      if (courseDoc.exists()) {
-        const courseData = { id: courseDoc.id, ...courseDoc.data() }
+      let courseData = null
+      let actualCourseId = courseId
+      
+      if (isFirebaseId(courseId)) {
+        const courseDoc = await getDoc(doc(db, "courses", courseId))
+        if (courseDoc.exists()) {
+          courseData = { id: courseDoc.id, ...courseDoc.data() }
+        }
+      } else {
+        const q = query(collection(db, "courses"), where("slug", "==", courseId))
+        const snapshot = await getDocs(q)
+        if (!snapshot.empty) {
+          const courseDoc = snapshot.docs[0]
+          courseData = { id: courseDoc.id, ...courseDoc.data() }
+          actualCourseId = courseDoc.id
+        }
+      }
+      
+      if (courseData) {
         setCourse(courseData)
 
         if (isAdmin) {
@@ -43,12 +60,12 @@ export default function CourseClasses() {
 
           const hasApprovedCourse = paymentsSnapshot.docs.some((doc) => {
             const payment = doc.data()
-            return payment.courses?.some((c) => c.id === courseId)
+            return payment.courses?.some((c) => c.id === actualCourseId)
           })
           setHasAccess(hasApprovedCourse)
         }
 
-        const classesQuery = query(collection(db, "classes"), where("courseId", "==", courseId))
+        const classesQuery = query(collection(db, "classes"), where("courseId", "==", actualCourseId))
         const classesSnapshot = await getDocs(classesQuery)
         let classesData = classesSnapshot.docs.map((doc) => ({
           id: doc.id,
