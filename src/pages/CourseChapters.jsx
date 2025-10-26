@@ -18,10 +18,12 @@ export default function CourseChapters() {
   const { currentUser, isAdmin } = useAuth()
   const { getExamsByCourse } = useExam()
   const [course, setCourse] = useState(null)
+  const [actualCourseId, setActualCourseId] = useState(null)
   const [chapters, setChapters] = useState([])
   const [subjects, setSubjects] = useState([])
   const [exams, setExams] = useState([])
   const [loading, setLoading] = useState(true)
+  const [courseNotFound, setCourseNotFound] = useState(false)
   const [hasAccess, setHasAccess] = useState(false)
   const [telegramId, setTelegramId] = useState("")
   const [telegramMobile, setTelegramMobile] = useState("")
@@ -37,19 +39,19 @@ export default function CourseChapters() {
   }, [courseId, subject])
 
   useEffect(() => {
-    if (currentUser && courseId) {
+    if (currentUser && actualCourseId) {
       checkTelegramSubmission()
     }
-  }, [currentUser, courseId])
+  }, [currentUser, actualCourseId])
 
   const checkTelegramSubmission = async () => {
-    if (!currentUser || !courseId) return
+    if (!currentUser || !actualCourseId) return
     
     try {
       const submissionQuery = query(
         collection(db, "telegramSubmissions"),
         where("userId", "==", currentUser.uid),
-        where("courseId", "==", courseId)
+        where("courseId", "==", actualCourseId)
       )
       const submissionSnapshot = await getDocs(submissionQuery)
       setTelegramSubmitted(!submissionSnapshot.empty)
@@ -71,7 +73,7 @@ export default function CourseChapters() {
         userEmail: currentUser.email,
         telegramId: telegramId.trim(),
         telegramMobile: telegramMobile.trim(),
-        courseId: courseId,
+        courseId: actualCourseId,
         courseName: course?.title || "",
         submittedAt: serverTimestamp()
       })
@@ -98,7 +100,7 @@ export default function CourseChapters() {
   const fetchCourseData = async () => {
     try {
       let courseData = null
-      let actualCourseId = courseId
+      let resolvedCourseId = courseId
       
       if (isFirebaseId(courseId)) {
         const courseDoc = await getDoc(doc(db, "courses", courseId))
@@ -111,12 +113,13 @@ export default function CourseChapters() {
         if (!snapshot.empty) {
           const courseDoc = snapshot.docs[0]
           courseData = { id: courseDoc.id, ...courseDoc.data() }
-          actualCourseId = courseDoc.id
+          resolvedCourseId = courseDoc.id
         }
       }
       
       if (courseData) {
         setCourse(courseData)
+        setActualCourseId(resolvedCourseId)
 
         if (isAdmin) {
           setHasAccess(true)
@@ -130,12 +133,12 @@ export default function CourseChapters() {
 
           const hasApprovedCourse = paymentsSnapshot.docs.some((doc) => {
             const payment = doc.data()
-            return payment.courses?.some((c) => c.id === actualCourseId)
+            return payment.courses?.some((c) => c.id === resolvedCourseId)
           })
           setHasAccess(hasApprovedCourse)
         }
 
-        const classesQuery = query(collection(db, "classes"), where("courseId", "==", actualCourseId))
+        const classesQuery = query(collection(db, "classes"), where("courseId", "==", resolvedCourseId))
         const classesSnapshot = await getDocs(classesQuery)
         let classesData = classesSnapshot.docs.map((doc) => ({
           id: doc.id,
@@ -227,11 +230,14 @@ export default function CourseChapters() {
           setSubjects([])
         }
 
-        const examsData = await getExamsByCourse(actualCourseId)
+        const examsData = await getExamsByCourse(resolvedCourseId)
         setExams(examsData)
+      } else {
+        setCourseNotFound(true)
       }
     } catch (error) {
       console.error("Error fetching course data:", error)
+      setCourseNotFound(true)
     } finally {
       setLoading(false)
     }
@@ -241,6 +247,26 @@ export default function CourseChapters() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    )
+  }
+
+  if (courseNotFound) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <div className="max-w-md w-full bg-card border border-border rounded-xl p-8 text-center">
+          <div className="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
+            <Lock className="w-10 h-10 text-red-500" />
+          </div>
+          <h2 className="text-2xl font-bold mb-3">Course Not Found</h2>
+          <p className="text-muted-foreground mb-6">The course you're looking for doesn't exist or has been removed.</p>
+          <button
+            onClick={() => navigate("/courses")}
+            className="w-full py-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-colors font-medium"
+          >
+            Browse Courses
+          </button>
+        </div>
       </div>
     )
   }

@@ -17,6 +17,7 @@ export default function CourseClasses() {
   const [course, setCourse] = useState(null)
   const [classes, setClasses] = useState([])
   const [loading, setLoading] = useState(true)
+  const [courseNotFound, setCourseNotFound] = useState(false)
   const [hasAccess, setHasAccess] = useState(false)
 
   const isArchive = location.pathname.includes("/archive/")
@@ -110,9 +111,12 @@ export default function CourseClasses() {
 
         classesData.sort((a, b) => a.order - b.order)
         setClasses(classesData)
+      } else {
+        setCourseNotFound(true)
       }
     } catch (error) {
       console.error("Error fetching course data:", error)
+      setCourseNotFound(true)
     } finally {
       setLoading(false)
     }
@@ -122,6 +126,26 @@ export default function CourseClasses() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    )
+  }
+
+  if (courseNotFound) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <div className="max-w-md w-full bg-card border border-border rounded-xl p-8 text-center">
+          <div className="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
+            <Lock className="w-10 h-10 text-red-500" />
+          </div>
+          <h2 className="text-2xl font-bold mb-3">Course Not Found</h2>
+          <p className="text-muted-foreground mb-6">The course you're looking for doesn't exist or has been removed.</p>
+          <button
+            onClick={() => navigate("/courses")}
+            className="w-full py-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-colors font-medium"
+          >
+            Browse Courses
+          </button>
+        </div>
       </div>
     )
   }
