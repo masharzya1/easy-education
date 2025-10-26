@@ -19,6 +19,7 @@ import {
   X,
   FileQuestion,
   Send,
+  Bell,
 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import AdminOverview from "./AdminOverview"
@@ -39,6 +40,7 @@ import ManageExamQuestions from "./ManageExamQuestions"
 import ViewExamSubmissions from "./ViewExamSubmissions"
 import ViewExamResults from "./ViewExamResults"
 import ManageTelegramSubmissions from "./ManageTelegramSubmissions"
+import Notifications from "./Notifications"
 
 export default function AdminDashboard() {
   const location = useLocation()
@@ -47,6 +49,7 @@ export default function AdminDashboard() {
 
   const navItems = [
     { name: "Overview", path: "/admin", icon: LayoutDashboard },
+    { name: "Notifications", path: "/admin/notifications", icon: Bell },
     { name: "Users", path: "/admin/users", icon: Users },
     { name: "Courses", path: "/admin/courses", icon: BookOpen },
     { name: "Classes", path: "/admin/classes", icon: Video },
@@ -126,6 +129,7 @@ export default function AdminDashboard() {
           <div className="p-3 sm:p-4 lg:p-4">
             <Routes>
               <Route index element={<AdminOverview />} />
+              <Route path="notifications" element={<Notifications />} />
               <Route path="users" element={<ManageUsers />} />
               <Route path="courses" element={<ManageCourses />} />
               <Route path="classes" element={<ManageClasses />} />

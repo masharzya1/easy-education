@@ -3,7 +3,7 @@ import { toast } from "../../hooks/use-toast"
 
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
-import { Plus, Edit, Trash2, X } from "lucide-react"
+import { Plus, Edit, Trash2, X, Upload, Loader2 } from "lucide-react"
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, query, where } from "firebase/firestore"
 import { db } from "../../lib/firebase"
 import ConfirmDialog from "../../components/ConfirmDialog"
@@ -18,11 +18,13 @@ export default function ManageSubjects() {
   const [selectedCourse, setSelectedCourse] = useState("")
   const [bulkSubjects, setBulkSubjects] = useState([{ title: "", description: "" }])
   const [submitting, setSubmitting] = useState(false)
+  const [uploading, setUploading] = useState(false)
   const [confirmDialog, setConfirmDialog] = useState({ isOpen: false, title: "", message: "", onConfirm: () => {} })
   const [formData, setFormData] = useState({
     title: "",
     description: "",
     imageUrl: "",
+    courseId: "",
   })
 
   useEffect(() => {
@@ -55,6 +57,80 @@ export default function ManageSubjects() {
     }
   }
 
+  const handleImageUpload = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (!file.type.startsWith("image/")) {
+      toast({
+        variant: "error",
+        title: "Invalid File",
+        description: "Please select an image file.",
+      })
+      return
+    }
+
+    const maxSize = 5 * 1024 * 1024
+    if (file.size > maxSize) {
+      toast({
+        variant: "error",
+        title: "File Too Large",
+        description: "Image must be less than 5MB.",
+      })
+      return
+    }
+
+    setUploading(true)
+    try {
+      const reader = new FileReader()
+      
+      const uploadPromise = new Promise((resolve, reject) => {
+        reader.onload = async () => {
+          try {
+            const base64 = reader.result.split(",")[1]
+            
+            const response = await fetch("/api/upload-image", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ image: base64 }),
+            })
+
+            const data = await response.json()
+            
+            if (data.success && data.url) {
+              resolve(data.url)
+            } else {
+              reject(new Error(data.error || "Upload failed"))
+            }
+          } catch (err) {
+            reject(err)
+          }
+        }
+        
+        reader.onerror = () => reject(new Error("Failed to read file"))
+      })
+
+      reader.readAsDataURL(file)
+      const url = await uploadPromise
+      
+      setFormData({ ...formData, imageUrl: url })
+      toast({
+        variant: "success",
+        title: "Success",
+        description: "Image uploaded successfully!",
+      })
+    } catch (error) {
+      console.error("Error uploading image:", error)
+      toast({
+        variant: "error",
+        title: "Upload Failed",
+        description: error.message || "Failed to upload image. Please try again.",
+      })
+    } finally {
+      setUploading(false)
+    }
+  }
+
   const handleOpenModal = (subject = null) => {
     if (subject) {
       setEditingSubject(subject)
@@ -62,6 +138,7 @@ export default function ManageSubjects() {
         title: subject.title,
         description: subject.description || "",
         imageUrl: subject.imageUrl || "",
+        courseId: subject.courseId || "",
       })
     } else {
       setEditingSubject(null)
@@ -69,6 +146,7 @@ export default function ManageSubjects() {
         title: "",
         description: "",
         imageUrl: "",
+        courseId: "",
       })
     }
     setShowModal(true)
@@ -77,10 +155,25 @@ export default function ManageSubjects() {
   const handleCloseModal = () => {
     setShowModal(false)
     setEditingSubject(null)
+    setFormData({
+      title: "",
+      description: "",
+      imageUrl: "",
+      courseId: "",
+    })
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+
+    if (!formData.courseId) {
+      toast({
+        variant: "error",
+        title: "Validation Error",
+        description: "Please select a course for this subject.",
+      })
+      return
+    }
 
     try {
       if (editingSubject) {
@@ -371,30 +464,42 @@ export default function ManageSubjects() {
               key={subject.id}
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="bg-card border border-border rounded-xl p-6"
+              className="bg-card border border-border rounded-xl overflow-hidden"
             >
-              <h3 className="font-semibold text-lg mb-2">{subject.title}</h3>
-              <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{subject.description}</p>
-              {subject.courseId && (
-                <p className="text-xs text-primary mb-3">
-                  Course: {courses.find(c => c.id === subject.courseId)?.title || "Unknown"}
-                </p>
+              {subject.imageUrl && (
+                <div className="w-full h-48 overflow-hidden bg-muted">
+                  <img 
+                    src={subject.imageUrl} 
+                    alt={subject.title}
+                    className="w-full h-full object-cover"
+                    onError={(e) => e.target.style.display = 'none'}
+                  />
+                </div>
               )}
-              <div className="flex gap-2">
-                <button
-                  onClick={() => handleOpenModal(subject)}
-                  className="flex-1 px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-colors flex items-center justify-center gap-2"
-                >
-                  <Edit className="w-4 h-4" />
-                  Edit
-                </button>
-                <button
-                  onClick={() => handleDelete(subject.id)}
-                  className="flex-1 px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg transition-colors flex items-center justify-center gap-2"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  Delete
-                </button>
+              <div className="p-6">
+                <h3 className="font-semibold text-lg mb-2">{subject.title}</h3>
+                <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{subject.description}</p>
+                {subject.courseId && (
+                  <p className="text-xs text-primary mb-3">
+                    Course: {courses.find(c => c.id === subject.courseId)?.title || "Unknown"}
+                  </p>
+                )}
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleOpenModal(subject)}
+                    className="flex-1 px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-colors flex items-center justify-center gap-2"
+                  >
+                    <Edit className="w-4 h-4" />
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(subject.id)}
+                    className="flex-1 px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg transition-colors flex items-center justify-center gap-2"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Delete
+                  </button>
+                </div>
               </div>
             </motion.div>
           ))}
@@ -424,7 +529,7 @@ export default function ManageSubjects() {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-2">Title</label>
+                <label className="block text-sm font-medium mb-2">Title *</label>
                 <input
                   type="text"
                   value={formData.title}
@@ -432,6 +537,23 @@ export default function ManageSubjects() {
                   required
                   className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">Course *</label>
+                <select
+                  value={formData.courseId}
+                  onChange={(e) => setFormData({ ...formData, courseId: e.target.value })}
+                  required
+                  className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                >
+                  <option value="">Select a batch course...</option>
+                  {courses.filter(c => c.type === "batch").map((course) => (
+                    <option key={course.id} value={course.id}>
+                      {course.title}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div>
@@ -445,24 +567,55 @@ export default function ManageSubjects() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">Image URL (optional)</label>
-                <input
-                  type="url"
-                  value={formData.imageUrl}
-                  onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                  className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                  placeholder="https://example.com/image.jpg"
-                />
-                {formData.imageUrl && (
-                  <div className="mt-2">
-                    <img 
-                      src={formData.imageUrl} 
-                      alt="Preview" 
-                      className="w-full h-32 object-cover rounded-lg border border-border"
-                      onError={(e) => e.target.style.display = 'none'}
-                    />
+                <label className="block text-sm font-medium mb-2">Subject Image</label>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <label className="flex-1 cursor-pointer">
+                      <div className="flex items-center justify-center gap-2 px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-colors border border-primary/20">
+                        {uploading ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            <span className="text-sm font-medium">Uploading...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="w-4 h-4" />
+                            <span className="text-sm font-medium">Upload Image</span>
+                          </>
+                        )}
+                      </div>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        disabled={uploading}
+                        className="hidden"
+                      />
+                    </label>
                   </div>
-                )}
+                  
+                  {formData.imageUrl && (
+                    <div className="relative">
+                      <img 
+                        src={formData.imageUrl} 
+                        alt="Preview" 
+                        className="w-full h-48 object-cover rounded-lg border border-border"
+                        onError={(e) => e.target.style.display = 'none'}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, imageUrl: "" })}
+                        className="absolute top-2 right-2 p-1.5 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+                  
+                  <p className="text-xs text-muted-foreground">
+                    Upload an image for this subject. Recommended size: 800x600px or similar aspect ratio.
+                  </p>
+                </div>
               </div>
 
               <div className="flex gap-3 pt-4">

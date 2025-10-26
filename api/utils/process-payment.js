@@ -191,6 +191,38 @@ export async function processPaymentAndEnrollUser(paymentData) {
       } catch (notifyError) {
         console.error('Failed to notify admins:', notifyError);
       }
+
+      try {
+        if (!db) {
+          console.error('Firestore not initialized, skipping notification creation');
+        } else {
+          const isFree = finalAmount === 0;
+          const coursesText = courses?.length > 1 
+            ? `${courses.length} courses` 
+            : courses?.[0]?.title || 'Unknown Course';
+          
+          const sanitizedUserName = (userName || userEmail || 'User').substring(0, 100);
+          const sanitizedCoursesText = coursesText.substring(0, 200);
+          
+          await db.collection('notifications').add({
+            type: 'enrollment',
+            title: isFree ? 'New Free Enrollment' : 'New Course Enrollment',
+            message: `${sanitizedUserName} enrolled in ${sanitizedCoursesText}${isFree ? ' (Free)' : ` for ৳${finalAmount}`}`,
+            userId: userId || 'unknown',
+            userName: sanitizedUserName,
+            userEmail: (userEmail || 'unknown').substring(0, 100),
+            courses: courses?.map(c => ({ id: c.id, title: (c.title || 'Untitled').substring(0, 100) })) || [],
+            amount: parseFloat(finalAmount) || 0,
+            isFree,
+            isRead: false,
+            createdAt: FieldValue.serverTimestamp(),
+            link: '/admin/payments'
+          });
+          console.log('Created notification record for admin');
+        }
+      } catch (notificationError) {
+        console.error('Failed to create notification record:', notificationError);
+      }
     }
 
     return {

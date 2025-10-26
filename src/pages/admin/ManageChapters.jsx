@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
-import { Plus, Edit, Trash2, X } from "lucide-react"
+import { Plus, Edit, Trash2, X, Upload, Loader2 } from "lucide-react"
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from "firebase/firestore"
 import { db } from "../../lib/firebase"
 import { toast } from "../../hooks/use-toast"
@@ -20,11 +20,14 @@ export default function ManageChapters() {
   const [selectedSubject, setSelectedSubject] = useState("")
   const [bulkChapters, setBulkChapters] = useState([{ title: "", description: "" }])
   const [submitting, setSubmitting] = useState(false)
+  const [uploading, setUploading] = useState(false)
   const [confirmDialog, setConfirmDialog] = useState({ isOpen: false, title: "", message: "", onConfirm: () => {} })
   const [formData, setFormData] = useState({
     title: "",
     description: "",
     imageUrl: "",
+    courseId: "",
+    subjectId: "",
   })
 
   useEffect(() => {
@@ -68,6 +71,80 @@ export default function ManageChapters() {
     }
   }
 
+  const handleImageUpload = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (!file.type.startsWith("image/")) {
+      toast({
+        variant: "error",
+        title: "Invalid File",
+        description: "Please select an image file.",
+      })
+      return
+    }
+
+    const maxSize = 5 * 1024 * 1024
+    if (file.size > maxSize) {
+      toast({
+        variant: "error",
+        title: "File Too Large",
+        description: "Image must be less than 5MB.",
+      })
+      return
+    }
+
+    setUploading(true)
+    try {
+      const reader = new FileReader()
+      
+      const uploadPromise = new Promise((resolve, reject) => {
+        reader.onload = async () => {
+          try {
+            const base64 = reader.result.split(",")[1]
+            
+            const response = await fetch("/api/upload-image", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ image: base64 }),
+            })
+
+            const data = await response.json()
+            
+            if (data.success && data.url) {
+              resolve(data.url)
+            } else {
+              reject(new Error(data.error || "Upload failed"))
+            }
+          } catch (err) {
+            reject(err)
+          }
+        }
+        
+        reader.onerror = () => reject(new Error("Failed to read file"))
+      })
+
+      reader.readAsDataURL(file)
+      const url = await uploadPromise
+      
+      setFormData({ ...formData, imageUrl: url })
+      toast({
+        variant: "success",
+        title: "Success",
+        description: "Image uploaded successfully!",
+      })
+    } catch (error) {
+      console.error("Error uploading image:", error)
+      toast({
+        variant: "error",
+        title: "Upload Failed",
+        description: error.message || "Failed to upload image. Please try again.",
+      })
+    } finally {
+      setUploading(false)
+    }
+  }
+
   const handleOpenModal = (chapter = null) => {
     if (chapter) {
       setEditingChapter(chapter)
@@ -75,6 +152,8 @@ export default function ManageChapters() {
         title: chapter.title,
         description: chapter.description || "",
         imageUrl: chapter.imageUrl || "",
+        courseId: chapter.courseId || "",
+        subjectId: chapter.subjectId || "",
       })
     } else {
       setEditingChapter(null)
@@ -82,6 +161,8 @@ export default function ManageChapters() {
         title: "",
         description: "",
         imageUrl: "",
+        courseId: "",
+        subjectId: "",
       })
     }
     setShowModal(true)
@@ -90,10 +171,26 @@ export default function ManageChapters() {
   const handleCloseModal = () => {
     setShowModal(false)
     setEditingChapter(null)
+    setFormData({
+      title: "",
+      description: "",
+      imageUrl: "",
+      courseId: "",
+      subjectId: "",
+    })
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+
+    if (!formData.courseId) {
+      toast({
+        variant: "error",
+        title: "Validation Error",
+        description: "Please select a course for this chapter.",
+      })
+      return
+    }
 
     try {
       if (editingChapter) {
@@ -413,35 +510,47 @@ export default function ManageChapters() {
               key={chapter.id}
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="bg-card border border-border rounded-lg p-3 sm:p-4"
+              className="bg-card border border-border rounded-lg overflow-hidden"
             >
-              <h3 className="font-semibold text-sm sm:text-base mb-1">{chapter.title}</h3>
-              <p className="text-xs sm:text-sm text-muted-foreground mb-3 line-clamp-2">{chapter.description}</p>
-              {chapter.courseId && (
-                <p className="text-xs text-primary mb-2">
-                  Course: {courses.find(c => c.id === chapter.courseId)?.title || "Unknown"}
-                </p>
+              {chapter.imageUrl && (
+                <div className="w-full h-40 overflow-hidden bg-muted">
+                  <img 
+                    src={chapter.imageUrl} 
+                    alt={chapter.title}
+                    className="w-full h-full object-cover"
+                    onError={(e) => e.target.style.display = 'none'}
+                  />
+                </div>
               )}
-              {chapter.subjectId && (
-                <p className="text-xs text-secondary mb-2">
-                  Subject: {subjects.find(s => s.id === chapter.subjectId)?.title || "Unknown"}
-                </p>
-              )}
-              <div className="flex gap-2">
-                <button
-                  onClick={() => handleOpenModal(chapter)}
-                  className="flex-1 px-2 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary rounded hover:bg-primary/20 transition-colors flex items-center justify-center gap-1.5 text-xs"
-                >
-                  <Edit className="w-3 h-3" />
-                  Edit
-                </button>
-                <button
-                  onClick={() => handleDelete(chapter.id)}
-                  className="flex-1 px-2 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-600 rounded hover:bg-red-500/20 transition-colors flex items-center justify-center gap-1.5 text-xs"
-                >
-                  <Trash2 className="w-3 h-3" />
-                  Delete
-                </button>
+              <div className="p-3 sm:p-4">
+                <h3 className="font-semibold text-sm sm:text-base mb-1">{chapter.title}</h3>
+                <p className="text-xs sm:text-sm text-muted-foreground mb-3 line-clamp-2">{chapter.description}</p>
+                {chapter.courseId && (
+                  <p className="text-xs text-primary mb-2">
+                    Course: {courses.find(c => c.id === chapter.courseId)?.title || "Unknown"}
+                  </p>
+                )}
+                {chapter.subjectId && (
+                  <p className="text-xs text-secondary mb-2">
+                    Subject: {subjects.find(s => s.id === chapter.subjectId)?.title || "Unknown"}
+                  </p>
+                )}
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleOpenModal(chapter)}
+                    className="flex-1 px-2 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary rounded hover:bg-primary/20 transition-colors flex items-center justify-center gap-1.5 text-xs"
+                  >
+                    <Edit className="w-3 h-3" />
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(chapter.id)}
+                    className="flex-1 px-2 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-600 rounded hover:bg-red-500/20 transition-colors flex items-center justify-center gap-1.5 text-xs"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                    Delete
+                  </button>
+                </div>
               </div>
             </motion.div>
           ))}
@@ -482,6 +591,43 @@ export default function ManageChapters() {
               </div>
 
               <div>
+                <label className="block text-sm font-medium mb-1.5">Course *</label>
+                <select
+                  value={formData.courseId}
+                  onChange={(e) => {
+                    setFormData({ ...formData, courseId: e.target.value, subjectId: "" })
+                  }}
+                  required
+                  className="w-full px-3 py-2 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                >
+                  <option value="">Select a course...</option>
+                  {courses.map((course) => (
+                    <option key={course.id} value={course.id}>
+                      {course.title} ({course.type})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {formData.courseId && courses.find(c => c.id === formData.courseId)?.type === "batch" && (
+                <div>
+                  <label className="block text-sm font-medium mb-1.5">Subject (optional for batch courses)</label>
+                  <select
+                    value={formData.subjectId}
+                    onChange={(e) => setFormData({ ...formData, subjectId: e.target.value })}
+                    className="w-full px-3 py-2 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                  >
+                    <option value="">All subjects / No specific subject</option>
+                    {subjects.filter(s => s.courseId === formData.courseId).map((subject) => (
+                      <option key={subject.id} value={subject.id}>
+                        {subject.title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              <div>
                 <label className="block text-sm font-medium mb-1.5">Description</label>
                 <textarea
                   value={formData.description}
@@ -493,24 +639,55 @@ export default function ManageChapters() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1.5">Image URL (optional)</label>
-                <input
-                  type="url"
-                  value={formData.imageUrl}
-                  onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                  className="w-full px-3 py-2 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
-                  placeholder="https://example.com/image.jpg"
-                />
-                {formData.imageUrl && (
-                  <div className="mt-2">
-                    <img 
-                      src={formData.imageUrl} 
-                      alt="Preview" 
-                      className="w-full h-32 object-cover rounded-lg border border-border"
-                      onError={(e) => e.target.style.display = 'none'}
-                    />
+                <label className="block text-sm font-medium mb-1.5">Chapter Image</label>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <label className="flex-1 cursor-pointer">
+                      <div className="flex items-center justify-center gap-2 px-3 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-colors border border-primary/20">
+                        {uploading ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            <span className="text-sm font-medium">Uploading...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="w-4 h-4" />
+                            <span className="text-sm font-medium">Upload Image</span>
+                          </>
+                        )}
+                      </div>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        disabled={uploading}
+                        className="hidden"
+                      />
+                    </label>
                   </div>
-                )}
+                  
+                  {formData.imageUrl && (
+                    <div className="relative">
+                      <img 
+                        src={formData.imageUrl} 
+                        alt="Preview" 
+                        className="w-full h-40 object-cover rounded-lg border border-border"
+                        onError={(e) => e.target.style.display = 'none'}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, imageUrl: "" })}
+                        className="absolute top-2 right-2 p-1.5 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+                  
+                  <p className="text-xs text-muted-foreground">
+                    Upload an image for this chapter (recommended: 800x600px).
+                  </p>
+                </div>
               </div>
 
               <div className="flex gap-3 pt-4 border-t border-border">
