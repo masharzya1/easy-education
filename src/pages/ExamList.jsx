@@ -78,24 +78,24 @@ export default function ExamList() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="animate-spin rounded-full h-12 w-12 border-2 border-gray-200 border-t-black"></div>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-spin rounded-full h-12 w-12 border-2 border-border border-t-primary"></div>
       </div>
     )
   }
 
   if (!hasAccess && !isAdmin) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4 bg-white">
+      <div className="min-h-screen flex items-center justify-center px-4 bg-background">
         <div className="max-w-md w-full text-center">
-          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <Lock className="w-8 h-8 text-gray-900" />
+          <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-6">
+            <Lock className="w-8 h-8 text-foreground" />
           </div>
-          <h2 className="text-2xl font-bold mb-3 text-gray-900">Access Restricted</h2>
-          <p className="text-gray-600 mb-8">You need to purchase this course to access exams.</p>
+          <h2 className="text-2xl font-bold mb-3 text-foreground">Access Restricted</h2>
+          <p className="text-muted-foreground mb-8">You need to purchase this course to access exams.</p>
           <button
             onClick={() => navigate(`/course/${courseId}`)}
-            className="w-full px-6 py-3 bg-black text-white rounded-full font-medium hover:bg-gray-900 transition-colors"
+            className="w-full px-6 py-3 bg-primary text-primary-foreground rounded-full font-medium hover:bg-primary/90 transition-colors"
           >
             Purchase Course
           </button>
@@ -107,72 +107,72 @@ export default function ExamList() {
   const currentExams = activeTab === "active" ? activeExams : archivedExams
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-background">
       <div className="max-w-6xl mx-auto px-6 py-12">
         <div className="mb-12">
           <button
             onClick={() => navigate(`/course/${courseId}`)}
-            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6 transition-colors font-medium"
+            className="flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6 transition-colors font-medium"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to Course
           </button>
           <div>
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">{course?.title}</h1>
-            <p className="text-gray-600">Prepare and test your knowledge with our comprehensive exams</p>
+            <h1 className="text-4xl font-bold text-foreground mb-2">{course?.title}</h1>
+            <p className="text-muted-foreground">Prepare and test your knowledge with our comprehensive exams</p>
           </div>
         </div>
 
-        <div className="mb-8 border-b border-gray-200">
+        <div className="mb-8 border-b border-border">
           <div className="flex gap-8">
             <button
               onClick={() => setActiveTab("active")}
               className={`pb-4 font-medium transition-colors relative ${
-                activeTab === "active" ? "text-gray-900" : "text-gray-600 hover:text-gray-900"
+                activeTab === "active" ? "text-foreground" : "text-muted-foreground hover:text-foreground"
               }`}
             >
               <div className="flex items-center gap-2">
                 <FileQuestion className="w-4 h-4" />
                 Active Exams
                 {activeExams.length > 0 && (
-                  <span className="text-xs bg-gray-100 text-gray-900 px-2 py-1 rounded-full font-medium">
+                  <span className="text-xs bg-muted text-foreground px-2 py-1 rounded-full font-medium">
                     {activeExams.length}
                   </span>
                 )}
               </div>
-              {activeTab === "active" && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-black" />}
+              {activeTab === "active" && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />}
             </button>
 
             <button
               onClick={() => setActiveTab("archived")}
               className={`pb-4 font-medium transition-colors relative ${
-                activeTab === "archived" ? "text-gray-900" : "text-gray-600 hover:text-gray-900"
+                activeTab === "archived" ? "text-foreground" : "text-muted-foreground hover:text-foreground"
               }`}
             >
               <div className="flex items-center gap-2">
                 <Archive className="w-4 h-4" />
                 Archived Exams
                 {archivedExams.length > 0 && (
-                  <span className="text-xs bg-gray-100 text-gray-900 px-2 py-1 rounded-full font-medium">
+                  <span className="text-xs bg-muted text-foreground px-2 py-1 rounded-full font-medium">
                     {archivedExams.length}
                   </span>
                 )}
               </div>
-              {activeTab === "archived" && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-black" />}
+              {activeTab === "archived" && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />}
             </button>
           </div>
         </div>
 
         {currentExams.length === 0 ? (
           <div className="text-center py-16">
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-6">
               {activeTab === "active" ? (
-                <FileQuestion className="w-8 h-8 text-gray-400" />
+                <FileQuestion className="w-8 h-8 text-muted-foreground" />
               ) : (
-                <Archive className="w-8 h-8 text-gray-400" />
+                <Archive className="w-8 h-8 text-muted-foreground" />
               )}
             </div>
-            <p className="text-gray-600 text-lg">
+            <p className="text-muted-foreground text-lg">
               {activeTab === "active"
                 ? "No active exams available for this course yet."
                 : "No archived exams for this course."}
@@ -191,11 +191,11 @@ export default function ExamList() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
-                  className="group relative bg-white border border-gray-200 rounded-lg p-6 hover:border-gray-300 hover:shadow-md transition-all duration-300"
+                  className="group relative bg-card border border-border rounded-lg p-6 hover:border-primary/50 hover:shadow-md transition-all duration-300"
                 >
                   <div className="absolute top-6 right-6 flex flex-col items-end gap-2">
                     {exam.isArchived && (
-                      <div className="flex items-center gap-1 text-gray-600 bg-gray-100 px-3 py-1 rounded-full text-xs font-medium">
+                      <div className="flex items-center gap-1 text-muted-foreground bg-muted px-3 py-1 rounded-full text-xs font-medium">
                         <Archive className="w-3 h-3" />
                         Archived
                       </div>
@@ -212,16 +212,16 @@ export default function ExamList() {
                     )}
                   </div>
 
-                  <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center mb-4 group-hover:bg-gray-200 transition-colors">
-                    <Zap className="w-5 h-5 text-gray-900" />
+                  <div className="w-10 h-10 bg-muted rounded-lg flex items-center justify-center mb-4 group-hover:bg-muted/80 transition-colors">
+                    <Zap className="w-5 h-5 text-foreground" />
                   </div>
 
-                  <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-gray-700 transition-colors">
+                  <h3 className="text-lg font-bold text-foreground mb-2 group-hover:text-primary transition-colors">
                     {exam.title}
                   </h3>
-                  {exam.description && <p className="text-sm text-gray-600 mb-4 line-clamp-2">{exam.description}</p>}
+                  {exam.description && <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{exam.description}</p>}
 
-                  <div className="space-y-2 mb-6 text-sm text-gray-600">
+                  <div className="space-y-2 mb-6 text-sm text-muted-foreground">
                     <div className="flex items-center gap-2">
                       <Clock className="w-4 h-4" />
                       <span>{exam.duration} minutes</span>
@@ -234,9 +234,9 @@ export default function ExamList() {
 
                   {hasAttempted ? (
                     <div className="space-y-3">
-                      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                      <div className="bg-muted border border-border rounded-lg p-4">
                         <div className="flex justify-between items-center mb-2">
-                          <span className="text-sm font-medium text-gray-600">Your Score</span>
+                          <span className="text-sm font-medium text-muted-foreground">Your Score</span>
                           <span className={`text-2xl font-bold ${isPassed ? "text-green-700" : "text-orange-700"}`}>
                             {result.score}%
                           </span>
@@ -248,28 +248,28 @@ export default function ExamList() {
                       <div className="grid grid-cols-2 gap-2">
                         <Link
                           to={`/exam/${exam.id}/leaderboard`}
-                          className="px-3 py-2 bg-gray-100 text-gray-900 rounded-lg hover:bg-gray-200 transition-colors text-center font-medium text-xs flex items-center justify-center gap-1"
+                          className="px-3 py-2 bg-muted text-foreground rounded-lg hover:bg-muted/80 transition-colors text-center font-medium text-xs flex items-center justify-center gap-1"
                         >
                           <Trophy className="w-3 h-3" />
                           Leaderboard
                         </Link>
                         <Link
                           to={`/exam/${exam.id}/solutions`}
-                          className="px-3 py-2 bg-gray-100 text-gray-900 rounded-lg hover:bg-gray-200 transition-colors text-center font-medium text-xs flex items-center justify-center gap-1"
+                          className="px-3 py-2 bg-muted text-foreground rounded-lg hover:bg-muted/80 transition-colors text-center font-medium text-xs flex items-center justify-center gap-1"
                         >
                           <FileQuestion className="w-3 h-3" />
                           Solutions
                         </Link>
                         <Link
                           to={`/exam/${exam.id}/attempts`}
-                          className="px-3 py-2 bg-gray-100 text-gray-900 rounded-lg hover:bg-gray-200 transition-colors text-center font-medium text-xs flex items-center justify-center gap-1"
+                          className="px-3 py-2 bg-muted text-foreground rounded-lg hover:bg-muted/80 transition-colors text-center font-medium text-xs flex items-center justify-center gap-1"
                         >
                           <Clock className="w-3 h-3" />
                           My Attempts
                         </Link>
                         <Link
                           to={`/exam/${exam.id}`}
-                          className="px-3 py-2 bg-gray-900 text-white rounded-lg hover:bg-black transition-colors text-center font-medium text-xs flex items-center justify-center gap-1"
+                          className="px-3 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors text-center font-medium text-xs flex items-center justify-center gap-1"
                         >
                           Retake
                         </Link>
@@ -278,7 +278,7 @@ export default function ExamList() {
                   ) : (
                     <Link
                       to={`/exam/${exam.id}`}
-                      className="block w-full px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-900 transition-colors text-center font-medium"
+                      className="block w-full px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors text-center font-medium"
                     >
                       Start Exam
                     </Link>
