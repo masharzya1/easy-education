@@ -32,6 +32,8 @@ export default function ExamView() {
   const [reviewMode, setReviewMode] = useState(false)
   const [userResult, setUserResult] = useState(null)
   const [actualExamId, setActualExamId] = useState(null)
+  const [imagesPreloading, setImagesPreloading] = useState(false)
+  const [imagesLoaded, setImagesLoaded] = useState(false)
 
   useEffect(() => {
     if (!currentUser) {
@@ -129,8 +131,78 @@ export default function ExamView() {
     return () => clearInterval(timer)
   }, [hasStarted, timeLeft])
 
-  const startExam = () => {
-    setHasStarted(true)
+  const preloadImages = async () => {
+    if (!questions || questions.length === 0) {
+      return Promise.resolve()
+    }
+    
+    const imageUrls = []
+    
+    questions.forEach(question => {
+      if (question.questionImageUrl) {
+        imageUrls.push(question.questionImageUrl)
+      }
+      if (question.optionImages && Array.isArray(question.optionImages)) {
+        question.optionImages.forEach(imgUrl => {
+          if (imgUrl) imageUrls.push(imgUrl)
+        })
+      }
+    })
+    
+    if (imageUrls.length === 0) {
+      return Promise.resolve()
+    }
+    
+    const loadImage = (url) => {
+      return new Promise((resolve, reject) => {
+        const img = new Image()
+        const timeout = setTimeout(() => {
+          reject(new Error(`Image load timeout: ${url}`))
+        }, 30000)
+        
+        img.onload = () => {
+          clearTimeout(timeout)
+          resolve(url)
+        }
+        img.onerror = () => {
+          clearTimeout(timeout)
+          reject(new Error(`Failed to load image: ${url}`))
+        }
+        img.src = url
+      })
+    }
+    
+    const results = await Promise.allSettled(imageUrls.map(url => loadImage(url)))
+    const failed = results.filter(r => r.status === 'rejected')
+    
+    if (failed.length > 0) {
+      const failedUrls = failed.map(r => r.reason?.message || 'Unknown').join(', ')
+      console.error(`${failed.length} image(s) failed to load:`, failedUrls)
+      throw new Error(`Failed to load ${failed.length} image(s). Please check your connection.`)
+    }
+    
+    return Promise.resolve()
+  }
+
+  const startExam = async () => {
+    if (imagesPreloading || hasStarted) return
+    
+    setImagesPreloading(true)
+    try {
+      await preloadImages()
+      setImagesLoaded(true)
+      setHasStarted(true)
+    } catch (error) {
+      console.error("Error preloading images:", error)
+      toast({
+        variant: "error",
+        title: "Image Loading Error",
+        description: "Some images failed to load. Please check your connection and try again.",
+      })
+      setImagesPreloading(false)
+    } finally {
+      setImagesPreloading(false)
+    }
   }
 
   const handleAnswerChange = (questionId, answer) => {
@@ -324,14 +396,23 @@ export default function ExamView() {
             <button
               onClick={() => navigate(-1)}
               className="flex-1 px-6 py-3 bg-muted hover:bg-muted/80 rounded-lg transition-colors font-medium"
+              disabled={imagesPreloading}
             >
               Go Back
             </button>
             <button
               onClick={startExam}
-              className="flex-1 px-6 py-3 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg transition-colors font-medium"
+              disabled={imagesPreloading}
+              className="flex-1 px-6 py-3 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              Start Exam
+              {imagesPreloading ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span>Loading Images...</span>
+                </>
+              ) : (
+                "Start Exam"
+              )}
             </button>
           </div>
         </motion.div>

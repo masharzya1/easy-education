@@ -299,6 +299,7 @@ export default function CourseSubjects() {
                         src={subjectInfo.imageUrl}
                         alt={subject}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        loading="lazy"
                       />
                     </div>
                     <div className="p-6">

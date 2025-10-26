@@ -532,6 +532,7 @@ export default function CourseChapters() {
                             src={subjectInfo.imageUrl}
                             alt={archiveSubject}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            loading="lazy"
                           />
                         </div>
                         <div className="p-6">
@@ -590,6 +591,7 @@ export default function CourseChapters() {
                             src={chapterInfo.imageUrl}
                             alt={chapter}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            loading="lazy"
                           />
                         </div>
                         <div className="p-6">
