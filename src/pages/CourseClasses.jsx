@@ -19,6 +19,7 @@ export default function CourseClasses() {
   const [loading, setLoading] = useState(true)
   const [courseNotFound, setCourseNotFound] = useState(false)
   const [hasAccess, setHasAccess] = useState(false)
+  const [imageErrors, setImageErrors] = useState({})
 
   const isArchive = location.pathname.includes("/archive/")
 
@@ -219,10 +220,29 @@ export default function CourseClasses() {
               className="group relative bg-card border border-border rounded-xl overflow-hidden hover:border-primary/50 hover:shadow-lg transition-all duration-300 text-left"
             >
               <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-secondary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-              <div className="relative p-6">
-                <div className="w-12 h-12 rounded-lg flex items-center justify-center mb-4 transition-colors bg-primary/10 group-hover:bg-primary/20">
-                  <Play className="w-6 h-6 fill-current text-primary" />
+              
+              {/* Class Image */}
+              {cls.imageURL && !imageErrors[cls.id] && (
+                <div className="relative w-full h-48 overflow-hidden bg-muted">
+                  <img
+                    src={cls.imageURL}
+                    alt={cls.title}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                    onError={() => {
+                      setImageErrors((prev) => ({ ...prev, [cls.id]: true }))
+                    }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
+              )}
+
+              <div className="relative p-6">
+                {(!cls.imageURL || imageErrors[cls.id]) && (
+                  <div className="w-12 h-12 rounded-lg flex items-center justify-center mb-4 transition-colors bg-primary/10 group-hover:bg-primary/20">
+                    <Play className="w-6 h-6 fill-current text-primary" />
+                  </div>
+                )}
                 <h3 className="text-lg font-bold mb-3 line-clamp-2 transition-colors group-hover:text-primary">
                   {cls.title}
                 </h3>
