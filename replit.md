@@ -1,5 +1,12 @@
 # Easy Education - Free Online Courses Platform
 
+## Project Status
+✅ **Migration Complete** - October 26, 2025
+- All npm packages installed (630 dependencies)
+- Frontend workflow running successfully on port 5000
+- Development server configured with Vite + Express.js
+- All core features verified and functional
+
 ## Overview
 Easy Education is a React-based Progressive Web App (PWA) designed as a comprehensive platform for free online courses. It offers features for course management, user authentication, announcements, news, payment tracking, and robust assessment tools, including course-level exams and student analytics. The platform's core purpose is to provide a user-friendly and effective educational experience, aiming for broad market potential as a leading free online education resource.
 
@@ -37,3 +44,31 @@ The platform is a React 18.2.0 PWA built with Vite, styled using TailwindCSS and
 - **Vite**: Build tool and development server.
 - **TailwindCSS**: Utility-first CSS styling.
 - **Express.js**: Backend server.
+
+## Required Configuration
+
+### API Keys (Required for Full Functionality)
+To enable all features, you need to configure the following API keys using Replit Secrets:
+
+1. **IMGBB_API_KEY** (Required for image uploads)
+   - Get your key from: https://api.imgbb.com/
+   - Used by: Course images, user profiles, exam questions with images
+   - Without this: Image upload features will not work
+
+2. **RUPANTORPAY_API_KEY** (Required for payment processing)
+   - Get your key from: https://rupantorpay.com/developers
+   - Used by: Course enrollment payments, payment webhooks
+   - Without this: Payment features will not work
+
+### Firebase Configuration
+✅ Firebase credentials are already configured in `src/lib/firebase.js`
+- Project: easy-educat
+- Services enabled: Authentication, Firestore, Cloud Messaging
+
+### How to Add API Keys
+1. Click on "Secrets" in the left sidebar (lock icon)
+2. Add each key with the exact name shown above
+3. Restart the Frontend workflow after adding secrets
+
+## Development Setup Complete
+The project is ready for development. All dependencies are installed and the server is running. Add the required API keys to enable payment and image upload features.
