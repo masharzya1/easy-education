@@ -203,7 +203,9 @@ export function ExamProvider({ children }) {
       const attemptNumber = previousAttempts.length + 1
 
       const wrongAnswers = questions
-        .filter((q, index) => {
+        .filter((q) => {
+          // Only check MCQ questions for wrong answers
+          if (q.type !== "mcq") return false
           const userAnswer = answers[q.id]
           return userAnswer !== q.correctAnswer
         })
