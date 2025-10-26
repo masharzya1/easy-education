@@ -17,6 +17,8 @@ import {
   Newspaper,
   Users,
   Download,
+  CreditCard,
+  BarChart3,
 } from "lucide-react"
 import { useAuth } from "../contexts/AuthContext"
 import { useTheme } from "../contexts/ThemeContext"
@@ -161,7 +163,7 @@ export default function Header() {
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setSidebarOpen(true)}
-                className="p-2 hover:bg-primary/10 rounded-lg smooth-transition hover:scale-105 active:scale-95"
+                className="lg:hidden p-2 hover:bg-primary/10 rounded-lg smooth-transition hover:scale-105 active:scale-95"
                 aria-label="Open menu"
               >
                 <Menu className="w-5 h-5 sm:w-6 sm:h-6 text-foreground" />
@@ -178,31 +180,6 @@ export default function Header() {
               </Link>
             </div>
 
-            <div className="hidden lg:flex items-center gap-2 flex-1 justify-center">
-              <Link to="/" className="px-3 py-2 rounded-lg hover:bg-primary/10 smooth-transition text-sm font-medium">
-                Home
-              </Link>
-              <Link
-                to="/courses"
-                className="px-3 py-2 rounded-lg hover:bg-primary/10 smooth-transition text-sm font-medium"
-              >
-                Courses
-              </Link>
-              <Link
-                to="/announcements"
-                className="px-3 py-2 rounded-lg hover:bg-primary/10 smooth-transition text-sm font-medium"
-              >
-                Announcements
-              </Link>
-              {communityEnabled && (
-                <Link
-                  to="/community"
-                  className="px-3 py-2 rounded-lg hover:bg-primary/10 smooth-transition text-sm font-medium"
-                >
-                  Community
-                </Link>
-              )}
-            </div>
 
             <div className="flex items-center gap-2">
               {showInstallButton && (
@@ -269,7 +246,7 @@ export default function Header() {
               ) : (
                 <Link
                   to="/login"
-                  className="hidden sm:block px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg smooth-transition text-sm font-medium hover:scale-105 active:scale-95"
+                  className="hidden sm:block px-4 py-2 bg-primary hover:bg-primary/90 text-white dark:text-black rounded-lg smooth-transition text-sm font-medium hover:scale-105 active:scale-95"
                 >
                   Login
                 </Link>
@@ -366,6 +343,14 @@ export default function Header() {
               {currentUser && (
                 <div className="p-4 border-t border-border/50 space-y-1">
                   <Link
+                    to={isAdmin ? "/admin" : "/dashboard"}
+                    onClick={() => setSidebarOpen(false)}
+                    className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-primary/10 smooth-transition group hover:scale-[1.02] active:scale-[0.98]"
+                  >
+                    <LayoutDashboard className="w-5 h-5 text-muted-foreground group-hover:text-primary smooth-transition" />
+                    <span className="font-medium group-hover:text-primary smooth-transition">Dashboard</span>
+                  </Link>
+                  <Link
                     to="/my-courses"
                     onClick={() => setSidebarOpen(false)}
                     className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-primary/10 smooth-transition group hover:scale-[1.02] active:scale-[0.98]"
@@ -373,6 +358,26 @@ export default function Header() {
                     <BookOpen className="w-5 h-5 text-muted-foreground group-hover:text-primary smooth-transition" />
                     <span className="font-medium group-hover:text-primary smooth-transition">My Courses</span>
                   </Link>
+                  {!isAdmin && (
+                    <>
+                      <Link
+                        to="/payment-history"
+                        onClick={() => setSidebarOpen(false)}
+                        className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-primary/10 smooth-transition group hover:scale-[1.02] active:scale-[0.98]"
+                      >
+                        <CreditCard className="w-5 h-5 text-muted-foreground group-hover:text-primary smooth-transition" />
+                        <span className="font-medium group-hover:text-primary smooth-transition">Payment History</span>
+                      </Link>
+                      <Link
+                        to="/analytics"
+                        onClick={() => setSidebarOpen(false)}
+                        className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-primary/10 smooth-transition group hover:scale-[1.02] active:scale-[0.98]"
+                      >
+                        <BarChart3 className="w-5 h-5 text-muted-foreground group-hover:text-primary smooth-transition" />
+                        <span className="font-medium group-hover:text-primary smooth-transition">Analytics</span>
+                      </Link>
+                    </>
+                  )}
                   <Link
                     to="/profile"
                     onClick={() => setSidebarOpen(false)}
@@ -380,14 +385,6 @@ export default function Header() {
                   >
                     <User className="w-5 h-5 text-muted-foreground group-hover:text-primary smooth-transition" />
                     <span className="font-medium group-hover:text-primary smooth-transition">Profile</span>
-                  </Link>
-                  <Link
-                    to={isAdmin ? "/admin" : "/dashboard"}
-                    onClick={() => setSidebarOpen(false)}
-                    className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-primary/10 smooth-transition group hover:scale-[1.02] active:scale-[0.98]"
-                  >
-                    <LayoutDashboard className="w-5 h-5 text-muted-foreground group-hover:text-primary smooth-transition" />
-                    <span className="font-medium group-hover:text-primary smooth-transition">Dashboard</span>
                   </Link>
                   <button
                     onClick={handleSignOut}
@@ -407,13 +404,6 @@ export default function Header() {
                     className="block w-full px-4 py-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg smooth-transition text-center font-medium hover:scale-[1.02] active:scale-[0.98]"
                   >
                     Login
-                  </Link>
-                  <Link
-                    to="/register"
-                    onClick={() => setSidebarOpen(false)}
-                    className="block w-full px-4 py-3 bg-muted hover:bg-muted/80 rounded-lg smooth-transition text-center font-medium hover:scale-[1.02] active:scale-[0.98]"
-                  >
-                    Register
                   </Link>
                 </div>
               )}

@@ -24,6 +24,7 @@ export default function ViewExamSubmissions() {
   const [users, setUsers] = useState({})
   const [loading, setLoading] = useState(true)
   const [selectedExam, setSelectedExam] = useState("")
+  const [markingFilter, setMarkingFilter] = useState("all")
   const [expandedSubmissions, setExpandedSubmissions] = useState({})
   const [editingGrades, setEditingGrades] = useState({})
   const [savingGrades, setSavingGrades] = useState({})
@@ -162,7 +163,13 @@ export default function ViewExamSubmissions() {
     }
   }
 
-  const filteredSubmissions = selectedExam ? submissions.filter((s) => s.examId === selectedExam) : submissions
+  let filteredSubmissions = selectedExam ? submissions.filter((s) => s.examId === selectedExam) : submissions
+  
+  if (markingFilter === "marked") {
+    filteredSubmissions = filteredSubmissions.filter((s) => s.cqGraded === true)
+  } else if (markingFilter === "unmarked") {
+    filteredSubmissions = filteredSubmissions.filter((s) => !s.cqGraded)
+  }
 
   const getExamTitle = (examId) => {
     const exam = exams.find((e) => e.id === examId)
@@ -196,7 +203,7 @@ export default function ViewExamSubmissions() {
         <p className="text-muted-foreground">View and review creative question exam submissions</p>
       </div>
 
-      <div className="mb-6 flex gap-4 items-center">
+      <div className="mb-6 space-y-4">
         <div className="flex-1 max-w-md">
           <label className="block text-sm font-medium mb-2">Filter by Exam</label>
           <select
@@ -213,6 +220,42 @@ export default function ViewExamSubmissions() {
                 </option>
               ))}
           </select>
+        </div>
+        
+        <div>
+          <label className="block text-sm font-medium mb-2">Filter by Marking Status</label>
+          <div className="flex gap-2 flex-wrap">
+            <button
+              onClick={() => setMarkingFilter("all")}
+              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                markingFilter === "all"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted hover:bg-muted/80"
+              }`}
+            >
+              All ({(selectedExam ? submissions.filter((s) => s.examId === selectedExam) : submissions).length})
+            </button>
+            <button
+              onClick={() => setMarkingFilter("marked")}
+              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                markingFilter === "marked"
+                  ? "bg-green-600 text-white"
+                  : "bg-muted hover:bg-muted/80"
+              }`}
+            >
+              Marked ({(selectedExam ? submissions.filter((s) => s.examId === selectedExam && s.cqGraded === true) : submissions.filter((s) => s.cqGraded === true)).length})
+            </button>
+            <button
+              onClick={() => setMarkingFilter("unmarked")}
+              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                markingFilter === "unmarked"
+                  ? "bg-orange-600 text-white"
+                  : "bg-muted hover:bg-muted/80"
+              }`}
+            >
+              Unmarked ({(selectedExam ? submissions.filter((s) => s.examId === selectedExam && !s.cqGraded) : submissions.filter((s) => !s.cqGraded)).length})
+            </button>
+          </div>
         </div>
       </div>
 

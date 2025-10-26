@@ -552,13 +552,6 @@ export default function ManageClasses() {
           </div>
           <div className="flex gap-2">
             <button
-              onClick={fixAllVideoURLs}
-              disabled={!selectedCourse || submitting}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded text-sm transition-colors disabled:opacity-50"
-            >
-              Fix Videos
-            </button>
-            <button
               onClick={handleOpenArchiveModal}
               disabled={!selectedCourse}
               className="flex items-center gap-1.5 px-3 py-1.5 bg-secondary hover:bg-secondary/90 text-secondary-foreground rounded text-sm transition-colors disabled:opacity-50"

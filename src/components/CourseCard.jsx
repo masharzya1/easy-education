@@ -144,7 +144,7 @@ export default function CourseCard({ course, onAddToCart, showProgress = false }
     removeFromCart(course.id)
   }
 
-  const truncateDescription = (text, maxLength = 20) => {
+  const truncateDescription = (text, maxLength = 120) => {
     if (!text) return ""
     return text.length > maxLength ? text.substring(0, maxLength) + "..." : text
   }
@@ -185,8 +185,7 @@ export default function CourseCard({ course, onAddToCart, showProgress = false }
           <p className="text-sm text-muted-foreground mb-3 line-clamp-2 leading-relaxed">
             {truncateDescription(course.description)}
           </p>
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-sm text-muted-foreground">{course.instructorName}</span>
+          <div className="flex items-center justify-end mb-3">
             <span className="px-3 py-1 bg-primary/10 text-primary text-xs rounded-full font-medium">
               {course.category}
             </span>
