@@ -169,12 +169,12 @@ export default function Home() {
       {/* Categories */}
       {categories.length > 0 && (
         <section className="py-12 md:py-14 px-4 bg-muted/30">
-          <div className="container mx-auto">
+          <div className="container mx-auto max-w-6xl">
             <div className="flex items-center gap-3 mb-8">
               <h2 className="text-3xl md:text-4xl font-serif font-bold">Browse by Category</h2>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
               {categories.map((category, index) => (
                 <motion.div
                   key={category.id}
@@ -210,7 +210,7 @@ export default function Home() {
 
       {/* Trending Courses */}
       <section className="py-12 md:py-14 px-4 bg-gradient-to-b from-background via-primary/5 to-background">
-        <div className="container mx-auto">
+        <div className="container mx-auto max-w-6xl">
           <div className="flex items-center gap-3 mb-8">
             <TrendingUp className="w-6 h-6 text-primary" />
             <h2 className="text-3xl md:text-4xl font-serif font-bold">Trending Courses</h2>
@@ -227,7 +227,7 @@ export default function Home() {
               ))}
             </div>
           ) : trendingCourses.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
               {trendingCourses.map((course, index) => (
                 <motion.div
                   key={course.id}

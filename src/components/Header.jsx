@@ -160,7 +160,7 @@ export default function Header() {
       <header className="sticky top-0 z-50 dark:bg-black/95 backdrop-blur-xl border-b border-border/50">
         <nav className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 lg:flex-1">
               <button
                 onClick={() => setSidebarOpen(true)}
                 className="lg:hidden p-2 hover:bg-primary/10 rounded-lg smooth-transition hover:scale-105 active:scale-95"
@@ -178,25 +178,25 @@ export default function Header() {
                   Easy Education
                 </motion.div>
               </Link>
-
-              <nav className="hidden lg:flex items-center gap-1 ml-8">
-                {navLinks.map((link) => {
-                  const Icon = link.icon
-                  return (
-                    <Link
-                      key={link.path}
-                      to={link.path}
-                      className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-primary/10 transition-colors font-medium text-sm"
-                    >
-                      <Icon className="w-4 h-4" />
-                      <span>{link.name}</span>
-                    </Link>
-                  )
-                })}
-              </nav>
             </div>
 
-            <div className="flex items-center gap-2">
+            <nav className="hidden lg:flex items-center gap-1 justify-center lg:flex-1">
+              {navLinks.map((link) => {
+                const Icon = link.icon
+                return (
+                  <Link
+                    key={link.path}
+                    to={link.path}
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-primary/10 transition-colors font-medium text-sm"
+                  >
+                    <Icon className="w-4 h-4" />
+                    <span>{link.name}</span>
+                  </Link>
+                )
+              })}
+            </nav>
+
+            <div className="flex items-center gap-2 lg:flex-1 justify-end">
               {showInstallButton && (
                 <button
                   onClick={handleInstallClick}
@@ -251,13 +251,22 @@ export default function Header() {
               </div>
 
               {currentUser ? (
-                <Link
-                  to={isAdmin ? "/admin" : "/dashboard"}
-                  className="hidden sm:flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary/90 text-white dark:text-black rounded-lg smooth-transition text-sm font-medium hover:scale-105 active:scale-95"
-                >
-                  <LayoutDashboard className="w-4 h-4" />
-                  Dashboard
-                </Link>
+                <>
+                  <Link
+                    to={isAdmin ? "/admin" : "/dashboard"}
+                    className="hidden sm:flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary/90 text-white dark:text-black rounded-lg smooth-transition text-sm font-medium hover:scale-105 active:scale-95"
+                  >
+                    <LayoutDashboard className="w-4 h-4" />
+                    Dashboard
+                  </Link>
+                  <button
+                    onClick={handleSignOut}
+                    className="hidden sm:flex items-center gap-2 px-4 py-2 bg-destructive/10 hover:bg-destructive/20 text-destructive rounded-lg smooth-transition text-sm font-medium hover:scale-105 active:scale-95"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Logout
+                  </button>
+                </>
               ) : (
                 <Link
                   to="/login"
