@@ -1,7 +1,7 @@
 "use client"
 
 import { Routes, Route, Link, useLocation } from "react-router-dom"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import {
   Users,
   BookOpen,
@@ -22,6 +22,8 @@ import {
   Bell,
 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
+import { collection, query, where, onSnapshot } from "firebase/firestore"
+import { db } from "../../lib/firebase"
 import AdminOverview from "./AdminOverview"
 import ManageUsers from "./ManageUsers"
 import ManageCourses from "./ManageCourses"
@@ -46,6 +48,20 @@ export default function AdminDashboard() {
   const location = useLocation()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [unreadCount, setUnreadCount] = useState(0)
+
+  useEffect(() => {
+    const notificationsQuery = query(
+      collection(db, "notifications"),
+      where("isRead", "==", false)
+    )
+    
+    const unsubscribe = onSnapshot(notificationsQuery, (snapshot) => {
+      setUnreadCount(snapshot.size)
+    })
+
+    return () => unsubscribe()
+  }, [])
 
   const navItems = [
     { name: "Overview", path: "/admin", icon: LayoutDashboard },
@@ -117,6 +133,11 @@ export default function AdminDashboard() {
                   >
                     <item.icon className="w-4 h-4 flex-shrink-0" />
                     <span>{item.name}</span>
+                    {item.name === "Notifications" && unreadCount > 0 && (
+                      <span className="ml-auto bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
+                        {unreadCount > 99 ? "99+" : unreadCount}
+                      </span>
+                    )}
                   </Link>
                 )
               })}
@@ -191,6 +212,11 @@ export default function AdminDashboard() {
                       >
                         <item.icon className="w-5 h-5 flex-shrink-0" />
                         <span className="font-medium">{item.name}</span>
+                        {item.name === "Notifications" && unreadCount > 0 && (
+                          <span className="ml-auto bg-red-500 text-white text-xs font-bold rounded-full min-w-[20px] h-[20px] flex items-center justify-center px-1.5">
+                            {unreadCount > 99 ? "99+" : unreadCount}
+                          </span>
+                        )}
                       </Link>
                     )
                   })}
