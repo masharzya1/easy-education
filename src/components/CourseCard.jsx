@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { ShoppingCart, Trash2, Users, Check, Clock } from "lucide-react"
 import { useCart } from "../contexts/CartContext"
 import { useAuth } from "../contexts/AuthContext"
@@ -13,6 +13,7 @@ import { toast } from "../hooks/use-toast"
 export default function CourseCard({ course, onAddToCart, showProgress = false }) {
   const { addToCart, removeFromCart, cartItems, openCart } = useCart()
   const { currentUser } = useAuth()
+  const navigate = useNavigate()
   const [isPurchased, setIsPurchased] = useState(false)
   const [isInCart, setIsInCart] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -216,12 +217,17 @@ export default function CourseCard({ course, onAddToCart, showProgress = false }
               <div className="mb-3">
                 <ProgressBar progress={progress} showLabel={true} showPercentage={true} animated={false} />
               </div>
-              <Link to={course.type === "batch" ? `/course/${course.slug || course.id}/subjects` : `/course/${course.slug || course.id}/chapters`} onClick={(e) => e.stopPropagation()}>
-                <button className="w-full px-4 py-2 bg-green-500/20 text-green-700 dark:text-green-400 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm font-medium hover:bg-green-500/30">
-                  <Check className="w-4 h-4" />
-                  Continue Course
-                </button>
-              </Link>
+              <button 
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  navigate(course.type === "batch" ? `/course/${course.slug || course.id}/subjects` : `/course/${course.slug || course.id}/chapters`)
+                }}
+                className="w-full px-4 py-2 bg-green-500/20 text-green-700 dark:text-green-400 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm font-medium hover:bg-green-500/30"
+              >
+                <Check className="w-4 h-4" />
+                Continue Course
+              </button>
             </>
           ) : hasPendingPayment ? (
             <button
@@ -240,17 +246,27 @@ export default function CourseCard({ course, onAddToCart, showProgress = false }
               Remove from Cart
             </button>
           ) : !course.price || course.price === 0 || course.price === "0" || course.price === null ? (
-            <Link to={courseUrl} onClick={(e) => e.stopPropagation()}>
-              <button className="w-full px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-colors flex items-center justify-center gap-2 text-sm font-medium">
-                Enroll Free
-              </button>
-            </Link>
+            <button 
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                navigate(courseUrl)
+              }}
+              className="w-full px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-colors flex items-center justify-center gap-2 text-sm font-medium"
+            >
+              Enroll Free
+            </button>
           ) : (
-            <Link to={courseUrl} onClick={(e) => e.stopPropagation()}>
-              <button className="w-full px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-colors flex items-center justify-center gap-2 text-sm font-medium">
-                Buy Now
-              </button>
-            </Link>
+            <button 
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                navigate(courseUrl)
+              }}
+              className="w-full px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-colors flex items-center justify-center gap-2 text-sm font-medium"
+            >
+              Buy Now
+            </button>
           )}
         </div>
       </div>

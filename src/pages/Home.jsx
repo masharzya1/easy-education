@@ -199,6 +199,11 @@ export default function Home() {
                           </div>
                         )}
                       </div>
+                      <div className="p-3">
+                        <h3 className="text-sm md:text-base font-semibold text-center group-hover:text-primary transition-colors">
+                          {category.title}
+                        </h3>
+                      </div>
                     </div>
                   </button>
                 </motion.div>

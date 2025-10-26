@@ -19,6 +19,7 @@ export default function CourseSubjects() {
   const [course, setCourse] = useState(null)
   const [actualCourseId, setActualCourseId] = useState(null)
   const [subjects, setSubjects] = useState([])
+  const [subjectData, setSubjectData] = useState([])
   const [hasArchive, setHasArchive] = useState(false)
   const [exams, setExams] = useState([])
   const [loading, setLoading] = useState(true)
@@ -166,6 +167,14 @@ export default function CourseSubjects() {
         const uniqueSubjects = [...new Set(regularSubjects)].sort()
         setSubjects(uniqueSubjects)
 
+        const subjectsQuery = query(collection(db, "subjects"), where("courseId", "==", resolvedCourseId))
+        const subjectsSnapshot = await getDocs(subjectsQuery)
+        const fetchedSubjects = subjectsSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }))
+        setSubjectData(fetchedSubjects)
+
         const archiveClasses = classesData.filter((cls) => isClassArchived(cls))
         setHasArchive(archiveClasses.length > 0)
 
@@ -267,27 +276,50 @@ export default function CourseSubjects() {
             </motion.button>
           )}
 
-          {subjects.map((subject, index) => (
-            <motion.button
-              key={subject}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: (index + (exams.length > 0 ? 1 : 0)) * 0.1 }}
-              onClick={() => {
-                navigate(`/course/${courseId}/subjects/${encodeURIComponent(subject)}/chapters`)
-              }}
-              className="group relative bg-card border border-border rounded-xl p-6 hover:border-primary/50 hover:shadow-lg transition-all duration-300 text-left"
-            >
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-secondary/5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity" />
-              <div className="relative">
-                <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
-                  <BookOpen className="w-6 h-6 text-primary" />
-                </div>
-                <h3 className="text-xl font-bold mb-2 group-hover:text-primary transition-colors">{subject}</h3>
-                <p className="text-sm text-muted-foreground">Click to view chapters</p>
-              </div>
-            </motion.button>
-          ))}
+          {subjects.map((subject, index) => {
+            const subjectInfo = subjectData.find(s => s.title === subject)
+            const hasImage = subjectInfo?.imageUrl
+            
+            return (
+              <motion.button
+                key={subject}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: (index + (exams.length > 0 ? 1 : 0)) * 0.1 }}
+                onClick={() => {
+                  navigate(`/course/${courseId}/subjects/${encodeURIComponent(subject)}/chapters`)
+                }}
+                className="group relative bg-card border border-border rounded-xl overflow-hidden hover:border-primary/50 hover:shadow-lg transition-all duration-300 text-left"
+              >
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-secondary/5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity" />
+                {hasImage ? (
+                  <div className="relative">
+                    <div className="aspect-video bg-gradient-to-br from-primary/20 to-secondary/20 relative overflow-hidden">
+                      <img
+                        src={subjectInfo.imageUrl}
+                        alt={subject}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    </div>
+                    <div className="p-6">
+                      <h3 className="text-xl font-bold mb-2 group-hover:text-primary transition-colors">{subject}</h3>
+                      {subjectInfo.description && (
+                        <p className="text-sm text-muted-foreground line-clamp-2">{subjectInfo.description}</p>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="relative p-6">
+                    <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
+                      <BookOpen className="w-6 h-6 text-primary" />
+                    </div>
+                    <h3 className="text-xl font-bold mb-2 group-hover:text-primary transition-colors">{subject}</h3>
+                    <p className="text-sm text-muted-foreground">Click to view chapters</p>
+                  </div>
+                )}
+              </motion.button>
+            )
+          })}
 
           {hasArchive && (
             <motion.button

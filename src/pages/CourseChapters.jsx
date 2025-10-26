@@ -20,7 +20,9 @@ export default function CourseChapters() {
   const [course, setCourse] = useState(null)
   const [actualCourseId, setActualCourseId] = useState(null)
   const [chapters, setChapters] = useState([])
+  const [chapterData, setChapterData] = useState([])
   const [subjects, setSubjects] = useState([])
+  const [subjectData, setSubjectData] = useState([])
   const [exams, setExams] = useState([])
   const [loading, setLoading] = useState(true)
   const [courseNotFound, setCourseNotFound] = useState(false)
@@ -172,6 +174,14 @@ export default function CourseChapters() {
           const uniqueSubjects = [...new Set(archivedSubjects)].sort()
           setSubjects(uniqueSubjects)
           setChapters([])
+          
+          const subjectsQuery = query(collection(db, "subjects"), where("courseId", "==", resolvedCourseId))
+          const subjectsSnapshot = await getDocs(subjectsQuery)
+          const fetchedSubjects = subjectsSnapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          }))
+          setSubjectData(fetchedSubjects)
         } else if (isArchiveSubject && subject) {
           const decodedSubject = decodeURIComponent(subject)
           classesData = classesData.filter((cls) => {
@@ -193,6 +203,14 @@ export default function CourseChapters() {
           const uniqueChapters = [...new Set(allChapters)].sort()
           setChapters(uniqueChapters)
           setSubjects([])
+          
+          const chaptersQuery = query(collection(db, "chapters"), where("courseId", "==", resolvedCourseId))
+          const chaptersSnapshot = await getDocs(chaptersQuery)
+          const fetchedChapters = chaptersSnapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          }))
+          setChapterData(fetchedChapters)
         } else if (subject) {
           const decodedSubject = decodeURIComponent(subject)
           classesData = classesData.filter((cls) => {
@@ -214,6 +232,14 @@ export default function CourseChapters() {
           const uniqueChapters = [...new Set(allChapters)].sort()
           setChapters(uniqueChapters)
           setSubjects([])
+          
+          const chaptersQuery = query(collection(db, "chapters"), where("courseId", "==", resolvedCourseId))
+          const chaptersSnapshot = await getDocs(chaptersQuery)
+          const fetchedChapters = chaptersSnapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          }))
+          setChapterData(fetchedChapters)
         } else {
           classesData = classesData.filter((cls) => !isClassArchived(cls))
 
@@ -228,6 +254,14 @@ export default function CourseChapters() {
           const uniqueChapters = [...new Set(allChapters)].sort()
           setChapters(uniqueChapters)
           setSubjects([])
+          
+          const chaptersQuery = query(collection(db, "chapters"), where("courseId", "==", resolvedCourseId))
+          const chaptersSnapshot = await getDocs(chaptersQuery)
+          const fetchedChapters = chaptersSnapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          }))
+          setChapterData(fetchedChapters)
         }
 
         const examsData = await getExamsByCourse(resolvedCourseId)
@@ -475,60 +509,108 @@ export default function CourseChapters() {
           )}
 
           {isArchive && subjects.length > 0
-            ? subjects.map((archiveSubject, index) => (
-                <motion.button
-                  key={archiveSubject}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  onClick={() => {
-                    navigate(`/course/${courseId}/archive/${encodeURIComponent(archiveSubject)}/chapters`)
-                  }}
-                  className="group relative bg-card border border-border rounded-xl p-6 hover:border-primary/50 hover:shadow-lg transition-all duration-300 text-left"
-                >
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-secondary/5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <div className="relative">
-                    <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
-                      <BookOpen className="w-6 h-6 text-primary" />
-                    </div>
-                    <h3 className="text-xl font-bold mb-2 group-hover:text-primary transition-colors">
-                      {archiveSubject}
-                    </h3>
-                    <p className="text-sm text-muted-foreground">Click to view archived chapters</p>
-                  </div>
-                </motion.button>
-              ))
-            : chapters.map((chapter, index) => (
-                <motion.button
-                  key={chapter}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  onClick={() => {
-                    if (isArchiveSubject && subject) {
-                      navigate(
-                        `/course/${courseId}/archive/${encodeURIComponent(subject)}/${encodeURIComponent(chapter)}/classes`,
-                      )
-                    } else if (subject) {
-                      navigate(
-                        `/course/${courseId}/classes/${encodeURIComponent(subject)}/${encodeURIComponent(chapter)}`,
-                      )
-                    } else {
-                      navigate(`/course/${courseId}/classes/${encodeURIComponent(chapter)}`)
-                    }
-                  }}
-                  className="group relative bg-card border border-border rounded-xl p-6 hover:border-primary/50 hover:shadow-lg transition-all duration-300 text-left"
-                >
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-secondary/5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <div className="relative">
-                    <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
-                      <BookOpen className="w-6 h-6 text-primary" />
-                    </div>
-                    <h3 className="text-xl font-bold mb-2 group-hover:text-primary transition-colors">{chapter}</h3>
-                    <p className="text-sm text-muted-foreground">Click to view classes</p>
-                  </div>
-                </motion.button>
-              ))}
+            ? subjects.map((archiveSubject, index) => {
+                const subjectInfo = subjectData.find(s => s.title === archiveSubject)
+                const hasImage = subjectInfo?.imageUrl
+                
+                return (
+                  <motion.button
+                    key={archiveSubject}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    onClick={() => {
+                      navigate(`/course/${courseId}/archive/${encodeURIComponent(archiveSubject)}/chapters`)
+                    }}
+                    className="group relative bg-card border border-border rounded-xl overflow-hidden hover:border-primary/50 hover:shadow-lg transition-all duration-300 text-left"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-secondary/5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity" />
+                    {hasImage ? (
+                      <div className="relative">
+                        <div className="aspect-video bg-gradient-to-br from-primary/20 to-secondary/20 relative overflow-hidden">
+                          <img
+                            src={subjectInfo.imageUrl}
+                            alt={archiveSubject}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                        </div>
+                        <div className="p-6">
+                          <h3 className="text-xl font-bold mb-2 group-hover:text-primary transition-colors">
+                            {archiveSubject}
+                          </h3>
+                          {subjectInfo.description && (
+                            <p className="text-sm text-muted-foreground line-clamp-2">{subjectInfo.description}</p>
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="relative p-6">
+                        <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
+                          <BookOpen className="w-6 h-6 text-primary" />
+                        </div>
+                        <h3 className="text-xl font-bold mb-2 group-hover:text-primary transition-colors">
+                          {archiveSubject}
+                        </h3>
+                        <p className="text-sm text-muted-foreground">Click to view archived chapters</p>
+                      </div>
+                    )}
+                  </motion.button>
+                )
+              })
+            : chapters.map((chapter, index) => {
+                const chapterInfo = chapterData.find(c => c.title === chapter)
+                const hasImage = chapterInfo?.imageUrl
+                
+                return (
+                  <motion.button
+                    key={chapter}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    onClick={() => {
+                      if (isArchiveSubject && subject) {
+                        navigate(
+                          `/course/${courseId}/archive/${encodeURIComponent(subject)}/${encodeURIComponent(chapter)}/classes`,
+                        )
+                      } else if (subject) {
+                        navigate(
+                          `/course/${courseId}/classes/${encodeURIComponent(subject)}/${encodeURIComponent(chapter)}`,
+                        )
+                      } else {
+                        navigate(`/course/${courseId}/classes/${encodeURIComponent(chapter)}`)
+                      }
+                    }}
+                    className="group relative bg-card border border-border rounded-xl overflow-hidden hover:border-primary/50 hover:shadow-lg transition-all duration-300 text-left"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-secondary/5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity" />
+                    {hasImage ? (
+                      <div className="relative">
+                        <div className="aspect-video bg-gradient-to-br from-primary/20 to-secondary/20 relative overflow-hidden">
+                          <img
+                            src={chapterInfo.imageUrl}
+                            alt={chapter}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                        </div>
+                        <div className="p-6">
+                          <h3 className="text-xl font-bold mb-2 group-hover:text-primary transition-colors">{chapter}</h3>
+                          {chapterInfo.description && (
+                            <p className="text-sm text-muted-foreground line-clamp-2">{chapterInfo.description}</p>
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="relative p-6">
+                        <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
+                          <BookOpen className="w-6 h-6 text-primary" />
+                        </div>
+                        <h3 className="text-xl font-bold mb-2 group-hover:text-primary transition-colors">{chapter}</h3>
+                        <p className="text-sm text-muted-foreground">Click to view classes</p>
+                      </div>
+                    )}
+                  </motion.button>
+                )
+              })}
         </div>
 
         {!isArchive && chapters.length === 0 && (
