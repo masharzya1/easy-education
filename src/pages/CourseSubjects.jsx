@@ -189,7 +189,7 @@ export default function CourseSubjects() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-6">
+      <div className="container mx-auto max-w-6xl px-4 py-6">
         <div className="mb-8">
           <button
             onClick={() => navigate(`/course/${courseId}`)}
