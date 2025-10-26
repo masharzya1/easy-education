@@ -7,6 +7,7 @@ import { Plus, Search, Edit2, Trash2, X, BookOpen, Upload, Link as LinkIcon } fr
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from "firebase/firestore"
 import { db } from "../../lib/firebase"
 import { uploadImageToImgBB } from "../../lib/imgbb"
+import { generateSlug } from "../../lib/slug"
 import ConfirmDialog from "../../components/ConfirmDialog"
 
 export default function ManageCourses() {
@@ -132,6 +133,7 @@ export default function ManageCourses() {
         publishStatus: formData.publishStatus,
         thumbnailURL: thumbnailURL || "",
         telegramLink: formData.telegramLink || "",
+        slug: generateSlug(formData.title),
         updatedAt: serverTimestamp(),
       }
 

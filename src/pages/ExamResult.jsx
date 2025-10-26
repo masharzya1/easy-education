@@ -72,11 +72,11 @@ export default function ExamResult() {
     <div className="min-h-screen bg-background py-8 px-4">
       <div className="max-w-4xl mx-auto">
         <button
-          onClick={() => navigate(-1)}
+          onClick={() => navigate('/exams')}
           className="flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          Back
+          Back to Exams
         </button>
 
         <div className={`rounded-2xl p-8 text-center mb-8 ${

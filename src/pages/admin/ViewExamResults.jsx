@@ -71,7 +71,7 @@ export default function ViewExamResults() {
   const filteredResults = results.filter((result) => {
     const matchesExam = !selectedExam || result.examId === selectedExam
     const user = users[result.userId]
-    const userName = user?.displayName || user?.email || ""
+    const userName = user?.name || user?.displayName || user?.email || ""
     const matchesSearch = !searchQuery || userName.toLowerCase().includes(searchQuery.toLowerCase())
     return matchesExam && matchesSearch
   })
@@ -81,7 +81,7 @@ export default function ViewExamResults() {
       const exam = exams.find((e) => e.id === result.examId)
       const user = users[result.userId]
       return {
-        User: user?.displayName || user?.email || "Unknown",
+        User: user?.name || user?.displayName || user?.email || "Unknown",
         Email: user?.email || "",
         Exam: exam?.title || "Unknown Exam",
         Score: result.totalScore || result.score || 0,

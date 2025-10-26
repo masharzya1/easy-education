@@ -26,7 +26,7 @@ export default function ExamAttempts() {
       setExam(examData)
 
       const userAttempts = await getUserExamAttempts(currentUser.uid, examId)
-      setAttempts(userAttempts.reverse())
+      setAttempts(userAttempts)
     } catch (error) {
       console.error("Error fetching data:", error)
     } finally {
@@ -122,8 +122,8 @@ export default function ExamAttempts() {
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                   <div className="flex-1">
                     <h3 className="font-bold text-lg mb-2">
-                      Attempt {index + 1} 
-                      {index === 0 && (
+                      Attempt {attempt.attemptNumber || (index + 1)} 
+                      {index === attempts.length - 1 && (
                         <span className="ml-2 text-xs font-semibold px-2 py-1 bg-primary/10 text-primary rounded-full">
                           Latest
                         </span>

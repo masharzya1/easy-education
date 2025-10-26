@@ -278,14 +278,15 @@ export function ExamProvider({ children }) {
       const q = query(collection(db, "examResults"), where("examId", "==", examId))
       const snapshot = await getDocs(q)
       
-      const userBestScores = {}
+      const userAttempt1Scores = {}
       snapshot.docs.forEach(doc => {
         const data = doc.data()
         const userId = data.userId
-        const score = data.totalScore || data.score || 0
+        const attemptNumber = data.attemptNumber || 1
         
-        if (!userBestScores[userId] || score > userBestScores[userId].score) {
-          userBestScores[userId] = {
+        if (attemptNumber === 1) {
+          const score = data.totalScore || data.score || 0
+          userAttempt1Scores[userId] = {
             id: doc.id,
             ...data,
             score
@@ -293,7 +294,7 @@ export function ExamProvider({ children }) {
         }
       })
 
-      const leaderboard = Object.values(userBestScores)
+      const leaderboard = Object.values(userAttempt1Scores)
       leaderboard.sort((a, b) => b.score - a.score)
       
       return leaderboard.slice(0, limit)
