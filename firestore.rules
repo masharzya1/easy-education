@@ -1,0 +1,147 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+    
+    function isAdmin() {
+      return isSignedIn() && 
+             exists(/databases/$(database)/documents/adminTokens/$(request.auth.uid));
+    }
+
+    // Users collection
+    match /users/{userId} {
+      allow read: if isSignedIn() && (isOwner(userId) || isAdmin());
+      allow write: if isOwner(userId) || isAdmin();
+    }
+
+    // Courses collection
+    match /courses/{courseId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Subjects collection
+    match /subjects/{subjectId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Chapters collection
+    match /chapters/{chapterId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Classes collection
+    match /classes/{classId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Exams collection
+    match /exams/{examId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Exam questions
+    match /examQuestions/{questionId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Exam results
+    match /examResults/{resultId} {
+      allow read: if isSignedIn() && 
+                     (isOwner(resource.data.userId) || isAdmin());
+      allow create: if isSignedIn() && 
+                       isOwner(request.resource.data.userId);
+      allow update, delete: if isAdmin();
+    }
+
+    // Community posts
+    match /posts/{postId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && 
+                       isOwner(request.resource.data.userId);
+      allow update, delete: if isSignedIn() && 
+                                (isOwner(resource.data.userId) || isAdmin());
+      
+      // Comments subcollection
+      match /comments/{commentId} {
+        allow read: if isSignedIn();
+        allow create: if isSignedIn() && 
+                         isOwner(request.resource.data.userId);
+        allow update, delete: if isSignedIn() && 
+                                  (isOwner(resource.data.userId) || isAdmin());
+      }
+    }
+
+    // Payments collection
+    match /payments/{paymentId} {
+      allow read: if isSignedIn() && 
+                     (isOwner(resource.data.userId) || isAdmin());
+      allow write: if isAdmin();
+    }
+
+    // User courses enrollment
+    match /userCourses/{enrollmentId} {
+      allow read: if isSignedIn() && 
+                     (isOwner(resource.data.userId) || isAdmin());
+      allow write: if isAdmin();
+    }
+
+    // Categories collection
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Teachers collection
+    match /teachers/{teacherId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Announcements collection
+    match /announcements/{announcementId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // Coupons collection
+    match /coupons/{couponId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // Notifications collection
+    match /notifications/{notificationId} {
+      allow read: if isSignedIn() && 
+                     (isOwner(resource.data.userId) || isAdmin());
+      allow write: if isAdmin();
+    }
+
+    // Admin tokens collection
+    match /adminTokens/{userId} {
+      allow read: if isSignedIn();
+      allow write: if false; // Only admins can modify via backend
+    }
+
+    // Telegram submissions
+    match /telegramSubmissions/{submissionId} {
+      allow read: if isAdmin();
+      allow create: if isSignedIn() && 
+                       isOwner(request.resource.data.userId);
+      allow update, delete: if isAdmin();
+    }
+  }
+}
