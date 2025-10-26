@@ -75,6 +75,39 @@ The project is ready for development. All dependencies are installed and the ser
 
 ## Recent Work Completed (October 26, 2025 - Latest Session)
 
+### Session 5: Critical Bug Fixes ✅
+**Completed Tasks (1-4):**
+
+1. **Task 1: Fixed Archived Class Display Issues** ✓
+   - **Problem**: Empty subjects/chapters were showing when their classes were archived
+   - **Solution**: Added validation in CourseSubjects.jsx and CourseChapters.jsx to only show subjects/chapters that have active/non-archived classes
+   - **Impact**: Cleaner UI - no more empty/nested subject displays
+   - **Files changed**: `src/pages/CourseSubjects.jsx`, `src/pages/CourseChapters.jsx`
+
+2. **Task 2: Fixed Exam Routing Inconsistency** ✓
+   - **Problem**: Continue course button and exam links used different routing methods (slug vs ID), causing "exam questions not found" errors
+   - **Solution**: Updated ExamList.jsx and CourseDetail.jsx to support both slug-based and ID-based navigation
+   - **Impact**: All exam navigation now works seamlessly regardless of routing method
+   - **Files changed**: `src/pages/ExamList.jsx`, `src/pages/CourseDetail.jsx`
+
+3. **Task 3: Fixed Archived Exams and Back Button** ✓
+   - **Problem 1**: Archived exams couldn't be retaken - forced into review mode
+   - **Problem 2**: "Back to Exams" button was getting overlapped by other UI elements
+   - **Solution**: 
+     - Removed automatic review mode activation for archived exams in ExamView.jsx
+     - Added `z-50` to "Back to Exams" button in ExamResult.jsx
+   - **Impact**: Users can now retake archived exams unlimited times; navigation button always visible
+   - **Files changed**: `src/pages/ExamView.jsx`, `src/pages/ExamResult.jsx`
+
+4. **Task 4: Updated Footer Layout** ✓
+   - **Problem**: Footer needed better organization per user requirements
+   - **Solution**: Restructured footer to have:
+     - Top row: Brand | Quick Links | Contact (with email, phone, support bot, support ID)
+     - Below: "Follow Us" section as standalone section
+     - Removed separate "Support" heading (support links now under Contact)
+   - **Impact**: Cleaner, more organized footer layout
+   - **Files changed**: `src/components/Footer.jsx`
+
 ### Session 4: Performance Optimization - Lazy Loading ✅
 **Completed Task 1:**
 
@@ -160,18 +193,14 @@ The project is ready for development. All dependencies are installed and the ser
 3. **Firebase Rules Fix - Community Features**
 4. **Footer & Menu Verification**
 
-### Remaining Work (5 Tasks)
-
-#### High Priority 🔴
-- **Task 2**: Fix archived class issues (prevent subjects nesting inside other subjects, fix chapter display logic)
-- **Task 6**: Fix dark mode on Analytics, Exams, and Exam View pages (white background issue)
-
-#### Medium Priority 🟡
-- **Task 4**: Fix archived exams retake issue and increase "back to exam" button z-index
-- **Task 5**: Fix footer layout (Contact section should have support and follow us in same row)
-
-#### Lower Priority 🟢
-- **Task 3**: Fix routing inconsistency: continue course button (slug vs ID-based routing)
+### Important Files Modified (Session 5 - Current)
+1. `src/pages/CourseSubjects.jsx` - Filter to show only subjects with active classes
+2. `src/pages/CourseChapters.jsx` - Filter to show only chapters with active classes
+3. `src/pages/ExamList.jsx` - Support both slug and ID-based routing
+4. `src/pages/CourseDetail.jsx` - Support both slug and ID-based routing
+5. `src/pages/ExamView.jsx` - Remove archived exam review mode restriction
+6. `src/pages/ExamResult.jsx` - Increase "Back to Exams" button z-index
+7. `src/components/Footer.jsx` - Restructure footer layout
 
 ### Important Files Modified (Session 4 - Current)
 1. `src/components/CourseCard.jsx` - Added lazy loading to course thumbnails
