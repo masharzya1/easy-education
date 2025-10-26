@@ -24,6 +24,7 @@ export default function ManageSubjects() {
     title: "",
     imageUrl: "",
     courseId: "",
+    order: 0,
   })
 
   useEffect(() => {
@@ -48,6 +49,7 @@ export default function ManageSubjects() {
     try {
       const snapshot = await getDocs(collection(db, "subjects"))
       const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
+      data.sort((a, b) => (b.order || 0) - (a.order || 0))
       setSubjects(data)
     } catch (error) {
       console.error("Error fetching subjects:", error)
@@ -137,13 +139,16 @@ export default function ManageSubjects() {
         title: subject.title,
         imageUrl: subject.imageUrl || "",
         courseId: subject.courseId || "",
+        order: subject.order || 0,
       })
     } else {
       setEditingSubject(null)
+      const maxOrder = subjects.length > 0 ? Math.max(...subjects.map(s => s.order || 0)) : 0
       setFormData({
         title: "",
         imageUrl: "",
         courseId: "",
+        order: maxOrder + 1,
       })
     }
     setShowModal(true)
@@ -156,6 +161,7 @@ export default function ManageSubjects() {
       title: "",
       imageUrl: "",
       courseId: "",
+      order: 0,
     })
   }
 
@@ -266,10 +272,14 @@ export default function ManageSubjects() {
 
     setSubmitting(true)
     try {
+      const maxOrder = subjects.length > 0 ? Math.max(...subjects.map(s => s.order || 0)) : 0
+      let currentOrder = maxOrder + 1
+      
       for (const subject of validSubjects) {
         await addDoc(collection(db, "subjects"), {
           title: subject.title,
           courseId: selectedCourse,
+          order: currentOrder++,
           createdAt: serverTimestamp(),
         })
       }
@@ -541,6 +551,20 @@ export default function ManageSubjects() {
                     </option>
                   ))}
                 </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">Order</label>
+                <input
+                  type="number"
+                  value={formData.order}
+                  onChange={(e) => setFormData({ ...formData, order: parseInt(e.target.value) || 0 })}
+                  className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  placeholder="Auto-calculated if empty"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Subjects are displayed in descending order (highest first). Auto-incremented for new subjects.
+                </p>
               </div>
 
               <div>
