@@ -686,7 +686,7 @@ export default function ExamView() {
         </div>
 
         {!reviewMode && (
-          <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t border-border p-4 z-50">
+          <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t border-border p-4 z-[100]">
             <div className="max-w-4xl mx-auto flex gap-3">
               <button
                 onClick={() => {
@@ -717,11 +717,11 @@ export default function ExamView() {
         )}
 
         {reviewMode && (
-          <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t border-border p-4">
+          <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t border-border p-4 z-[100]">
             <div className="max-w-4xl mx-auto">
               <button
                 onClick={() => navigate(-1)}
-                className="w-full px-6 py-3 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg transition-colors font-medium"
+                className="w-full px-6 py-3 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg transition-colors font-medium relative z-10"
               >
                 Back to Exams
               </button>
