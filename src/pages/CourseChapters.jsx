@@ -159,19 +159,31 @@ export default function CourseChapters() {
         }
 
         if (isArchiveRoot) {
-          classesData = classesData.filter((cls) => isClassArchived(cls))
+          const archivedClasses = classesData.filter((cls) => isClassArchived(cls))
+          classesData = archivedClasses
 
-          const archivedSubjects = []
-          classesData.forEach((cls) => {
-            if (Array.isArray(cls.subject)) {
-              cls.subject.forEach((s) => {
-                if (s && s !== "archive") archivedSubjects.push(s)
-              })
-            } else if (cls.subject && cls.subject !== "archive") {
-              archivedSubjects.push(cls.subject)
-            }
+          const subjectChapterMap = {}
+          archivedClasses.forEach((cls) => {
+            const subjects = Array.isArray(cls.subject) ? cls.subject : [cls.subject]
+            subjects.forEach((s) => {
+              if (s && s !== "archive") {
+                if (!subjectChapterMap[s]) {
+                  subjectChapterMap[s] = new Set()
+                }
+                const chapters = Array.isArray(cls.chapter) ? cls.chapter : [cls.chapter || "General"]
+                chapters.forEach((ch) => {
+                  if (ch && ch !== "archive") {
+                    subjectChapterMap[s].add(ch)
+                  }
+                })
+              }
+            })
           })
-          const uniqueSubjects = [...new Set(archivedSubjects)].sort()
+
+          const subjectsWithClasses = Object.keys(subjectChapterMap).filter(subject => {
+            return subjectChapterMap[subject].size > 0
+          })
+          const uniqueSubjects = subjectsWithClasses.sort()
           setSubjects(uniqueSubjects)
           setChapters([])
           
@@ -184,27 +196,27 @@ export default function CourseChapters() {
           setSubjectData(fetchedSubjects)
         } else if (isArchiveSubject && subject) {
           const decodedSubject = decodeURIComponent(subject)
-          classesData = classesData.filter((cls) => {
+          const filteredClasses = classesData.filter((cls) => {
             if (!isClassArchived(cls)) return false
             if (Array.isArray(cls.subject)) {
               return cls.subject.includes(decodedSubject)
             }
             return cls.subject === decodedSubject
           })
+          classesData = filteredClasses
 
-          const allChapters = []
-          classesData.forEach((cls) => {
-            if (Array.isArray(cls.chapter)) {
-              cls.chapter.forEach((ch) => {
-                if (ch && ch !== "archive") allChapters.push(ch)
-              })
-            } else if (cls.chapter && cls.chapter !== "archive") {
-              allChapters.push(cls.chapter)
-            } else if (!cls.chapter) {
-              allChapters.push("General")
-            }
+          const chapterClassCount = {}
+          filteredClasses.forEach((cls) => {
+            const chapters = Array.isArray(cls.chapter) ? cls.chapter : [cls.chapter || "General"]
+            chapters.forEach((ch) => {
+              if (ch && ch !== "archive") {
+                chapterClassCount[ch] = (chapterClassCount[ch] || 0) + 1
+              }
+            })
           })
-          const uniqueChapters = [...new Set(allChapters)].filter(ch => ch !== "archive").sort()
+
+          const chaptersWithClasses = Object.keys(chapterClassCount).filter(ch => chapterClassCount[ch] > 0)
+          const uniqueChapters = chaptersWithClasses.sort()
           setChapters(uniqueChapters)
           setSubjects([])
           
@@ -217,27 +229,27 @@ export default function CourseChapters() {
           setChapterData(fetchedChapters)
         } else if (subject) {
           const decodedSubject = decodeURIComponent(subject)
-          classesData = classesData.filter((cls) => {
+          const filteredClasses = classesData.filter((cls) => {
             if (isClassArchived(cls)) return false
             if (Array.isArray(cls.subject)) {
               return cls.subject.includes(decodedSubject)
             }
             return cls.subject === decodedSubject
           })
+          classesData = filteredClasses
 
-          const allChapters = []
-          classesData.forEach((cls) => {
-            if (Array.isArray(cls.chapter)) {
-              cls.chapter.forEach((ch) => {
-                if (ch && ch !== "archive") allChapters.push(ch)
-              })
-            } else if (cls.chapter && cls.chapter !== "archive") {
-              allChapters.push(cls.chapter)
-            } else if (!cls.chapter) {
-              allChapters.push("General")
-            }
+          const chapterClassCount = {}
+          filteredClasses.forEach((cls) => {
+            const chapters = Array.isArray(cls.chapter) ? cls.chapter : [cls.chapter || "General"]
+            chapters.forEach((ch) => {
+              if (ch && ch !== "archive") {
+                chapterClassCount[ch] = (chapterClassCount[ch] || 0) + 1
+              }
+            })
           })
-          const uniqueChapters = [...new Set(allChapters)].filter(ch => ch !== "archive").sort()
+
+          const chaptersWithClasses = Object.keys(chapterClassCount).filter(ch => chapterClassCount[ch] > 0)
+          const uniqueChapters = chaptersWithClasses.sort()
           setChapters(uniqueChapters)
           setSubjects([])
           
@@ -249,21 +261,21 @@ export default function CourseChapters() {
           }))
           setChapterData(fetchedChapters)
         } else {
-          classesData = classesData.filter((cls) => !isClassArchived(cls))
+          const filteredClasses = classesData.filter((cls) => !isClassArchived(cls))
+          classesData = filteredClasses
 
-          const allChapters = []
-          classesData.forEach((cls) => {
-            if (Array.isArray(cls.chapter)) {
-              cls.chapter.forEach((ch) => {
-                if (ch && ch !== "archive") allChapters.push(ch)
-              })
-            } else if (cls.chapter && cls.chapter !== "archive") {
-              allChapters.push(cls.chapter)
-            } else if (!cls.chapter) {
-              allChapters.push("General")
-            }
+          const chapterClassCount = {}
+          filteredClasses.forEach((cls) => {
+            const chapters = Array.isArray(cls.chapter) ? cls.chapter : [cls.chapter || "General"]
+            chapters.forEach((ch) => {
+              if (ch && ch !== "archive") {
+                chapterClassCount[ch] = (chapterClassCount[ch] || 0) + 1
+              }
+            })
           })
-          const uniqueChapters = [...new Set(allChapters)].filter(ch => ch !== "archive").sort()
+
+          const chaptersWithClasses = Object.keys(chapterClassCount).filter(ch => chapterClassCount[ch] > 0)
+          const uniqueChapters = chaptersWithClasses.sort()
           setChapters(uniqueChapters)
           setSubjects([])
           

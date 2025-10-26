@@ -152,19 +152,30 @@ export default function CourseSubjects() {
           return subjectIsArchive || chapterIsArchive
         }
 
-        const regularSubjects = []
+        const subjectChapterMap = {}
         classesData
           .filter((cls) => !isClassArchived(cls) && cls.subject)
           .forEach((cls) => {
-            if (Array.isArray(cls.subject)) {
-              cls.subject.forEach((s) => {
-                if (s && s !== "archive") regularSubjects.push(s)
-              })
-            } else if (cls.subject !== "archive") {
-              regularSubjects.push(cls.subject)
-            }
+            const subjects = Array.isArray(cls.subject) ? cls.subject : [cls.subject]
+            subjects.forEach((s) => {
+              if (s && s !== "archive") {
+                if (!subjectChapterMap[s]) {
+                  subjectChapterMap[s] = new Set()
+                }
+                const chapters = Array.isArray(cls.chapter) ? cls.chapter : [cls.chapter || "General"]
+                chapters.forEach((ch) => {
+                  if (ch && ch !== "archive") {
+                    subjectChapterMap[s].add(ch)
+                  }
+                })
+              }
+            })
           })
-        const uniqueSubjects = [...new Set(regularSubjects)].sort()
+
+        const subjectsWithClasses = Object.keys(subjectChapterMap).filter(subject => {
+          return subjectChapterMap[subject].size > 0
+        })
+        const uniqueSubjects = subjectsWithClasses.sort()
         setSubjects(uniqueSubjects)
 
         const subjectsQuery = query(collection(db, "subjects"), where("courseId", "==", resolvedCourseId))
