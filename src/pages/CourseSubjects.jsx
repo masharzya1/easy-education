@@ -394,6 +394,8 @@ export default function CourseSubjects() {
 
               <div className="border-t border-border pt-4">
                 <h3 className="font-semibold mb-3 text-sm">Submit Your Telegram Information</h3>
+                <p className="block text-xs font-medium text-muted-foreground mb-1.5">
+টেলিগ্ রাম গ্ রুপে জয়েন রিকুয়েষ্ ট দেওয়ার আগে নিচের ফর্ মটা সাবমিট করে তারপর রিকুয়েষ্ ট দিবে, ফর্ মটা একবারের বেশি সাবমিট করা যাবেনা তাই সঠিক ইনফর্ মেশন দিয়ে সাবমিট করবে। আর রিকুয়েষ্ ট দেওয়ার পর অপেক্ ষা করবে আমরা সময় মতো তো মাকে গ্ রুপে এড করে নিবো।</p>
                 
                 <form onSubmit={handleTelegramSubmit} className="space-y-3">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
