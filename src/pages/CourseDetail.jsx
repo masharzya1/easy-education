@@ -121,10 +121,11 @@ export default function CourseDetail() {
   }
 
   const handleWatchNow = () => {
+    const courseIdentifier = course.slug || course.id
     if (course.type === "batch") {
-      navigate(`/course/${course.id}/subjects`)
+      navigate(`/course/${courseIdentifier}/subjects`)
     } else {
-      navigate(`/course/${course.id}/chapters`)
+      navigate(`/course/${courseIdentifier}/chapters`)
     }
   }
 

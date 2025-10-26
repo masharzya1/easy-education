@@ -8,6 +8,7 @@ import { doc, getDoc, collection, query, where, getDocs } from "firebase/firesto
 import { db } from "../lib/firebase"
 import { useAuth } from "../contexts/AuthContext"
 import { useExam } from "../contexts/ExamContext"
+import { isFirebaseId } from "../lib/utils/slugUtils"
 
 export default function ExamList() {
   const { courseId } = useParams()
@@ -15,6 +16,7 @@ export default function ExamList() {
   const { currentUser, isAdmin } = useAuth()
   const { getActiveExamsByCourse, getArchivedExamsByCourse, getExamResult } = useExam()
   const [course, setCourse] = useState(null)
+  const [actualCourseId, setActualCourseId] = useState(null)
   const [activeExams, setActiveExams] = useState([])
   const [archivedExams, setArchivedExams] = useState([])
   const [examResults, setExamResults] = useState({})
@@ -30,32 +32,53 @@ export default function ExamList() {
     try {
       setLoading(true)
 
-      const courseDoc = await getDoc(doc(db, "courses", courseId))
-      if (courseDoc.exists()) {
-        const courseData = { id: courseDoc.id, ...courseDoc.data() }
-        setCourse(courseData)
-
-        if (isAdmin) {
-          setHasAccess(true)
-        } else if (currentUser) {
-          const paymentsQuery = query(
-            collection(db, "payments"),
-            where("userId", "==", currentUser.uid),
-            where("status", "==", "approved"),
-          )
-          const paymentsSnapshot = await getDocs(paymentsQuery)
-          const hasApprovedCourse = paymentsSnapshot.docs.some((doc) => {
-            const payment = doc.data()
-            return payment.courses?.some((c) => c.id === courseId)
-          })
-          setHasAccess(hasApprovedCourse)
+      let courseData = null
+      let resolvedCourseId = courseId
+      
+      if (isFirebaseId(courseId)) {
+        const courseDoc = await getDoc(doc(db, "courses", courseId))
+        if (courseDoc.exists()) {
+          courseData = { id: courseDoc.id, ...courseDoc.data() }
+          resolvedCourseId = courseDoc.id
+        }
+      } else {
+        const q = query(collection(db, "courses"), where("slug", "==", courseId))
+        const snapshot = await getDocs(q)
+        if (!snapshot.empty) {
+          const courseDoc = snapshot.docs[0]
+          courseData = { id: courseDoc.id, ...courseDoc.data() }
+          resolvedCourseId = courseDoc.id
         }
       }
+      
+      if (!courseData) {
+        setLoading(false)
+        return
+      }
 
-      const activeExamsData = await getActiveExamsByCourse(courseId)
+      setCourse(courseData)
+      setActualCourseId(resolvedCourseId)
+
+      if (isAdmin) {
+        setHasAccess(true)
+      } else if (currentUser) {
+        const paymentsQuery = query(
+          collection(db, "payments"),
+          where("userId", "==", currentUser.uid),
+          where("status", "==", "approved"),
+        )
+        const paymentsSnapshot = await getDocs(paymentsQuery)
+        const hasApprovedCourse = paymentsSnapshot.docs.some((doc) => {
+          const payment = doc.data()
+          return payment.courses?.some((c) => c.id === resolvedCourseId)
+        })
+        setHasAccess(hasApprovedCourse)
+      }
+
+      const activeExamsData = await getActiveExamsByCourse(resolvedCourseId)
       setActiveExams(activeExamsData)
 
-      const archivedExamsData = await getArchivedExamsByCourse(courseId)
+      const archivedExamsData = await getArchivedExamsByCourse(resolvedCourseId)
       setArchivedExams(archivedExamsData)
 
       if (currentUser) {
