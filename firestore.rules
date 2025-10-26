@@ -67,22 +67,30 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
-    // Community posts
+    // Community posts - FIXED: Allow public reading
     match /posts/{postId} {
-      allow read: if isSignedIn();
+      allow read: if true; // Anyone can read posts
       allow create: if isSignedIn() && 
                        isOwner(request.resource.data.userId);
       allow update, delete: if isSignedIn() && 
                                 (isOwner(resource.data.userId) || isAdmin());
       
-      // Comments subcollection
+      // Comments subcollection - FIXED: Allow public reading
       match /comments/{commentId} {
-        allow read: if isSignedIn();
+        allow read: if true; // Anyone can read comments
         allow create: if isSignedIn() && 
                          isOwner(request.resource.data.userId);
         allow update, delete: if isSignedIn() && 
                                   (isOwner(resource.data.userId) || isAdmin());
       }
+    }
+    
+    // Top-level Comments collection (if used separately)
+    match /comments/{commentId} {
+      allow read: if true; // Anyone can read comments
+      allow create: if isSignedIn();
+      allow update, delete: if isSignedIn() && 
+                                (isOwner(resource.data.userId) || isAdmin());
     }
 
     // Payments collection

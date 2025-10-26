@@ -25,6 +25,8 @@ export default function ManageChapters() {
   const [formData, setFormData] = useState({
     title: "",
     imageUrl: "",
+    imageType: "upload",
+    imageLink: "",
     courseId: "",
     subjectId: "",
     order: 0,
@@ -152,6 +154,8 @@ export default function ManageChapters() {
       setFormData({
         title: chapter.title,
         imageUrl: chapter.imageUrl || "",
+        imageType: chapter.imageUrl?.startsWith("http") ? "link" : "upload",
+        imageLink: chapter.imageUrl || "",
         courseId: chapter.courseId || "",
         subjectId: chapter.subjectId || "",
         order: chapter.order || 0,
@@ -162,6 +166,8 @@ export default function ManageChapters() {
       setFormData({
         title: "",
         imageUrl: "",
+        imageType: "upload",
+        imageLink: "",
         courseId: "",
         subjectId: "",
         order: maxOrder + 1,
@@ -176,6 +182,8 @@ export default function ManageChapters() {
     setFormData({
       title: "",
       imageUrl: "",
+      imageType: "upload",
+      imageLink: "",
       courseId: "",
       subjectId: "",
       order: 0,
@@ -195,14 +203,29 @@ export default function ManageChapters() {
     }
 
     try {
+      let finalImageUrl = formData.imageUrl
+
+      // If imageType is "link", use the imageLink field
+      if (formData.imageType === "link") {
+        finalImageUrl = formData.imageLink
+      }
+
+      const dataToSave = {
+        title: formData.title,
+        imageUrl: finalImageUrl,
+        courseId: formData.courseId,
+        subjectId: formData.subjectId,
+        order: formData.order,
+      }
+
       if (editingChapter) {
         await updateDoc(doc(db, "chapters", editingChapter.id), {
-          ...formData,
+          ...dataToSave,
           updatedAt: serverTimestamp(),
         })
       } else {
         await addDoc(collection(db, "chapters"), {
-          ...formData,
+          ...dataToSave,
           createdAt: serverTimestamp(),
         })
       }
@@ -641,42 +664,83 @@ export default function ManageChapters() {
               <div>
                 <label className="block text-sm font-medium mb-1.5">Chapter Image</label>
                 <div className="space-y-3">
-                  <div className="flex items-center gap-3">
-                    <label className="flex-1 cursor-pointer">
-                      <div className="flex items-center justify-center gap-2 px-3 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-colors border border-primary/20">
-                        {uploading ? (
-                          <>
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                            <span className="text-sm font-medium">Uploading...</span>
-                          </>
-                        ) : (
-                          <>
-                            <Upload className="w-4 h-4" />
-                            <span className="text-sm font-medium">Upload Image</span>
-                          </>
-                        )}
-                      </div>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageUpload}
-                        disabled={uploading}
-                        className="hidden"
-                      />
-                    </label>
+                  {/* Image Type Toggle */}
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, imageType: "upload" })}
+                      className={`flex-1 px-3 py-2 rounded-lg transition-colors font-medium text-sm ${
+                        formData.imageType === "upload"
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted hover:bg-muted/80"
+                      }`}
+                    >
+                      Upload Image
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, imageType: "link" })}
+                      className={`flex-1 px-3 py-2 rounded-lg transition-colors font-medium text-sm ${
+                        formData.imageType === "link"
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted hover:bg-muted/80"
+                      }`}
+                    >
+                      Image Link
+                    </button>
                   </div>
-                  
-                  {formData.imageUrl && (
+
+                  {/* Upload Option */}
+                  {formData.imageType === "upload" && (
+                    <div className="flex items-center gap-3">
+                      <label className="flex-1 cursor-pointer">
+                        <div className="flex items-center justify-center gap-2 px-3 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-colors border border-primary/20">
+                          {uploading ? (
+                            <>
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                              <span className="text-sm font-medium">Uploading...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Upload className="w-4 h-4" />
+                              <span className="text-sm font-medium">Choose File</span>
+                            </>
+                          )}
+                        </div>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleImageUpload}
+                          disabled={uploading}
+                          className="hidden"
+                        />
+                      </label>
+                    </div>
+                  )}
+
+                  {/* Link Option */}
+                  {formData.imageType === "link" && (
+                    <input
+                      type="url"
+                      value={formData.imageLink}
+                      onChange={(e) => setFormData({ ...formData, imageLink: e.target.value })}
+                      placeholder="https://example.com/image.jpg"
+                      className="w-full px-3 py-2 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                    />
+                  )}
+
+                  {/* Image Preview */}
+                  {(formData.imageUrl || formData.imageLink) && (
                     <div className="relative">
                       <img 
-                        src={formData.imageUrl} 
+                        src={formData.imageType === "link" ? formData.imageLink : formData.imageUrl} 
                         alt="Preview" 
                         className="w-full h-40 object-cover rounded-lg border border-border"
                         onError={(e) => e.target.style.display = 'none'}
                       />
                       <button
                         type="button"
-                        onClick={() => setFormData({ ...formData, imageUrl: "" })}
+                        onClick={() => setFormData({ ...formData, imageUrl: "", imageLink: "" })}
                         className="absolute top-2 right-2 p-1.5 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
                       >
                         <X className="w-4 h-4" />
@@ -685,7 +749,10 @@ export default function ManageChapters() {
                   )}
                   
                   <p className="text-xs text-muted-foreground">
-                    Upload an image for this chapter (recommended: 800x600px).
+                    {formData.imageType === "upload" 
+                      ? "Upload an image to ImgBB (recommended: 800x600px)"
+                      : "Enter a direct image URL"
+                    }
                   </p>
                 </div>
               </div>

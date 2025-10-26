@@ -20,6 +20,7 @@ export default function ManageTeachers() {
     bio: "",
     imageURL: "",
     expertise: "",
+    order: 0,
   })
 
   useEffect(() => {
@@ -30,6 +31,7 @@ export default function ManageTeachers() {
     try {
       const snapshot = await getDocs(collection(db, "teachers"))
       const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
+      data.sort((a, b) => (b.order || 0) - (a.order || 0))
       setTeachers(data)
     } catch (error) {
       console.error("Error fetching teachers:", error)
@@ -92,7 +94,7 @@ export default function ManageTeachers() {
         })
       }
 
-      setFormData({ name: "", email: "", bio: "", imageURL: "", expertise: "" })
+      setFormData({ name: "", email: "", bio: "", imageURL: "", expertise: "", order: 0 })
       setShowForm(false)
       setEditingTeacher(null)
       fetchTeachers()
@@ -116,6 +118,7 @@ export default function ManageTeachers() {
       bio: teacher.bio || "",
       imageURL: teacher.imageURL || "",
       expertise: teacher.expertise || "",
+      order: teacher.order || 0,
     })
     setShowForm(true)
   }
@@ -152,11 +155,16 @@ export default function ManageTeachers() {
         <h1 className="text-2xl font-bold">Manage Teachers</h1>
         <button
           onClick={() => {
-            setShowForm(!showForm)
-            if (showForm) {
+            if (!showForm) {
+              // Opening form for new teacher - calculate next order
+              const maxOrder = teachers.length > 0 ? Math.max(...teachers.map(t => t.order || 0)) : 0
+              setFormData({ name: "", email: "", bio: "", imageURL: "", expertise: "", order: maxOrder + 1 })
+            } else {
+              // Closing form
               setEditingTeacher(null)
-              setFormData({ name: "", email: "", bio: "", imageURL: "", expertise: "" })
+              setFormData({ name: "", email: "", bio: "", imageURL: "", expertise: "", order: 0 })
             }
+            setShowForm(!showForm)
           }}
           className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors flex items-center gap-2"
         >
@@ -217,6 +225,20 @@ export default function ManageTeachers() {
             </div>
 
             <div>
+              <label className="block text-sm font-medium mb-2">Order</label>
+              <input
+                type="number"
+                value={formData.order}
+                onChange={(e) => setFormData({ ...formData, order: parseInt(e.target.value) || 0 })}
+                className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                placeholder="Auto-calculated if empty"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Teachers are displayed in descending order (highest first). Leave empty for auto-increment.
+              </p>
+            </div>
+
+            <div>
               <label className="block text-sm font-medium mb-2">Profile Photo</label>
               <div className="space-y-3">
                 {formData.imageURL && (
@@ -254,7 +276,7 @@ export default function ManageTeachers() {
                 onClick={() => {
                   setShowForm(false)
                   setEditingTeacher(null)
-                  setFormData({ name: "", email: "", bio: "", imageURL: "", expertise: "" })
+                  setFormData({ name: "", email: "", bio: "", imageURL: "", expertise: "", order: 0 })
                 }}
                 className="px-6 py-2 bg-muted hover:bg-muted/80 rounded-lg transition-colors"
               >
