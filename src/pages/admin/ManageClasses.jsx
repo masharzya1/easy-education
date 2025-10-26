@@ -49,6 +49,7 @@ export default function ManageClasses() {
   const [archiveSubmitting, setArchiveSubmitting] = useState(false)
   const [teachers, setTeachers] = useState([])
   const [confirmDialog, setConfirmDialog] = useState({ isOpen: false, title: "", message: "", onConfirm: () => {} })
+  const [showArchivedClasses, setShowArchivedClasses] = useState(false)
 
   const { getExamsByCourse, copyExamQuestions } = useExam()
 
@@ -63,7 +64,7 @@ export default function ManageClasses() {
     if (selectedCourse) {
       fetchClasses()
     }
-  }, [selectedCourse])
+  }, [selectedCourse, showArchivedClasses])
 
   useEffect(() => {
     if (archiveSourceCourse) {
@@ -130,14 +131,18 @@ export default function ManageClasses() {
           ...doc.data(),
         }))
         .filter((cls) => {
-          if (cls.isArchived === true) return false
+          const isArchived = cls.isArchived === true
           const subjectIsArchive = Array.isArray(cls.subject)
             ? cls.subject.includes("archive")
             : cls.subject === "archive"
           const chapterIsArchive = Array.isArray(cls.chapter)
             ? cls.chapter.includes("archive")
             : cls.chapter === "archive"
-          return !subjectIsArchive && !chapterIsArchive
+          const classIsArchived = isArchived || subjectIsArchive || chapterIsArchive
+          
+          // Show archived classes only when showArchivedClasses is true
+          // Show active classes only when showArchivedClasses is false
+          return showArchivedClasses ? classIsArchived : !classIsArchived
         })
         .sort((a, b) => a.order - b.order)
       setClasses(classesData)
@@ -157,7 +162,33 @@ export default function ManageClasses() {
     }
   }
 
-  const handleOpenModal = (classItem = null) => {
+  const getNextActiveClassOrder = async () => {
+    try {
+      const classesQuery = query(collection(db, "classes"), where("courseId", "==", selectedCourse))
+      const classesSnapshot = await getDocs(classesQuery)
+      const activeClasses = classesSnapshot.docs
+        .map((doc) => doc.data())
+        .filter((cls) => {
+          const isArchived = cls.isArchived === true
+          const subjectIsArchive = Array.isArray(cls.subject)
+            ? cls.subject.includes("archive")
+            : cls.subject === "archive"
+          const chapterIsArchive = Array.isArray(cls.chapter)
+            ? cls.chapter.includes("archive")
+            : cls.chapter === "archive"
+          return !isArchived && !subjectIsArchive && !chapterIsArchive
+        })
+      
+      if (activeClasses.length === 0) return 0
+      const maxOrder = Math.max(...activeClasses.map(c => c.order || 0))
+      return maxOrder + 1
+    } catch (error) {
+      console.error("Error calculating next order:", error)
+      return 0
+    }
+  }
+
+  const handleOpenModal = async (classItem = null) => {
     if (classItem) {
       setEditingClass(classItem)
       setFormData({
@@ -182,11 +213,12 @@ export default function ManageClasses() {
       setVideoType(classItem.youtubeLink ? "youtube" : "hls")
     } else {
       setEditingClass(null)
+      const nextOrder = await getNextActiveClassOrder()
       setFormData({
         title: "",
         chapter: [],
         subject: [],
-        order: classes.length,
+        order: nextOrder,
         duration: "",
         youtubeLink: "",
         hlsLink: "",
@@ -590,25 +622,59 @@ export default function ManageClasses() {
 
       {/* Classes Table */}
       {selectedCourse && (
-        <div className="bg-card border border-border rounded-xl overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[800px]">
-              <thead className="bg-muted">
-                <tr>
-                  <th className="text-left p-2 font-medium text-xs">Title</th>
-                  {selectedCourseData?.type === "batch" && (
-                    <th className="text-left p-2 font-medium text-xs">Subject</th>
-                  )}
-                  <th className="text-left p-2 font-medium text-xs">Chapter</th>
-                  <th className="text-left p-2 font-medium text-xs">Teacher</th>
-                  <th className="text-left p-2 font-medium text-xs">Order</th>
-                  <th className="text-right p-2 font-medium text-xs">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {classes.map((classItem) => (
-                  <tr key={classItem.id} className="hover:bg-muted/50">
-                    <td className="p-2 text-xs">{classItem.title}</td>
+        <div>
+          {/* Tab Toggle for Active/Archived */}
+          <div className="mb-4 flex gap-2 border-b border-border">
+            <button
+              onClick={() => setShowArchivedClasses(false)}
+              className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 ${
+                !showArchivedClasses
+                  ? "border-primary text-primary"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Active Classes
+            </button>
+            <button
+              onClick={() => setShowArchivedClasses(true)}
+              className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 ${
+                showArchivedClasses
+                  ? "border-primary text-primary"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Archived Classes
+            </button>
+          </div>
+
+          <div className="bg-card border border-border rounded-xl overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[800px]">
+                <thead className="bg-muted">
+                  <tr>
+                    <th className="text-left p-2 font-medium text-xs">Title</th>
+                    {selectedCourseData?.type === "batch" && (
+                      <th className="text-left p-2 font-medium text-xs">Subject</th>
+                    )}
+                    <th className="text-left p-2 font-medium text-xs">Chapter</th>
+                    <th className="text-left p-2 font-medium text-xs">Teacher</th>
+                    <th className="text-left p-2 font-medium text-xs">Order</th>
+                    <th className="text-right p-2 font-medium text-xs">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {classes.map((classItem) => (
+                    <tr key={classItem.id} className="hover:bg-muted/50">
+                      <td className="p-2 text-xs">
+                        <div className="flex items-center gap-2">
+                          {classItem.title}
+                          {showArchivedClasses && (
+                            <span className="px-2 py-0.5 bg-orange-500/10 text-orange-500 rounded text-xs font-medium">
+                              Archived
+                            </span>
+                          )}
+                        </div>
+                      </td>
                     {selectedCourseData?.type === "batch" && (
                       <td className="p-2 text-xs text-muted-foreground">{classItem.subject || "N/A"}</td>
                     )}
@@ -651,6 +717,7 @@ export default function ManageClasses() {
               <p>No classes yet. Add your first class!</p>
             </div>
           )}
+          </div>
         </div>
       )}
 
