@@ -541,9 +541,7 @@ export default function CourseWatch() {
             )}
 
           </div>
-        </div>
-      </div>
-      {currentClass?.teacherName && (
+          {currentClass?.teacherName && (
               <div className="bg-gradient-to-br from-primary/10 via-secondary/5 to-primary/5 border-2 border-primary/20 rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg">
                 <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6">
                   <div className="relative flex-shrink-0">
@@ -584,6 +582,8 @@ export default function CourseWatch() {
                 </div>
               </div>
             )}
+        </div>
+      </div>
 
 
       {/* Toast Notification Display */}
