@@ -31,6 +31,7 @@ export default function ExamView() {
   const [confirmDialog, setConfirmDialog] = useState({ isOpen: false, title: "", message: "", onConfirm: () => {} })
   const [reviewMode, setReviewMode] = useState(false)
   const [userResult, setUserResult] = useState(null)
+  const [actualExamId, setActualExamId] = useState(null)
 
   useEffect(() => {
     if (!currentUser) {
@@ -45,7 +46,7 @@ export default function ExamView() {
       setLoading(true)
 
       let examData = null
-      let actualExamId = examId
+      let resolvedExamId = examId
       
       if (isFirebaseId(examId)) {
         examData = await getExamById(examId)
@@ -54,7 +55,7 @@ export default function ExamView() {
         const snapshot = await getDocs(q)
         if (!snapshot.empty) {
           const examDoc = snapshot.docs[0]
-          actualExamId = examDoc.id
+          resolvedExamId = examDoc.id
           examData = { id: examDoc.id, ...examDoc.data() }
         }
       }
@@ -69,10 +70,11 @@ export default function ExamView() {
         return
       }
 
-      const questionsData = await getQuestionsByExam(actualExamId)
-      console.log("[v0] Fetched questions for exam:", actualExamId, "Count:", questionsData.length)
+      setActualExamId(resolvedExamId)
+      const questionsData = await getQuestionsByExam(resolvedExamId)
+      console.log("[v0] Fetched questions for exam:", resolvedExamId, "Count:", questionsData.length)
 
-      const existingResult = await getExamResult(currentUser.uid, actualExamId)
+      const existingResult = await getExamResult(currentUser.uid, resolvedExamId)
 
       if (existingResult && examData.isArchived) {
         setReviewMode(true)
@@ -224,7 +226,7 @@ export default function ExamView() {
       if (!currentUser?.uid) {
         throw new Error("User not authenticated")
       }
-      if (!examId) {
+      if (!actualExamId) {
         throw new Error("Exam ID is missing")
       }
       if (questions.length === 0) {
@@ -233,21 +235,21 @@ export default function ExamView() {
 
       console.log("[v0] Starting exam submission...", {
         userId: currentUser.uid,
-        examId,
+        examId: actualExamId,
         score,
         questionsCount: questions.length,
         answersCount: Object.keys(answers).length,
         cqImagesCount: Object.keys(cqImages).length,
       })
 
-      await submitExamResult(currentUser.uid, examId, answers, score, questions, cqImages)
+      await submitExamResult(currentUser.uid, actualExamId, answers, score, questions, cqImages)
 
       toast({
         title: "Exam Submitted!",
         description: `You scored ${score}%${score >= exam.passingScore ? " - Passed! 🎉" : ""}`,
       })
 
-      setTimeout(() => navigate(`/exam/${examId}/result`), 1500)
+      setTimeout(() => navigate(`/exam/${actualExamId}/result`), 1500)
     } catch (error) {
       console.error("[v0] Error submitting exam:", error)
       toast({

@@ -18,7 +18,7 @@ service cloud.firestore {
 
     // Users collection
     match /users/{userId} {
-      allow read: if isSignedIn() && (isOwner(userId) || isAdmin());
+      allow read: if isSignedIn();
       allow write: if isOwner(userId) || isAdmin();
     }
 
@@ -94,8 +94,7 @@ service cloud.firestore {
 
     // User courses enrollment
     match /userCourses/{enrollmentId} {
-      allow read: if isSignedIn() && 
-                     (isOwner(resource.data.userId) || isAdmin());
+      allow read: if isSignedIn();
       allow write: if isAdmin();
     }
 

@@ -37,12 +37,12 @@ export default function Checkout() {
   }, [])
 
   useEffect(() => {
-    if (!isCartLoaded || !isCouponLoaded) return
-
     if (!currentUser) {
       navigate("/login")
       return
     }
+
+    if (!isCartLoaded || !isCouponLoaded) return
 
     if (cartItems.length === 0) {
       sessionStorage.removeItem("appliedCoupon")
