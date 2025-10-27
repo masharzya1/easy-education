@@ -129,28 +129,27 @@ export default function Header() {
       return
     }
 
+    // Check dismiss status - only hide for 1 hour instead of 7 days
+    const dismissed = localStorage.getItem('pwaInstallDismissed')
+    const dismissTime = dismissed ? parseInt(dismissed) : 0
+    const hoursSinceDismiss = (Date.now() - dismissTime) / (1000 * 60 * 60)
+    
     // For iOS, show button if not installed
     if (iosDevice) {
-      const dismissed = localStorage.getItem('pwaInstallDismissed')
-      const dismissTime = dismissed ? parseInt(dismissed) : 0
-      const daysSinceDismiss = (Date.now() - dismissTime) / (1000 * 60 * 60 * 24)
-      
-      if (!dismissed || daysSinceDismiss >= 7) {
+      if (!dismissed || hoursSinceDismiss >= 1) {
         console.log('📱 Showing iOS install button')
         setTimeout(() => {
           setShowInstallButton(true)
         }, 1000)
+      } else {
+        console.log('⏰ Install button dismissed recently, will show again in 1 hour')
       }
     }
 
     // For non-iOS devices: show button after delay if not dismissed
     // This ensures the button appears even in iframes or if beforeinstallprompt doesn't fire
     if (!iosDevice) {
-      const dismissed = localStorage.getItem('pwaInstallDismissed')
-      const dismissTime = dismissed ? parseInt(dismissed) : 0
-      const daysSinceDismiss = (Date.now() - dismissTime) / (1000 * 60 * 60 * 24)
-      
-      if (!dismissed || daysSinceDismiss >= 7) {
+      if (!dismissed || hoursSinceDismiss >= 1) {
         console.log('📱 Showing install button (non-iOS)')
         // Wait brief moment to give beforeinstallprompt a chance to fire first
         setTimeout(() => {
@@ -161,9 +160,12 @@ export default function Header() {
           setShowInstallButton(true)
         }, 1000)
       } else {
-        console.log('⏰ Install button dismissed recently, will show again after 7 days')
+        console.log('⏰ Install button dismissed recently, will show again in 1 hour')
       }
     }
+    
+    // Add window function for manual reset (accessible via browser console)
+    window.resetPWAInstall = handleResetInstallPrompt
 
     // Listen for successful installation
     const handleAppInstalled = () => {
@@ -231,9 +233,21 @@ export default function Header() {
   }
 
   const handleInstallDismiss = () => {
+    // Don't save dismiss permanently - just close the modal
+    // This allows users to reinstall anytime they want
+    setShowInstallModal(false)
+    setShowInstallButton(false)
+    
+    // Set a short-term dismiss (only for current session or 1 hour)
     const dismissedAt = Date.now()
     localStorage.setItem('pwaInstallDismissed', dismissedAt.toString())
-    setShowInstallModal(false)
+  }
+  
+  const handleResetInstallPrompt = () => {
+    // Manual reset function for debugging
+    localStorage.removeItem('pwaInstallDismissed')
+    setShowInstallButton(true)
+    console.log('✅ Install prompt reset - button will show again')
   }
 
   const handleSearch = (e) => {
@@ -332,6 +346,7 @@ export default function Header() {
                   <Download className="w-5 h-5 text-primary animate-bounce" />
                 </button>
               )}
+              
               
               <div className="relative" ref={searchRef}>
                 <button

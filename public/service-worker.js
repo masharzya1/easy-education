@@ -1,4 +1,4 @@
-const CACHE_NAME = 'easy-education-v4';
+const CACHE_NAME = 'easy-education-v5';
 const STATIC_CACHE = [
   '/',
   '/index.html',
