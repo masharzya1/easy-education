@@ -7,6 +7,7 @@ Easy Education is a React-based Progressive Web App (PWA) providing a comprehens
 - **PWA Installation Enhancement**: Updated the install prompt to show clear, browser-specific installation instructions when the native install prompt is not available, ensuring users can properly install the app instead of just creating shortcuts.
 - **Course Tagging System**: Added a tagging feature to courses (maximum 6 tags per course). Tags are now displayed on course cards instead of descriptions for better visual hierarchy and discoverability.
 - **Clean URL Slugs**: Removed random ID suffixes from course slugs for cleaner, more readable URLs (e.g., `/course/react-fundamentals` instead of `/course/react-fundamentals-abc12345`).
+- **Comprehensive Firestore Security Rules**: Created complete security rules for all 23 collections in the application, fixing the community comments visibility issue where comments weren't showing due to incorrect field name checks (authorId vs userId).
 
 ## User Preferences
 I prefer iterative development with clear communication on proposed changes. Please ask before making major architectural changes or significant modifications to existing features. I appreciate detailed explanations for complex implementations.
