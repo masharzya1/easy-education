@@ -211,8 +211,13 @@ export default function WebsiteSettings() {
         await setDoc(doc(collection(db, "settings")), pwaData)
       }
 
-      setSuccessMessage("Settings saved successfully!")
-      setTimeout(() => setSuccessMessage(""), 3000)
+      setSuccessMessage("Settings saved successfully! Please reload the page to see PWA changes take effect.")
+      
+      if (settings.appIcon || settings.appLogo || settings.appName || settings.themeColor) {
+        setTimeout(() => {
+          window.location.reload()
+        }, 2000)
+      }
     } catch (error) {
       console.error("Error saving settings:", error)
       setErrorMessage("Failed to save settings. Please try again.")
@@ -375,9 +380,14 @@ export default function WebsiteSettings() {
             <Smartphone className="w-5 h-5 text-primary" />
             <h2 className="text-xl font-semibold">App Configuration (PWA)</h2>
           </div>
-          <p className="text-sm text-muted-foreground mb-4">
+          <p className="text-sm text-muted-foreground mb-2">
             Configure how your platform appears when installed as an app on mobile devices
           </p>
+          <div className="mb-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+            <p className="text-xs text-blue-600 dark:text-blue-400">
+              <strong>Note:</strong> After changing app icon, logo, or name, the page will automatically reload. Users may need to reinstall the app to see the new icon on their home screen.
+            </p>
+          </div>
           
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

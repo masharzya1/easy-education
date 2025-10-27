@@ -29,6 +29,11 @@ export default function SettingsLoader() {
           themeMetaTag.setAttribute("content", themeColor)
         }
 
+        const appleTitle = document.querySelector('meta[name="apple-mobile-web-app-title"]')
+        if (appleTitle) {
+          appleTitle.setAttribute("content", appName)
+        }
+
         if (appIcon) {
           let faviconLink = document.querySelector('link[rel="icon"]')
           if (!faviconLink) {
@@ -39,9 +44,19 @@ export default function SettingsLoader() {
           faviconLink.href = appIcon
 
           let appleTouchIcon = document.querySelector('link[rel="apple-touch-icon"]')
-          if (appleTouchIcon) {
-            appleTouchIcon.href = appIcon
+          if (!appleTouchIcon) {
+            appleTouchIcon = document.createElement("link")
+            appleTouchIcon.rel = "apple-touch-icon"
+            document.head.appendChild(appleTouchIcon)
           }
+          appleTouchIcon.href = appIcon
+        }
+
+        let manifestLink = document.querySelector('link[rel="manifest"]')
+        if (manifestLink) {
+          const manifestUrl = manifestLink.href
+          const timestamp = new Date().getTime()
+          manifestLink.href = manifestUrl.split('?')[0] + '?v=' + timestamp
         }
 
         if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
@@ -50,6 +65,14 @@ export default function SettingsLoader() {
             appName,
             appIcon,
             themeColor
+          })
+        }
+
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.getRegistrations().then((registrations) => {
+            registrations.forEach((registration) => {
+              registration.update()
+            })
           })
         }
       } catch (error) {

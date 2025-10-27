@@ -2,43 +2,53 @@ import admin from 'firebase-admin';
 
 let db = null;
 
-try {
-  const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT 
-    ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)
-    : null;
-
-  if (!admin.apps.length && serviceAccount) {
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount)
-    });
-    db = admin.firestore();
+if (admin.apps.length === 0) {
+  try {
+    if (process.env.FIREBASE_PROJECT_ID && 
+        process.env.FIREBASE_CLIENT_EMAIL && 
+        process.env.FIREBASE_PRIVATE_KEY) {
+      admin.initializeApp({
+        credential: admin.credential.cert({
+          projectId: process.env.FIREBASE_PROJECT_ID,
+          clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+          privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+        }),
+      });
+      db = admin.firestore();
+    } else {
+      console.warn('Firebase Admin credentials not configured, using default manifest values');
+    }
+  } catch (error) {
+    console.error('Firebase Admin initialization error:', error);
+    console.warn('Will use default manifest values');
   }
-} catch (error) {
-  console.error('Firebase Admin initialization error:', error);
+} else {
+  db = admin.firestore();
 }
 
-export default async function dynamicManifestHandler(req, res) {
+export default async function handler(req, res) {
   try {
-    let appName = "Easy Education";
-    let appShortName = "EasyEdu";
-    let appIcon = "/placeholder-logo.png";
-    let themeColor = "#3b82f6";
-    let backgroundColor = "#fcfcfd";
+    let appName = 'Easy Education - Free Online Courses';
+    let appShortName = 'Easy Education';
+    let appIcon = '/placeholder-logo.png';
+    let themeColor = '#3b82f6';
+    let backgroundColor = '#fcfcfd';
 
     if (db) {
-      const settingsRef = db.collection('settings');
-      const snapshot = await settingsRef.get();
-
-      snapshot.forEach(doc => {
-        const data = doc.data();
-        if (data.type === "pwa") {
-          if (data.appName) appName = data.appName;
-          if (data.appShortName) appShortName = data.appShortName;
-          if (data.appIcon) appIcon = data.appIcon;
-          if (data.themeColor) themeColor = data.themeColor;
-          if (data.backgroundColor) backgroundColor = data.backgroundColor;
+      try {
+        const settingsSnapshot = await db.collection('settings').where('type', '==', 'pwa').get();
+        
+        if (!settingsSnapshot.empty) {
+          const settings = settingsSnapshot.docs[0].data();
+          if (settings.appName) appName = settings.appName;
+          if (settings.appShortName) appShortName = settings.appShortName;
+          if (settings.appIcon) appIcon = settings.appIcon;
+          if (settings.themeColor) themeColor = settings.themeColor;
+          if (settings.backgroundColor) backgroundColor = settings.backgroundColor;
         }
-      });
+      } catch (dbError) {
+        console.error('Error fetching settings from Firestore:', dbError);
+      }
     }
 
     const manifest = {
@@ -95,7 +105,8 @@ export default async function dynamicManifestHandler(req, res) {
     };
 
     res.setHeader('Content-Type', 'application/json');
-    res.json(manifest);
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.status(200).json(manifest);
   } catch (error) {
     console.error('Error generating manifest:', error);
     res.status(500).json({ error: 'Failed to generate manifest' });

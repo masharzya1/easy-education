@@ -1,9 +1,9 @@
-const CACHE_NAME = 'easy-education-v1';
-const urlsToCache = [
+const CACHE_NAME = 'easy-education-v2';
+const STATIC_CACHE = [
   '/',
   '/index.html',
-  '/placeholder-logo.svg',
-  '/placeholder-logo.png'
+  '/placeholder-logo.png',
+  '/placeholder-logo.svg'
 ];
 
 self.addEventListener('install', (event) => {
@@ -11,13 +11,66 @@ self.addEventListener('install', (event) => {
     caches.open(CACHE_NAME)
       .then((cache) => {
         console.log('Opened cache');
-        return cache.addAll(urlsToCache);
+        return cache.addAll(STATIC_CACHE);
       })
   );
   self.skipWaiting();
 });
 
 self.addEventListener('fetch', (event) => {
+  if (event.request.url.includes('/api/manifest')) {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          if (response && response.status === 200) {
+            const responseClone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, responseClone);
+            });
+          }
+          return response;
+        })
+        .catch(() => {
+          return caches.match(event.request).then((cachedResponse) => {
+            if (cachedResponse) {
+              return cachedResponse;
+            }
+            const defaultManifest = {
+              name: 'Easy Education - Free Online Courses',
+              short_name: 'Easy Education',
+              description: 'Learn from the best free online courses with expert teachers',
+              start_url: '/',
+              display: 'standalone',
+              background_color: '#fcfcfd',
+              theme_color: '#3b82f6',
+              orientation: 'portrait-primary',
+              icons: [
+                {
+                  src: '/placeholder-logo.png',
+                  sizes: '192x192',
+                  type: 'image/png',
+                  purpose: 'any maskable'
+                },
+                {
+                  src: '/placeholder-logo.png',
+                  sizes: '512x512',
+                  type: 'image/png',
+                  purpose: 'any maskable'
+                }
+              ]
+            };
+            return new Response(JSON.stringify(defaultManifest), {
+              headers: { 
+                'Content-Type': 'application/json',
+                'Cache-Control': 'no-cache'
+              }
+            });
+          });
+        })
+    );
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request)
       .then((response) => {
@@ -55,12 +108,48 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'UPDATE_MANIFEST') {
+    caches.open(CACHE_NAME).then((cache) => {
+      cache.keys().then((keys) => {
+        keys.forEach((request) => {
+          if (request.url.includes('/api/manifest') || 
+              request.url.includes('placeholder-logo')) {
+            cache.delete(request);
+          }
+        });
+      });
+    });
+
+    self.clients.matchAll().then((clients) => {
+      clients.forEach((client) => {
+        client.postMessage({
+          type: 'MANIFEST_UPDATED',
+          data: {
+            appName: event.data.appName,
+            appIcon: event.data.appIcon,
+            themeColor: event.data.themeColor
+          }
+        });
+      });
+    });
+  }
+  
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+
 self.addEventListener('push', (event) => {
   const data = event.data ? event.data.json() : {};
+  
+  const iconUrl = data.icon || '/placeholder-logo.png';
+  const title = data.title || 'Easy Education';
+  
   const options = {
     body: data.body || 'New notification from Easy Education',
-    icon: '/placeholder-logo.png',
-    badge: '/placeholder-logo.png',
+    icon: iconUrl,
+    badge: iconUrl,
     vibrate: [100, 50, 100],
     data: {
       dateOfArrival: Date.now(),
@@ -71,13 +160,13 @@ self.addEventListener('push', (event) => {
       {
         action: 'view',
         title: 'View',
-        icon: '/placeholder-logo.png'
+        icon: iconUrl
       }
     ]
   };
 
   event.waitUntil(
-    self.registration.showNotification(data.title || 'Easy Education', options)
+    self.registration.showNotification(title, options)
   );
 });
 
