@@ -3,6 +3,11 @@
 ## Overview
 Easy Education is a React-based Progressive Web App (PWA) providing a comprehensive platform for free online courses. It includes features for course management, user authentication, announcements, news, payment tracking, and robust assessment tools like course-level exams and student analytics. The platform aims to deliver a user-friendly and effective educational experience, aspiring to be a leading free online education resource with broad market potential.
 
+## Recent Changes (October 27, 2025)
+- **PWA Installation Enhancement**: Updated the install prompt to show clear, browser-specific installation instructions when the native install prompt is not available, ensuring users can properly install the app instead of just creating shortcuts.
+- **Course Tagging System**: Added a tagging feature to courses (maximum 6 tags per course). Tags are now displayed on course cards instead of descriptions for better visual hierarchy and discoverability.
+- **Clean URL Slugs**: Removed random ID suffixes from course slugs for cleaner, more readable URLs (e.g., `/course/react-fundamentals` instead of `/course/react-fundamentals-abc12345`).
+
 ## User Preferences
 I prefer iterative development with clear communication on proposed changes. Please ask before making major architectural changes or significant modifications to existing features. I appreciate detailed explanations for complex implementations.
 
@@ -17,13 +22,13 @@ Easy Education is a React 18.2.0 PWA built with Vite, styled using TailwindCSS a
 
 **Technical Implementations & Feature Specifications:**
 - **User Management**: Authentication, user profiles, and ranking systems.
-- **Course Management**: Browsing, enrollment, creation, chapter/class organization, archiving.
+- **Course Management**: Browsing, enrollment, creation, chapter/class organization, archiving, and course tagging (up to 6 tags per course).
 - **Content Delivery**: Integrated video player with custom controls.
 - **Assessment System**: Course-level exams (MCQ, Creative Questions), image support, student tracking, exam history, analytics, admin bulk JSON upload, unlimited retakes, solution viewing, and leaderboards.
 - **Payment System**: Integration with RupantorPay (bKash, Nagad, Rocket, credit/debit cards), coupon system, and webhook-based course enrollment.
 - **Notification System**: PWA push notifications via Firebase Cloud Messaging (FCM) and email notifications via SendGrid.
 - **Admin Dashboard**: Comprehensive management interface for courses, users, payments, exams, and settings, including bulk creation tools.
-- **PWA Capabilities**: Full PWA support with install prompts, offline access, and background push notifications.
+- **PWA Capabilities**: Full PWA support with improved install prompts showing clear browser-specific instructions, offline access, and background push notifications.
 - **Class Resources**: Dynamic resource links (e.g., PDFs, external links) displayed on the CourseWatch page, with Google Drive's native viewer for inline PDF display.
 - **Telegram Integration**: Collects user Telegram ID and mobile number, provides a direct link to the course Telegram group.
 
