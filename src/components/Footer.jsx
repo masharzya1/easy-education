@@ -85,7 +85,7 @@ export default function Footer() {
           </div>
           
            <div>
-            <h4 className="font-semibold mb-4">Follow Us</h4>
+            <h4 className="font-semibold mb-4 ml-2">Follow Us</h4>
             <div className="flex flex-col gap-2">
 
 <a
