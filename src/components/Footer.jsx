@@ -84,9 +84,7 @@ export default function Footer() {
             </div>
           </div>
           
-        </div>
-        
-         <div>
+           <div>
             <h4 className="font-semibold mb-4">Follow Us</h4>
             <div className="flex flex-col gap-2">
 
@@ -108,6 +106,10 @@ export default function Footer() {
                 </a>
             </div>
           </div>
+          
+        </div>
+        
+        
           
         </div>
 
