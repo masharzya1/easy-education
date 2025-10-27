@@ -1,7 +1,9 @@
-const CACHE_NAME = 'easy-education-v3';
+const CACHE_NAME = 'easy-education-v4';
 const STATIC_CACHE = [
   '/',
   '/index.html',
+  '/icon-192x192.png',
+  '/icon-512x512.png',
   '/placeholder-logo.png',
   '/placeholder-logo.svg'
 ];

@@ -67,6 +67,7 @@
     "recharts": "2.15.4",
     "sass": "latest",
     "sass-embedded": "latest",
+    "sharp": "^0.34.4",
     "sonner": "^1.7.4",
     "stylus": "latest",
     "sugarss": "latest",

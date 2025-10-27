@@ -30,7 +30,8 @@ export default async function handler(req, res) {
   try {
     let appName = 'Easy Education - Free Online Courses';
     let appShortName = 'Easy Education';
-    let appIcon = '/placeholder-logo.png';
+    let appIcon192 = '/icon-192x192.png';
+    let appIcon512 = '/icon-512x512.png';
     let themeColor = '#3b82f6';
     let backgroundColor = '#fcfcfd';
 
@@ -42,7 +43,8 @@ export default async function handler(req, res) {
           const settings = settingsSnapshot.docs[0].data();
           if (settings.appName) appName = settings.appName;
           if (settings.appShortName) appShortName = settings.appShortName;
-          if (settings.appIcon) appIcon = settings.appIcon;
+          if (settings.appIcon192) appIcon192 = settings.appIcon192;
+          if (settings.appIcon512) appIcon512 = settings.appIcon512;
           if (settings.themeColor) themeColor = settings.themeColor;
           if (settings.backgroundColor) backgroundColor = settings.backgroundColor;
         }
@@ -65,13 +67,13 @@ export default async function handler(req, res) {
       gcm_sender_id: "103953800507",
       icons: [
         {
-          src: appIcon,
+          src: appIcon192,
           sizes: "192x192",
           type: "image/png",
           purpose: "any maskable"
         },
         {
-          src: appIcon,
+          src: appIcon512,
           sizes: "512x512",
           type: "image/png",
           purpose: "any maskable"
@@ -86,7 +88,7 @@ export default async function handler(req, res) {
           url: "/courses",
           icons: [
             {
-              src: appIcon,
+              src: appIcon192,
               sizes: "192x192"
             }
           ]
@@ -98,7 +100,7 @@ export default async function handler(req, res) {
           url: "/my-courses",
           icons: [
             {
-              src: appIcon,
+              src: appIcon192,
               sizes: "192x192"
             }
           ]
