@@ -36,6 +36,8 @@ export default function Header() {
   const [communityEnabled, setCommunityEnabled] = useState(true)
   const [deferredPrompt, setDeferredPrompt] = useState(null)
   const [showInstallButton, setShowInstallButton] = useState(false)
+  const [showInstallModal, setShowInstallModal] = useState(false)
+  const [isIOS, setIsIOS] = useState(false)
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -70,6 +72,14 @@ export default function Header() {
       return isStandalone || isIOSStandalone
     }
 
+    const checkIsIOS = () => {
+      const isIOSUserAgent = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream
+      const isIPadOS = navigator.platform === 'MacIntel' && navigator.maxTouchPoints >= 1
+      return isIOSUserAgent || isIPadOS
+    }
+
+    setIsIOS(checkIsIOS())
+
     if (!checkIfInstalled()) {
       setTimeout(() => {
         setShowInstallButton(true)
@@ -93,9 +103,12 @@ export default function Header() {
     }
   }
 
-  const handleInstallClick = async () => {
+  const handleInstallClick = () => {
+    setShowInstallModal(true)
+  }
+
+  const handleInstallConfirm = async () => {
     if (!deferredPrompt) {
-      alert('To install this app:\n\nOn iPhone/iPad:\n1. Tap the Share button\n2. Select "Add to Home Screen"\n\nOn Android:\n1. Tap the menu (⋮)\n2. Select "Add to Home Screen" or "Install App"')
       return
     }
 
@@ -109,6 +122,11 @@ export default function Header() {
     }
     
     setDeferredPrompt(null)
+    setShowInstallModal(false)
+  }
+
+  const handleInstallDismiss = () => {
+    setShowInstallModal(false)
   }
 
   const handleSearch = (e) => {
@@ -433,6 +451,126 @@ export default function Header() {
               )}
             </motion.div>
           </>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showInstallModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:p-4 sm:items-center"
+            onClick={handleInstallDismiss}
+          >
+            <motion.div
+              initial={{ y: 100, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 100, opacity: 0 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              className="bg-card border-t sm:border border-border sm:rounded-2xl rounded-t-3xl shadow-2xl max-w-md w-full overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="relative p-4 sm:p-6">
+                <div className="w-12 h-1.5 bg-muted rounded-full mx-auto mb-4 sm:hidden" />
+                
+                <button
+                  onClick={handleInstallDismiss}
+                  className="absolute top-3 right-3 p-1.5 rounded-lg hover:bg-muted transition-colors sm:top-4 sm:right-4"
+                  aria-label="Close"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+
+                <div className="flex flex-col sm:items-center sm:text-center">
+                  <div className="flex items-center gap-3 mb-3 sm:flex-col sm:gap-2">
+                    <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-primary to-blue-600 rounded-2xl flex items-center justify-center flex-shrink-0">
+                      <Download className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <h2 className="text-lg sm:text-xl font-bold mb-0.5">Install Easy Education</h2>
+                      <p className="text-sm text-muted-foreground">
+                        Quick access & offline learning
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="w-full space-y-2 mb-4 sm:mb-5">
+                    <div className="flex items-center gap-2.5 text-xs sm:text-sm text-left p-2.5 bg-muted/50 rounded-lg">
+                      <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
+                        <span className="text-primary font-bold text-xs">✓</span>
+                      </div>
+                      <span>Launch from home screen</span>
+                    </div>
+                    <div className="flex items-center gap-2.5 text-xs sm:text-sm text-left p-2.5 bg-muted/50 rounded-lg">
+                      <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
+                        <span className="text-primary font-bold text-xs">✓</span>
+                      </div>
+                      <span>Works without internet</span>
+                    </div>
+                    <div className="flex items-center gap-2.5 text-xs sm:text-sm text-left p-2.5 bg-muted/50 rounded-lg">
+                      <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
+                        <span className="text-primary font-bold text-xs">✓</span>
+                      </div>
+                      <span>No app store needed</span>
+                    </div>
+                  </div>
+
+                  {isIOS ? (
+                    <div className="w-full space-y-3">
+                      <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg text-left">
+                        <p className="text-xs font-semibold mb-2 text-blue-600 dark:text-blue-400">iPhone/iPad এ Install করুন:</p>
+                        <ol className="text-xs space-y-1.5 text-muted-foreground">
+                          <li className="flex items-start gap-2">
+                            <span className="font-bold text-blue-600 dark:text-blue-400">১.</span>
+                            <span>নিচে <strong>Share</strong> বাটনে ট্যাপ করুন (□↑ আইকন)</span>
+                          </li>
+                          <li className="flex items-start gap-2">
+                            <span className="font-bold text-blue-600 dark:text-blue-400">২.</span>
+                            <span>Scroll করে <strong>"Add to Home Screen"</strong> খুঁজুন</span>
+                          </li>
+                          <li className="flex items-start gap-2">
+                            <span className="font-bold text-blue-600 dark:text-blue-400">৩.</span>
+                            <span>উপরে ডানদিকে <strong>"Add"</strong> বাটনে ট্যাপ করুন</span>
+                          </li>
+                        </ol>
+                      </div>
+                      <button
+                        onClick={handleInstallDismiss}
+                        className="w-full py-3 px-4 bg-muted hover:bg-muted/80 text-foreground rounded-lg transition-colors font-medium text-sm"
+                      >
+                        বুঝেছি
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="w-full space-y-2">
+                      <button
+                        onClick={handleInstallConfirm}
+                        disabled={!deferredPrompt}
+                        className="w-full py-3 px-4 bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-600/90 text-white rounded-lg transition-all font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm shadow-lg hover:shadow-xl"
+                      >
+                        <Download className="w-4 h-4" />
+                        Install App Now
+                      </button>
+                      {!deferredPrompt && (
+                        <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+                          <p className="text-xs text-amber-600 dark:text-amber-400">
+                            <strong>Note:</strong> Browser menu থেকে "Add to Home Screen" অপশনে গিয়েও install করতে পারবেন
+                          </p>
+                        </div>
+                      )}
+                      <button
+                        onClick={handleInstallDismiss}
+                        className="w-full py-2.5 px-4 bg-muted/50 hover:bg-muted text-foreground rounded-lg transition-colors font-medium text-sm"
+                      >
+                        পরে করব
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
         )}
       </AnimatePresence>
     </>
