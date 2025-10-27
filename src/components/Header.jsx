@@ -179,12 +179,14 @@ export default function Header() {
   }
 
   const handleInstallClick = () => {
+    console.log('📱 Install button clicked, deferredPrompt:', !!deferredPrompt)
     setShowInstallModal(true)
   }
 
   const handleInstallConfirm = async () => {
     if (!deferredPrompt) {
-      console.log('❌ No deferred prompt available')
+      console.log('❌ No deferred prompt available - showing manual instructions')
+      // Keep modal open to show manual instructions
       return
     }
 
@@ -197,15 +199,22 @@ export default function Header() {
       if (outcome === 'accepted') {
         console.log('✅ User accepted the install prompt')
         setShowInstallButton(false)
+        setShowInstallModal(false)
       } else {
         console.log('❌ User dismissed the install prompt')
+        setShowInstallModal(false)
       }
     } catch (error) {
       console.error('Error showing install prompt:', error)
+      setShowInstallModal(false)
     } finally {
       deferredPrompt = null
-      setShowInstallModal(false)
     }
+  }
+
+  const handleOpenInNewTab = () => {
+    const currentUrl = window.location.origin
+    window.open(currentUrl, '_blank')
   }
 
   const handleInstallDismiss = () => {
@@ -632,30 +641,50 @@ export default function Header() {
                     </div>
                   ) : (
                     <div className="w-full space-y-2">
-                      <button
-                        onClick={handleInstallConfirm}
-                        disabled={!deferredPrompt}
-                        className="w-full py-3 px-4 bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-600/90 text-white rounded-lg transition-all font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm shadow-lg hover:shadow-xl"
-                      >
-                        <Download className="w-4 h-4" />
-                        Install App Now
-                      </button>
-                      {!deferredPrompt && (
-                        <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg space-y-2">
-                          <p className="text-xs text-amber-600 dark:text-amber-400">
-                            <strong>Install করতে:</strong>
-                          </p>
-                          <ol className="text-xs text-amber-600 dark:text-amber-400 space-y-1 list-decimal list-inside">
-                            <li>Browser এর menu (⋮) ওপেন করুন</li>
-                            <li>"Add to Home Screen" বা "Install App" সিলেক্ট করুন</li>
-                            <li>Confirm করুন</li>
-                          </ol>
+                      {deferredPrompt ? (
+                        <button
+                          onClick={handleInstallConfirm}
+                          className="w-full py-3 px-4 bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-600/90 text-white rounded-lg transition-all font-medium flex items-center justify-center gap-2 text-sm shadow-lg hover:shadow-xl"
+                        >
+                          <Download className="w-4 h-4" />
+                          Install App Now
+                        </button>
+                      ) : (
+                        <>
                           {window.self !== window.top && (
-                            <p className="text-xs text-amber-600 dark:text-amber-400 pt-2 border-t border-amber-500/20">
-                              <strong>Note:</strong> সবচেয়ে ভালো হয় direct link থেকে install করলে: {window.location.origin}
-                            </p>
+                            <button
+                              onClick={handleOpenInNewTab}
+                              className="w-full py-3 px-4 bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-600/90 text-white rounded-lg transition-all font-medium flex items-center justify-center gap-2 text-sm shadow-lg hover:shadow-xl"
+                            >
+                              <Download className="w-4 h-4" />
+                              New Tab এ খুলুন (Best)
+                            </button>
                           )}
-                        </div>
+                          <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg space-y-2">
+                            <p className="text-xs font-semibold text-blue-600 dark:text-blue-400">
+                              <strong>📱 PWA Install করার উপায়:</strong>
+                            </p>
+                            <ol className="text-xs text-blue-600 dark:text-blue-400 space-y-1.5">
+                              <li className="flex items-start gap-2">
+                                <span className="font-bold">১.</span>
+                                <span>Browser menu (⋮ বা ⁝) খুলুন</span>
+                              </li>
+                              <li className="flex items-start gap-2">
+                                <span className="font-bold">২.</span>
+                                <span><strong>"Add to Home Screen"</strong> বা <strong>"Install App"</strong> সিলেক্ট করুন</span>
+                              </li>
+                              <li className="flex items-start gap-2">
+                                <span className="font-bold">৩.</span>
+                                <span><strong>Install/Add</strong> বাটনে ক্লিক করুন</span>
+                              </li>
+                            </ol>
+                            <div className="pt-2 mt-2 border-t border-blue-500/20">
+                              <p className="text-xs text-blue-600 dark:text-blue-400">
+                                <strong>💡 Tip:</strong> Chrome, Edge, বা Samsung Internet browser থেকে install করলে সবচেয়ে ভালো কাজ করে।
+                              </p>
+                            </div>
+                          </div>
+                        </>
                       )}
                       <button
                         onClick={handleInstallDismiss}
