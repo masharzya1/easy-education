@@ -110,17 +110,27 @@ export default function Header() {
 
     const iosDevice = checkIsIOS()
     setIsIOS(iosDevice)
+    
+    const isInstalled = checkIfInstalled()
 
     console.log('🔍 PWA Install Debug:', {
       isIOS: iosDevice,
-      isInstalled: checkIfInstalled(),
+      isInstalled: isInstalled,
       inIframe: checkInIframe(),
       hasLocalStorageDismiss: !!localStorage.getItem('pwaInstallDismissed'),
       deferredPromptExists: !!deferredPrompt
     })
 
+    // If already installed, hide button and clear dismiss flag for future use
+    if (isInstalled) {
+      console.log('✅ App is already installed - hiding install button')
+      setShowInstallButton(false)
+      localStorage.removeItem('pwaInstallDismissed')
+      return
+    }
+
     // For iOS, show button if not installed
-    if (iosDevice && !checkIfInstalled()) {
+    if (iosDevice) {
       const dismissed = localStorage.getItem('pwaInstallDismissed')
       const dismissTime = dismissed ? parseInt(dismissed) : 0
       const daysSinceDismiss = (Date.now() - dismissTime) / (1000 * 60 * 60 * 24)
@@ -135,7 +145,7 @@ export default function Header() {
 
     // For non-iOS devices: show button after delay if not dismissed
     // This ensures the button appears even in iframes or if beforeinstallprompt doesn't fire
-    if (!iosDevice && !checkIfInstalled()) {
+    if (!iosDevice) {
       const dismissed = localStorage.getItem('pwaInstallDismissed')
       const dismissTime = dismissed ? parseInt(dismissed) : 0
       const daysSinceDismiss = (Date.now() - dismissTime) / (1000 * 60 * 60 * 24)
@@ -156,15 +166,18 @@ export default function Header() {
     }
 
     // Listen for successful installation
-    window.addEventListener('appinstalled', () => {
+    const handleAppInstalled = () => {
       console.log('✅ PWA was installed')
       setShowInstallButton(false)
       setShowInstallModal(false)
+      localStorage.removeItem('pwaInstallDismissed')
       deferredPrompt = null
-    })
+    }
+    
+    window.addEventListener('appinstalled', handleAppInstalled)
 
     return () => {
-      window.removeEventListener('appinstalled', () => {})
+      window.removeEventListener('appinstalled', handleAppInstalled)
     }
   }, [])
 
@@ -615,22 +628,29 @@ export default function Header() {
 
                   {isIOS ? (
                     <div className="w-full space-y-3">
-                      <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg text-left">
-                        <p className="text-xs font-semibold mb-2 text-blue-600 dark:text-blue-400">iPhone/iPad এ Install করুন:</p>
-                        <ol className="text-xs space-y-1.5 text-muted-foreground">
-                          <li className="flex items-start gap-2">
-                            <span className="font-bold text-blue-600 dark:text-blue-400">১.</span>
-                            <span>নিচে <strong>Share</strong> বাটনে ট্যাপ করুন (□↑ আইকন)</span>
+                      <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg text-left space-y-3">
+                        <p className="text-sm font-bold text-blue-600 dark:text-blue-400">
+                          📱 iPhone/iPad এ App Install করার নিয়ম:
+                        </p>
+                        <ol className="text-sm space-y-2.5 text-foreground">
+                          <li className="flex items-start gap-3">
+                            <span className="font-bold text-blue-600 dark:text-blue-400 text-base flex-shrink-0">১.</span>
+                            <span>সবার নিচে <strong className="text-blue-600 dark:text-blue-400">Share বাটন</strong> খুঁজুন (□↑ এই আইকন)</span>
                           </li>
-                          <li className="flex items-start gap-2">
-                            <span className="font-bold text-blue-600 dark:text-blue-400">২.</span>
-                            <span>Scroll করে <strong>"Add to Home Screen"</strong> খুঁজুন</span>
+                          <li className="flex items-start gap-3">
+                            <span className="font-bold text-blue-600 dark:text-blue-400 text-base flex-shrink-0">২.</span>
+                            <span>নিচের দিকে scroll করে <strong className="text-blue-600 dark:text-blue-400">"Add to Home Screen"</strong> অপশন খুঁজুন</span>
                           </li>
-                          <li className="flex items-start gap-2">
-                            <span className="font-bold text-blue-600 dark:text-blue-400">৩.</span>
-                            <span>উপরে ডানদিকে <strong>"Add"</strong> বাটনে ট্যাপ করুন</span>
+                          <li className="flex items-start gap-3">
+                            <span className="font-bold text-blue-600 dark:text-blue-400 text-base flex-shrink-0">৩.</span>
+                            <span>উপরে ডানপাশে <strong className="text-blue-600 dark:text-blue-400">"Add"</strong> বাটনে ট্যাপ করুন</span>
                           </li>
                         </ol>
+                        <div className="pt-2 border-t border-blue-500/20">
+                          <p className="text-xs text-blue-600 dark:text-blue-400">
+                            ✅ এরপর আপনার Home Screen এ App icon দেখতে পাবেন
+                          </p>
+                        </div>
                       </div>
                       <button
                         onClick={handleInstallDismiss}
@@ -647,7 +667,7 @@ export default function Header() {
                           className="w-full py-3 px-4 bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-600/90 text-white rounded-lg transition-all font-medium flex items-center justify-center gap-2 text-sm shadow-lg hover:shadow-xl"
                         >
                           <Download className="w-4 h-4" />
-                          Install App Now
+                          এখনই Install করুন
                         </button>
                       ) : (
                         <>
@@ -657,30 +677,37 @@ export default function Header() {
                               className="w-full py-3 px-4 bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-600/90 text-white rounded-lg transition-all font-medium flex items-center justify-center gap-2 text-sm shadow-lg hover:shadow-xl"
                             >
                               <Download className="w-4 h-4" />
-                              New Tab এ খুলুন (Best)
+                              নতুন Tab এ খুলুন
                             </button>
                           )}
-                          <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg space-y-2">
-                            <p className="text-xs font-semibold text-blue-600 dark:text-blue-400">
-                              <strong>📱 PWA Install করার উপায়:</strong>
+                          <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg space-y-3">
+                            <p className="text-sm font-bold text-blue-600 dark:text-blue-400">
+                              📱 Android Phone এ App Install করার নিয়ম:
                             </p>
-                            <ol className="text-xs text-blue-600 dark:text-blue-400 space-y-1.5">
-                              <li className="flex items-start gap-2">
-                                <span className="font-bold">১.</span>
-                                <span>Browser menu (⋮ বা ⁝) খুলুন</span>
+                            <ol className="text-sm space-y-2.5 text-foreground">
+                              <li className="flex items-start gap-3">
+                                <span className="font-bold text-blue-600 dark:text-blue-400 text-base flex-shrink-0">১.</span>
+                                <span>Browser এর উপরে ডান কোণায় <strong className="text-blue-600 dark:text-blue-400">তিন বিন্দু (⋮)</strong> বা <strong className="text-blue-600 dark:text-blue-400">তিন লাইন (≡)</strong> মেনুতে ক্লিক করুন</span>
                               </li>
                               <li className="flex items-start gap-2">
-                                <span className="font-bold">২.</span>
-                                <span><strong>"Add to Home Screen"</strong> বা <strong>"Install App"</strong> সিলেক্ট করুন</span>
+                                <span className="font-bold text-blue-600 dark:text-blue-400 text-base flex-shrink-0">২.</span>
+                                <div className="flex-1">
+                                  <p><strong className="text-blue-600 dark:text-blue-400">"Add to Home Screen"</strong> অপশন খুঁজুন</p>
+                                  <p className="text-xs mt-1 text-muted-foreground">(Chrome: "Install App" / "Add to Home Screen")</p>
+                                  <p className="text-xs text-muted-foreground">(Firefox: "Install" / "Add to Home Screen")</p>
+                                </div>
                               </li>
-                              <li className="flex items-start gap-2">
-                                <span className="font-bold">৩.</span>
-                                <span><strong>Install/Add</strong> বাটনে ক্লিক করুন</span>
+                              <li className="flex items-start gap-3">
+                                <span className="font-bold text-blue-600 dark:text-blue-400 text-base flex-shrink-0">৩.</span>
+                                <span>পপআপে <strong className="text-blue-600 dark:text-blue-400">"Install"</strong> বা <strong className="text-blue-600 dark:text-blue-400">"Add"</strong> বাটনে ক্লিক করুন</span>
                               </li>
                             </ol>
-                            <div className="pt-2 mt-2 border-t border-blue-500/20">
+                            <div className="pt-2 border-t border-blue-500/20 space-y-1">
                               <p className="text-xs text-blue-600 dark:text-blue-400">
-                                <strong>💡 Tip:</strong> Chrome, Edge, বা Samsung Internet browser থেকে install করলে সবচেয়ে ভালো কাজ করে।
+                                ✅ সফলভাবে install হলে আপনার Home Screen এ App icon দেখতে পাবেন
+                              </p>
+                              <p className="text-xs text-blue-600 dark:text-blue-400">
+                                💡 <strong>Best Browser:</strong> Chrome, Edge, বা Samsung Internet
                               </p>
                             </div>
                           </div>
