@@ -3,7 +3,7 @@ import { toast } from "../../hooks/use-toast"
 
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
-import { Plus, Search, Edit2, Trash2, X, BookOpen, Upload, Link as LinkIcon } from "lucide-react"
+import { Plus, Search, Edit2, Trash2, X, BookOpen, Upload, Link as LinkIcon, Tag } from "lucide-react"
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from "firebase/firestore"
 import { db } from "../../lib/firebase"
 import { uploadImageToImgBB } from "../../lib/imgbb"
@@ -31,7 +31,9 @@ export default function ManageCourses() {
     imageType: "upload",
     imageLink: "",
     telegramLink: "",
+    tags: [],
   })
+  const [tagInput, setTagInput] = useState("")
   const [imageFile, setImageFile] = useState(null)
   const [submitting, setSubmitting] = useState(false)
 
@@ -75,6 +77,7 @@ export default function ManageCourses() {
         imageType: course.thumbnailURL ? "link" : "upload",
         imageLink: course.thumbnailURL || "",
         telegramLink: course.telegramLink || "",
+        tags: course.tags || [],
       })
     } else {
       setEditingCourse(null)
@@ -90,9 +93,11 @@ export default function ManageCourses() {
         imageType: "upload",
         imageLink: "",
         telegramLink: "",
+        tags: [],
       })
     }
     setImageFile(null)
+    setTagInput("")
     setShowModal(true)
   }
 
@@ -133,23 +138,21 @@ export default function ManageCourses() {
         publishStatus: formData.publishStatus,
         thumbnailURL: thumbnailURL || "",
         telegramLink: formData.telegramLink || "",
+        tags: formData.tags || [],
         slug: generateSlug(formData.title),
         updatedAt: serverTimestamp(),
       }
 
       if (editingCourse) {
         if (!editingCourse.slug) {
-          courseData.slug = generateSlug(formData.title, editingCourse.id)
+          courseData.slug = generateSlug(formData.title)
         } else {
           courseData.slug = editingCourse.slug
         }
         await updateDoc(doc(db, "courses", editingCourse.id), courseData)
       } else {
         courseData.createdAt = serverTimestamp()
-        const docRef = await addDoc(collection(db, "courses"), courseData)
-        await updateDoc(doc(db, "courses", docRef.id), {
-          slug: generateSlug(formData.title, docRef.id)
-        })
+        await addDoc(collection(db, "courses"), courseData)
       }
 
       await fetchData()
@@ -338,6 +341,67 @@ export default function ManageCourses() {
                   className="w-full px-3 py-2 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
                   placeholder="Enter course description"
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1.5">Tags (Max 6)</label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={tagInput}
+                    onChange={(e) => setTagInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault()
+                        if (tagInput.trim() && formData.tags.length < 6 && !formData.tags.includes(tagInput.trim())) {
+                          setFormData({ ...formData, tags: [...formData.tags, tagInput.trim()] })
+                          setTagInput("")
+                        }
+                      }
+                    }}
+                    className="flex-1 px-3 py-2 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                    placeholder="Type a tag and press Enter"
+                    disabled={formData.tags.length >= 6}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (tagInput.trim() && formData.tags.length < 6 && !formData.tags.includes(tagInput.trim())) {
+                        setFormData({ ...formData, tags: [...formData.tags, tagInput.trim()] })
+                        setTagInput("")
+                      }
+                    }}
+                    disabled={!tagInput.trim() || formData.tags.length >= 6}
+                    className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                  >
+                    Add
+                  </button>
+                </div>
+                {formData.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {formData.tags.map((tag, index) => (
+                      <span
+                        key={index}
+                        className="inline-flex items-center gap-1.5 px-3 py-1 bg-primary/10 text-primary text-xs rounded-full"
+                      >
+                        <Tag className="w-3 h-3" />
+                        {tag}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setFormData({ ...formData, tags: formData.tags.filter((_, i) => i !== index) })
+                          }}
+                          className="hover:text-red-500 transition-colors"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+                <p className="text-xs text-muted-foreground mt-1">
+                  {formData.tags.length}/6 tags added
+                </p>
               </div>
 
               <div>

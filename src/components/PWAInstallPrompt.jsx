@@ -167,12 +167,11 @@ export default function PWAInstallPrompt() {
                     Got it
                   </button>
                 </div>
-              ) : (
+              ) : deferredPrompt ? (
                 <div className="w-full space-y-2">
                   <button
                     onClick={handleInstallClick}
-                    disabled={!deferredPrompt}
-                    className="w-full py-2.5 px-4 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-all font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                    className="w-full py-2.5 px-4 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-all font-medium flex items-center justify-center gap-2 text-sm"
                   >
                     <Download className="w-4 h-4" />
                     Install App
@@ -182,6 +181,23 @@ export default function PWAInstallPrompt() {
                     className="w-full py-2.5 px-4 bg-muted/50 hover:bg-muted text-foreground rounded-lg transition-colors font-medium text-sm"
                   >
                     Not now
+                  </button>
+                </div>
+              ) : (
+                <div className="w-full space-y-2">
+                  <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg text-left">
+                    <p className="text-xs font-semibold mb-2">How to install on Android/Desktop:</p>
+                    <ol className="text-xs space-y-1 text-muted-foreground">
+                      <li>1. Click the <strong>three dots menu</strong> (⋮) in your browser</li>
+                      <li>2. Select <strong>"Install app"</strong> or <strong>"Add to Home screen"</strong></li>
+                      <li>3. Click <strong>Install</strong></li>
+                    </ol>
+                  </div>
+                  <button
+                    onClick={handleDismiss}
+                    className="w-full py-2.5 px-4 bg-muted hover:bg-muted/80 text-foreground rounded-lg transition-colors font-medium text-sm"
+                  >
+                    Got it
                   </button>
                 </div>
               )}

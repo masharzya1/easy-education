@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { Link, useNavigate } from "react-router-dom"
-import { ShoppingCart, Trash2, Users, Check, Clock } from "lucide-react"
+import { ShoppingCart, Trash2, Users, Check, Clock, Tag } from "lucide-react"
 import { useCart } from "../contexts/CartContext"
 import { useAuth } from "../contexts/AuthContext"
 import { collection, query, where, getDocs } from "firebase/firestore"
@@ -186,9 +186,23 @@ export default function CourseCard({ course, onAddToCart, showProgress = false }
           <h3 className="font-semibold text-lg mb-2 line-clamp-2 group-hover:text-primary transition-colors">
             {course.title}
           </h3>
-          <p className="text-sm text-muted-foreground mb-3 line-clamp-2 leading-relaxed">
-            {truncateDescription(course.description)}
-          </p>
+          {course.tags && course.tags.length > 0 ? (
+            <div className="flex flex-wrap gap-1.5 mb-3 min-h-[40px]">
+              {course.tags.slice(0, 6).map((tag, index) => (
+                <span
+                  key={index}
+                  className="inline-flex items-center gap-1 px-2 py-1 bg-primary/10 text-primary text-xs rounded-full font-medium"
+                >
+                  <Tag className="w-3 h-3" />
+                  {tag}
+                </span>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground mb-3 line-clamp-2 leading-relaxed">
+              {truncateDescription(course.description)}
+            </p>
+          )}
           <div className="flex items-center justify-end mb-3">
             <span className="px-3 py-1 bg-primary/10 text-primary text-xs rounded-full font-medium">
               {course.category}
