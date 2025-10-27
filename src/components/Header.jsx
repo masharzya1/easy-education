@@ -300,7 +300,6 @@ export default function Header() {
             </nav>
 
             <div className="flex items-center gap-2 lg:flex-1 justify-end">
-              {console.log('🔍 Rendering header - showInstallButton:', showInstallButton)}
               {showInstallButton && (
                 <button
                   onClick={handleInstallClick}

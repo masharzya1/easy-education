@@ -4,6 +4,7 @@
 Easy Education is a React-based Progressive Web App (PWA) providing a comprehensive platform for free online courses. It includes features for course management, user authentication, announcements, news, payment tracking, and robust assessment tools like course-level exams and student analytics. The platform aims to deliver a user-friendly and effective educational experience, aspiring to be a leading free online education resource with broad market potential.
 
 ## Recent Changes (October 27, 2025)
+- **PWA Icon Fix & Install Button**: Fixed critical PWA installation issue where icons were incorrectly sized (256x144 instead of required 192x192 and 512x512). Generated proper PWA icons using Sharp, updated manifest and service worker to use correct icon files. Enhanced install button logic to show for all users (including in iframes) with improved fallback instructions when native install prompt is unavailable.
 - **PWA Installation Enhancement**: Updated the install prompt to show clear, browser-specific installation instructions when the native install prompt is not available, ensuring users can properly install the app instead of just creating shortcuts.
 - **Course Tagging System**: Added a tagging feature to courses (maximum 6 tags per course). Tags are now displayed on course cards instead of descriptions for better visual hierarchy and discoverability.
 - **Clean URL Slugs**: Removed random ID suffixes from course slugs for cleaner, more readable URLs (e.g., `/course/react-fundamentals` instead of `/course/react-fundamentals-abc12345`).
