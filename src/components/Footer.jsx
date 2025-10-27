@@ -80,7 +80,17 @@ export default function Footer() {
                 <Send className="w-4 h-4" />
                 Telegram
               </a> 
-              <a
+
+            </div>
+          </div>
+          
+        </div>
+        
+         <div>
+            <h4 className="font-semibold mb-4">Follow Us</h4>
+            <div className="flex flex-col gap-2">
+
+<a
               href = "https://youtube.com/@easyeducation19"
               target = "_blank"
               rel = "noopener noreferrer"
@@ -103,9 +113,11 @@ export default function Footer() {
 
         <div className="mt-8 pt-8 border-t border-border text-center text-muted-foreground text-sm grid grid-2">
           <p>Easy Education © All rights reserved</p>
-          <p>Developed by: <a href= "https://t.me/@hermanoMayorBot">Hermano Mayor</a></p>
+          <p>Developed by: <a href= "https://t.me/hermanoMayorBot">Hermano Mayor</a></p>
         </div>
-      </div>
+      
+      
+      
     </footer>
   )
 }
