@@ -14,6 +14,7 @@ const __dirname = dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 
 app.use(cors());
 app.use(express.json());
@@ -50,7 +51,7 @@ app.post('/api/upload-image', (req, res) => {
   uploadImageHandler(req, res);
 });
 
-if (process.env.NODE_ENV === 'production') {
+if (IS_PRODUCTION) {
   const distPath = join(__dirname, 'dist');
   app.use(express.static(distPath));
   
@@ -78,5 +79,6 @@ if (process.env.NODE_ENV === 'production') {
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
-  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`Environment: ${IS_PRODUCTION ? 'production' : 'development'}`);
+  console.log(`Serving from: ${IS_PRODUCTION ? 'dist/' : 'vite dev server'}`);
 });
