@@ -104,8 +104,20 @@ export default function Header() {
       return isIOSUserAgent || isIPadOS
     }
 
+    const checkInIframe = () => {
+      return window.self !== window.top
+    }
+
     const iosDevice = checkIsIOS()
     setIsIOS(iosDevice)
+
+    console.log('🔍 PWA Install Debug:', {
+      isIOS: iosDevice,
+      isInstalled: checkIfInstalled(),
+      inIframe: checkInIframe(),
+      hasLocalStorageDismiss: !!localStorage.getItem('pwaInstallDismissed'),
+      deferredPromptExists: !!deferredPrompt
+    })
 
     // For iOS, show button if not installed
     if (iosDevice && !checkIfInstalled()) {
@@ -114,9 +126,32 @@ export default function Header() {
       const daysSinceDismiss = (Date.now() - dismissTime) / (1000 * 60 * 60 * 24)
       
       if (!dismissed || daysSinceDismiss >= 7) {
+        console.log('📱 Showing iOS install button')
         setTimeout(() => {
           setShowInstallButton(true)
         }, 1000)
+      }
+    }
+
+    // For non-iOS devices: show button after delay if not dismissed
+    // This ensures the button appears even in iframes or if beforeinstallprompt doesn't fire
+    if (!iosDevice && !checkIfInstalled()) {
+      const dismissed = localStorage.getItem('pwaInstallDismissed')
+      const dismissTime = dismissed ? parseInt(dismissed) : 0
+      const daysSinceDismiss = (Date.now() - dismissTime) / (1000 * 60 * 60 * 24)
+      
+      if (!dismissed || daysSinceDismiss >= 7) {
+        console.log('📱 Showing install button (non-iOS)')
+        // Wait brief moment to give beforeinstallprompt a chance to fire first
+        setTimeout(() => {
+          if (!deferredPrompt) {
+            console.log('🔔 No beforeinstallprompt received - showing button anyway')
+          }
+          console.log('🎯 Setting showInstallButton to TRUE')
+          setShowInstallButton(true)
+        }, 1000)
+      } else {
+        console.log('⏰ Install button dismissed recently, will show again after 7 days')
       }
     }
 
@@ -265,6 +300,7 @@ export default function Header() {
             </nav>
 
             <div className="flex items-center gap-2 lg:flex-1 justify-end">
+              {console.log('🔍 Rendering header - showInstallButton:', showInstallButton)}
               {showInstallButton && (
                 <button
                   onClick={handleInstallClick}
@@ -606,10 +642,20 @@ export default function Header() {
                         Install App Now
                       </button>
                       {!deferredPrompt && (
-                        <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+                        <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg space-y-2">
                           <p className="text-xs text-amber-600 dark:text-amber-400">
-                            <strong>Note:</strong> Browser menu থেকে "Add to Home Screen" অপশনে গিয়েও install করতে পারবেন
+                            <strong>Install করতে:</strong>
                           </p>
+                          <ol className="text-xs text-amber-600 dark:text-amber-400 space-y-1 list-decimal list-inside">
+                            <li>Browser এর menu (⋮) ওপেন করুন</li>
+                            <li>"Add to Home Screen" বা "Install App" সিলেক্ট করুন</li>
+                            <li>Confirm করুন</li>
+                          </ol>
+                          {window.self !== window.top && (
+                            <p className="text-xs text-amber-600 dark:text-amber-400 pt-2 border-t border-amber-500/20">
+                              <strong>Note:</strong> সবচেয়ে ভালো হয় direct link থেকে install করলে: {window.location.origin}
+                            </p>
+                          )}
                         </div>
                       )}
                       <button
