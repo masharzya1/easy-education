@@ -56,10 +56,12 @@ export default async function handler(req, res) {
       short_name: appShortName,
       description: "Learn from the best free online courses with expert teachers",
       start_url: "/",
+      scope: "/",
       display: "standalone",
       background_color: backgroundColor,
       theme_color: themeColor,
       orientation: "portrait-primary",
+      prefer_related_applications: false,
       gcm_sender_id: "103953800507",
       icons: [
         {

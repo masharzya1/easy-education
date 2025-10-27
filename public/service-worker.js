@@ -1,4 +1,4 @@
-const CACHE_NAME = 'easy-education-v2';
+const CACHE_NAME = 'easy-education-v3';
 const STATIC_CACHE = [
   '/',
   '/index.html',
@@ -40,10 +40,12 @@ self.addEventListener('fetch', (event) => {
               short_name: 'Easy Education',
               description: 'Learn from the best free online courses with expert teachers',
               start_url: '/',
+              scope: '/',
               display: 'standalone',
               background_color: '#fcfcfd',
               theme_color: '#3b82f6',
               orientation: 'portrait-primary',
+              prefer_related_applications: false,
               icons: [
                 {
                   src: '/placeholder-logo.png',
