@@ -25,6 +25,10 @@ import { useTheme } from "../contexts/ThemeContext"
 import { collection, getDocs, query, where } from "firebase/firestore"
 import { db } from "../lib/firebase"
 
+// CRITICAL: Define deferredPrompt at module level to capture event early
+let deferredPrompt = null
+let isInstallListenerSet = false
+
 export default function Header() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
@@ -34,10 +38,38 @@ export default function Header() {
   const navigate = useNavigate()
   const searchRef = useRef(null)
   const [communityEnabled, setCommunityEnabled] = useState(true)
-  const [deferredPrompt, setDeferredPrompt] = useState(null)
   const [showInstallButton, setShowInstallButton] = useState(false)
   const [showInstallModal, setShowInstallModal] = useState(false)
   const [isIOS, setIsIOS] = useState(false)
+  const [canInstall, setCanInstall] = useState(false)
+
+  // Set up beforeinstallprompt listener IMMEDIATELY (before any other effects)
+  useEffect(() => {
+    if (isInstallListenerSet) return
+
+    const handleBeforeInstallPrompt = (e) => {
+      console.log('✅ beforeinstallprompt fired!')
+      e.preventDefault()
+      deferredPrompt = e
+      setCanInstall(true)
+      
+      // Check if already dismissed
+      const dismissed = localStorage.getItem('pwaInstallDismissed')
+      const dismissTime = dismissed ? parseInt(dismissed) : 0
+      const daysSinceDismiss = (Date.now() - dismissTime) / (1000 * 60 * 60 * 24)
+      
+      if (!dismissed || daysSinceDismiss >= 7) {
+        setShowInstallButton(true)
+      }
+    }
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+    isInstallListenerSet = true
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+    }
+  }, [])
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -54,18 +86,12 @@ export default function Header() {
         }
       } catch (error) {
         console.error("[v0] Error fetching settings:", error)
-        // Continue with default settings
       }
     }
     fetchSettings()
   }, [])
 
   useEffect(() => {
-    const handleBeforeInstallPrompt = (e) => {
-      e.preventDefault()
-      setDeferredPrompt(e)
-    }
-
     const checkIfInstalled = () => {
       const isStandalone = window.matchMedia('(display-mode: standalone)').matches
       const isIOSStandalone = window.navigator.standalone === true
@@ -78,18 +104,32 @@ export default function Header() {
       return isIOSUserAgent || isIPadOS
     }
 
-    setIsIOS(checkIsIOS())
+    const iosDevice = checkIsIOS()
+    setIsIOS(iosDevice)
 
-    if (!checkIfInstalled()) {
-      setTimeout(() => {
-        setShowInstallButton(true)
-      }, 1000)
+    // For iOS, show button if not installed
+    if (iosDevice && !checkIfInstalled()) {
+      const dismissed = localStorage.getItem('pwaInstallDismissed')
+      const dismissTime = dismissed ? parseInt(dismissed) : 0
+      const daysSinceDismiss = (Date.now() - dismissTime) / (1000 * 60 * 60 * 24)
       
-      window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+      if (!dismissed || daysSinceDismiss >= 7) {
+        setTimeout(() => {
+          setShowInstallButton(true)
+        }, 1000)
+      }
     }
 
+    // Listen for successful installation
+    window.addEventListener('appinstalled', () => {
+      console.log('✅ PWA was installed')
+      setShowInstallButton(false)
+      setShowInstallModal(false)
+      deferredPrompt = null
+    })
+
     return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+      window.removeEventListener('appinstalled', () => {})
     }
   }, [])
 
@@ -109,23 +149,33 @@ export default function Header() {
 
   const handleInstallConfirm = async () => {
     if (!deferredPrompt) {
+      console.log('❌ No deferred prompt available')
       return
     }
 
-    deferredPrompt.prompt()
-    const { outcome } = await deferredPrompt.userChoice
-    console.log(`User response to install prompt: ${outcome}`)
-    
-    if (outcome === 'accepted') {
-      console.log('User accepted the install prompt')
-      setShowInstallButton(false)
+    try {
+      console.log('📱 Showing install prompt...')
+      await deferredPrompt.prompt()
+      const { outcome } = await deferredPrompt.userChoice
+      console.log(`User response to install prompt: ${outcome}`)
+      
+      if (outcome === 'accepted') {
+        console.log('✅ User accepted the install prompt')
+        setShowInstallButton(false)
+      } else {
+        console.log('❌ User dismissed the install prompt')
+      }
+    } catch (error) {
+      console.error('Error showing install prompt:', error)
+    } finally {
+      deferredPrompt = null
+      setShowInstallModal(false)
     }
-    
-    setDeferredPrompt(null)
-    setShowInstallModal(false)
   }
 
   const handleInstallDismiss = () => {
+    const dismissedAt = Date.now()
+    localStorage.setItem('pwaInstallDismissed', dismissedAt.toString())
     setShowInstallModal(false)
   }
 
@@ -306,6 +356,7 @@ export default function Header() {
         </nav>
       </header>
 
+      {/* Mobile Sidebar - Keep existing code */}
       <AnimatePresence>
         {sidebarOpen && (
           <>
@@ -324,6 +375,7 @@ export default function Header() {
               transition={{ type: "spring", damping: 30, stiffness: 300 }}
               className="fixed left-0 top-0 bottom-0 w-full sm:w-80 bg-card border-r border-border z-50 overflow-y-auto"
             >
+              {/* Keep all existing sidebar content */}
               <div className="flex items-center justify-between p-4 border-b border-border/50 bg-primary/5">
                 <Link to="/" onClick={() => setSidebarOpen(false)}>
                   <motion.div
@@ -454,6 +506,7 @@ export default function Header() {
         )}
       </AnimatePresence>
 
+      {/* Install Modal */}
       <AnimatePresence>
         {showInstallModal && (
           <motion.div
