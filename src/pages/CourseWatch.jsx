@@ -29,7 +29,7 @@ import { toast as showGlobalToast } from "../hooks/use-toast"
 import { isFirebaseId } from "../lib/utils/slugUtils"
 
 export default function CourseWatch() {
-  const { courseId } = useParams()
+  const { courseId, classId } = useParams()
   const navigate = useNavigate()
   const { currentUser, isAdmin } = useAuth()
   const [course, setCourse] = useState(null)
@@ -128,15 +128,23 @@ export default function CourseWatch() {
         setClasses(classesData)
 
         if (classesData.length > 0) {
-          setCurrentClass(classesData[0])
-
-          if (courseData.type === "batch" && classesData[0].subject) {
-            setSelectedSubject(classesData[0].subject)
-            if (classesData[0].chapter) {
-              setSelectedChapter(classesData[0].chapter)
+          // If classId is provided in URL, find and set that specific class
+          let initialClass = classesData[0]
+          if (classId) {
+            const foundClass = classesData.find(cls => cls.id === classId)
+            if (foundClass) {
+              initialClass = foundClass
             }
-          } else if (classesData[0].chapter) {
-            setSelectedChapter(classesData[0].chapter)
+          }
+          setCurrentClass(initialClass)
+
+          if (courseData.type === "batch" && initialClass.subject) {
+            setSelectedSubject(initialClass.subject)
+            if (initialClass.chapter) {
+              setSelectedChapter(initialClass.chapter)
+            }
+          } else if (initialClass.chapter) {
+            setSelectedChapter(initialClass.chapter)
           }
         }
       } else {
