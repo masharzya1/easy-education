@@ -52,7 +52,7 @@ async function notifyAdminsOfEnrollment(enrollmentData) {
       .get();
     
     if (adminTokensSnapshot.empty) {
-      console.log('No admin tokens found for notification');
+      //('No admin tokens found for notification');
       return;
     }
 
@@ -61,7 +61,7 @@ async function notifyAdminsOfEnrollment(enrollmentData) {
       .filter(Boolean);
     
     if (tokens.length === 0) {
-      console.log('No valid admin tokens for notification');
+      //('No valid admin tokens for notification');
       return;
     }
 
@@ -91,13 +91,13 @@ async function notifyAdminsOfEnrollment(enrollmentData) {
 
     if (messaging) {
       const response = await messaging.sendEachForMulticast(message);
-      console.log(`Admin enrollment notification sent successfully to ${response.successCount}/${tokens.length} admin(s)`);
+      //(`Admin enrollment notification sent successfully to ${response.successCount}/${tokens.length} admin(s)`);
       
       if (response.failureCount > 0) {
-        console.log('Failed tokens:', response.responses.filter(r => !r.success).map((r, i) => ({ token: tokens[i], error: r.error })));
+        //('Failed tokens:', response.responses.filter(r => !r.success).map((r, i) => ({ token: tokens[i], error: r.error })));
       }
     } else {
-      console.log('Firebase Messaging not available, skipping admin notification');
+      //('Firebase Messaging not available, skipping admin notification');
     }
   } catch (error) {
     console.error('Error notifying admins of enrollment:', error);
@@ -133,7 +133,7 @@ export async function processPaymentAndEnrollUser(paymentData) {
       .get();
 
     if (!existingPaymentQuery.empty) {
-      console.log(`Payment ${transactionId} already processed`);
+      //(`Payment ${transactionId} already processed`);
       return {
         success: true,
         alreadyProcessed: true,
@@ -177,7 +177,7 @@ export async function processPaymentAndEnrollUser(paymentData) {
       }
       
       await batch.commit();
-      console.log(`Successfully enrolled user ${userId} in ${courses.length} course(s)`);
+      //(`Successfully enrolled user ${userId} in ${courses.length} course(s)`);
       
       try {
         await notifyAdminsOfEnrollment({
@@ -218,7 +218,7 @@ export async function processPaymentAndEnrollUser(paymentData) {
             createdAt: FieldValue.serverTimestamp(),
             link: '/admin/payments'
           });
-          console.log('Created notification record for admin');
+          //('Created notification record for admin');
         }
       } catch (notificationError) {
         console.error('Failed to create notification record:', notificationError);

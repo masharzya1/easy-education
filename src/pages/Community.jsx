@@ -93,7 +93,7 @@ export default function Community() {
 
     Object.entries(expandedComments).forEach(([postId, isExpanded]) => {
       if (isExpanded && !postComments[postId]) {
-        console.log(" Setting up comment listener for post:", postId)
+        //(" Setting up comment listener for post:", postId)
         setLoadingComments((prev) => ({ ...prev, [postId]: true }))
         setPostComments((prev) => ({ ...prev, [postId]: [] }))
 
@@ -106,11 +106,11 @@ export default function Community() {
         const unsubscribe = onSnapshot(
           commentsQuery,
           async (snapshot) => {
-            console.log(" Comments snapshot received for post:", postId)
-            console.log(" Number of comments:", snapshot.docs.length)
+            //(" Comments snapshot received for post:", postId)
+            //(" Number of comments:", snapshot.docs.length)
 
             if (snapshot.docs.length === 0) {
-              console.log(" No comments found in database for this post")
+              //(" No comments found in database for this post")
               setPostComments((prev) => ({ ...prev, [postId]: [] }))
               setLoadingComments((prev) => ({ ...prev, [postId]: false }))
               return
@@ -120,7 +120,7 @@ export default function Community() {
               const comments = await Promise.all(
                 snapshot.docs.map(async (commentDoc) => {
                   const commentData = { id: commentDoc.id, ...commentDoc.data() }
-                  console.log(" Comment data:", commentData)
+                  //(" Comment data:", commentData)
 
                   try {
                     const authorDoc = await getDoc(doc(db, "users", commentData.authorId))
@@ -134,7 +134,7 @@ export default function Community() {
                 }),
               )
 
-              console.log(" Processed comments:", comments)
+              //(" Processed comments:", comments)
               setPostComments((prev) => ({ ...prev, [postId]: comments }))
               setLoadingComments((prev) => ({ ...prev, [postId]: false }))
             } catch (error) {
@@ -188,21 +188,21 @@ export default function Community() {
 
     setLoading(true)
     try {
-      console.log(" Creating post for user:", currentUser.uid)
+      //(" Creating post for user:", currentUser.uid)
       let imageURL = null
 
       if (newPostImage) {
-        console.log(" Uploading image to imgbb...")
+        //(" Uploading image to imgbb...")
         try {
           imageURL = await uploadImageToImgBB(newPostImage)
-          console.log(" Image uploaded successfully:", imageURL)
+          //(" Image uploaded successfully:", imageURL)
         } catch (uploadError) {
           console.error(" Image upload error:", uploadError)
           throw new Error(uploadError.message || "Failed to upload image. Please try again.")
         }
       }
 
-      console.log(" Adding post document to Firestore...")
+      //(" Adding post document to Firestore...")
       const postData = {
         authorId: currentUser.uid,
         content: newPostContent.trim(),
@@ -212,15 +212,15 @@ export default function Community() {
         timestamp: serverTimestamp(),
       }
 
-      console.log(" Post data:", postData)
+      //(" Post data:", postData)
       const docRef = await addDoc(collection(db, "posts"), postData)
-      console.log(" Post created successfully with ID:", docRef.id)
+      //(" Post created successfully with ID:", docRef.id)
 
       setNewPostContent("")
       setNewPostImage(null)
       setImagePreview(null)
 
-      console.log(" Post will appear automatically via real-time listener")
+      //(" Post will appear automatically via real-time listener")
     } catch (error) {
       console.error(" Error creating post:", error)
       console.error(" Error code:", error.code)
@@ -260,7 +260,7 @@ export default function Community() {
           likes: arrayUnion(currentUser.uid),
         })
       }
-      console.log(" Like updated successfully")
+      //(" Like updated successfully")
     } catch (error) {
       console.error(" Error liking post:", error)
       alert("Failed to like post. Please try again.")
@@ -276,7 +276,7 @@ export default function Community() {
 
     try {
       await deleteDoc(doc(db, "posts", postId))
-      console.log(" Post deleted successfully")
+      //(" Post deleted successfully")
     } catch (error) {
       console.error(" Error deleting post:", error)
       alert("Failed to delete post. Please try again.")
@@ -284,8 +284,8 @@ export default function Community() {
   }
 
   const toggleComments = async (postId) => {
-    console.log(" Toggling comments for post:", postId)
-    console.log(" Current expanded state:", expandedComments[postId])
+    //(" Toggling comments for post:", postId)
+    //(" Current expanded state:", expandedComments[postId])
 
     const newState = !expandedComments[postId]
     setExpandedComments((prev) => ({
@@ -294,7 +294,7 @@ export default function Community() {
     }))
 
     if (newState && !postComments[postId]) {
-      console.log(" Manually fetching comments to debug...")
+      //(" Manually fetching comments to debug...")
       try {
         const commentsQuery = query(
           collection(db, "comments"),
@@ -302,9 +302,9 @@ export default function Community() {
           orderBy("timestamp", "asc"),
         )
         const snapshot = await getDocs(commentsQuery)
-        console.log(" Manual fetch result - number of comments:", snapshot.docs.length)
+        //(" Manual fetch result - number of comments:", snapshot.docs.length)
         snapshot.docs.forEach((doc) => {
-          console.log(" Comment doc:", doc.id, doc.data())
+          //(" Comment doc:", doc.id, doc.data())
         })
       } catch (error) {
         console.error(" Manual fetch error:", error)
@@ -324,9 +324,9 @@ export default function Community() {
     }
 
     try {
-      console.log(" Adding comment to post:", postId)
-      console.log(" Comment content:", commentContent)
-      console.log(" Current user:", currentUser.uid)
+      //(" Adding comment to post:", postId)
+      //(" Comment content:", commentContent)
+      //(" Current user:", currentUser.uid)
 
       const commentData = {
         postId: postId,
@@ -336,14 +336,14 @@ export default function Community() {
         timestamp: serverTimestamp(),
       }
 
-      console.log(" Comment data to be saved:", commentData)
+      //(" Comment data to be saved:", commentData)
 
       const docRef = await addDoc(collection(db, "comments"), commentData)
-      console.log(" Comment created with ID:", docRef.id)
+      //(" Comment created with ID:", docRef.id)
 
       const post = posts.find((p) => p.id === postId)
       const newCount = (post?.commentsCount || 0) + 1
-      console.log(" Updating comment count to:", newCount)
+      //(" Updating comment count to:", newCount)
 
       await updateDoc(doc(db, "posts", postId), {
         commentsCount: newCount,
@@ -351,7 +351,7 @@ export default function Community() {
 
       setCommentInputs((prev) => ({ ...prev, [postId]: "" }))
 
-      console.log(" Comment added successfully, should appear via real-time listener")
+      //(" Comment added successfully, should appear via real-time listener")
     } catch (error) {
       console.error(" Error adding comment:", error)
       console.error(" Error code:", error.code)

@@ -78,7 +78,7 @@ if (IS_PRODUCTION) {
 }
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`Environment: ${IS_PRODUCTION ? 'production' : 'development'}`);
-  console.log(`Serving from: ${IS_PRODUCTION ? 'dist/' : 'vite dev server'}`);
+  //(`Server running on port ${PORT}`);
+  //(`Environment: ${IS_PRODUCTION ? 'production' : 'development'}`);
+  //(`Serving from: ${IS_PRODUCTION ? 'dist/' : 'vite dev server'}`);
 });

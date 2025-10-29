@@ -12,7 +12,7 @@ export default function Login() {
 
   useEffect(() => {
     if (currentUser && userProfile) {
-      console.log(" User already logged in, redirecting...")
+      //(" User already logged in, redirecting...")
       if (userProfile.role === "admin") {
         navigate("/admin", { replace: true })
       } else {
@@ -26,16 +26,16 @@ export default function Login() {
     setLoading(true)
 
     try {
-      console.log(" Attempting Google login...")
+      //(" Attempting Google login...")
       const { profile } = await signInWithGoogle()
-      console.log(" Google login successful, profile:", profile)
+      //(" Google login successful, profile:", profile)
 
       setTimeout(() => {
         if (profile?.role === "admin") {
-          console.log(" Redirecting to admin dashboard")
+          //(" Redirecting to admin dashboard")
           navigate("/admin", { replace: true })
         } else {
-          console.log(" Redirecting to user dashboard")
+          //(" Redirecting to user dashboard")
           navigate("/dashboard", { replace: true })
         }
       }, 200)

@@ -48,7 +48,7 @@ export default function Header() {
     if (isInstallListenerSet) return
 
     const handleBeforeInstallPrompt = (e) => {
-      console.log('✅ beforeinstallprompt fired!')
+      //('✅ beforeinstallprompt fired!')
       e.preventDefault()
       deferredPrompt = e
       setCanInstall(true)
@@ -75,7 +75,7 @@ export default function Header() {
     const fetchSettings = async () => {
       try {
         if (!db) {
-          console.warn("[v0] Firebase not available, skipping settings fetch")
+          console.warn(" Firebase not available, skipping settings fetch")
           return
         }
         const settingsQuery = query(collection(db, "settings"), where("type", "==", "general"))
@@ -85,7 +85,7 @@ export default function Header() {
           setCommunityEnabled(settings.communityEnabled !== false)
         }
       } catch (error) {
-        console.error("[v0] Error fetching settings:", error)
+        console.error(" Error fetching settings:", error)
       }
     }
     fetchSettings()
@@ -113,7 +113,7 @@ export default function Header() {
     
     const isInstalled = checkIfInstalled()
 
-    console.log('🔍 PWA Install Debug:', {
+    //('🔍 PWA Install Debug:', {
       isIOS: iosDevice,
       isInstalled: isInstalled,
       inIframe: checkInIframe(),
@@ -123,7 +123,7 @@ export default function Header() {
 
     // If already installed, hide button and clear dismiss flag for future use
     if (isInstalled) {
-      console.log('✅ App is already installed - hiding install button')
+      //('✅ App is already installed - hiding install button')
       setShowInstallButton(false)
       localStorage.removeItem('pwaInstallDismissed')
       return
@@ -137,12 +137,12 @@ export default function Header() {
     // For iOS, show button if not installed
     if (iosDevice) {
       if (!dismissed || hoursSinceDismiss >= 1) {
-        console.log('📱 Showing iOS install button')
+        //('📱 Showing iOS install button')
         setTimeout(() => {
           setShowInstallButton(true)
         }, 1000)
       } else {
-        console.log('⏰ Install button dismissed recently, will show again in 1 hour')
+        //('⏰ Install button dismissed recently, will show again in 1 hour')
       }
     }
 
@@ -150,17 +150,17 @@ export default function Header() {
     // This ensures the button appears even in iframes or if beforeinstallprompt doesn't fire
     if (!iosDevice) {
       if (!dismissed || hoursSinceDismiss >= 1) {
-        console.log('📱 Showing install button (non-iOS)')
+        //('📱 Showing install button (non-iOS)')
         // Wait brief moment to give beforeinstallprompt a chance to fire first
         setTimeout(() => {
           if (!deferredPrompt) {
-            console.log('🔔 No beforeinstallprompt received - showing button anyway')
+            //('🔔 No beforeinstallprompt received - showing button anyway')
           }
-          console.log('🎯 Setting showInstallButton to TRUE')
+          //('🎯 Setting showInstallButton to TRUE')
           setShowInstallButton(true)
         }, 1000)
       } else {
-        console.log('⏰ Install button dismissed recently, will show again in 1 hour')
+        //('⏰ Install button dismissed recently, will show again in 1 hour')
       }
     }
     
@@ -169,7 +169,7 @@ export default function Header() {
 
     // Listen for successful installation
     const handleAppInstalled = () => {
-      console.log('✅ PWA was installed')
+      //('✅ PWA was installed')
       setShowInstallButton(false)
       setShowInstallModal(false)
       localStorage.removeItem('pwaInstallDismissed')
@@ -194,29 +194,29 @@ export default function Header() {
   }
 
   const handleInstallClick = () => {
-    console.log('📱 Install button clicked, deferredPrompt:', !!deferredPrompt)
+    //('📱 Install button clicked, deferredPrompt:', !!deferredPrompt)
     setShowInstallModal(true)
   }
 
   const handleInstallConfirm = async () => {
     if (!deferredPrompt) {
-      console.log('❌ No deferred prompt available - showing manual instructions')
+      //('❌ No deferred prompt available - showing manual instructions')
       // Keep modal open to show manual instructions
       return
     }
 
     try {
-      console.log('📱 Showing install prompt...')
+      //('📱 Showing install prompt...')
       await deferredPrompt.prompt()
       const { outcome } = await deferredPrompt.userChoice
-      console.log(`User response to install prompt: ${outcome}`)
+      //(`User response to install prompt: ${outcome}`)
       
       if (outcome === 'accepted') {
-        console.log('✅ User accepted the install prompt')
+        //('✅ User accepted the install prompt')
         setShowInstallButton(false)
         setShowInstallModal(false)
       } else {
-        console.log('❌ User dismissed the install prompt')
+        //('❌ User dismissed the install prompt')
         setShowInstallModal(false)
       }
     } catch (error) {
@@ -247,7 +247,7 @@ export default function Header() {
     // Manual reset function for debugging
     localStorage.removeItem('pwaInstallDismissed')
     setShowInstallButton(true)
-    console.log('✅ Install prompt reset - button will show again')
+    //('✅ Install prompt reset - button will show again')
   }
 
   const handleSearch = (e) => {

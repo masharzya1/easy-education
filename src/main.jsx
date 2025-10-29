@@ -21,4 +21,4 @@ if (rootElement) {
 
 registerServiceWorker()
 
-console.log(" React app mounted")
+//(" React app mounted")

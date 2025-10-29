@@ -39,7 +39,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    console.log('Verifying payment with transaction_id:', transaction_id);
+    //('Verifying payment with transaction_id:', transaction_id);
     
     const response = await fetch(VERIFY_API_URL, {
       method: 'POST',
@@ -54,8 +54,8 @@ export default async function handler(req, res) {
 
     const paymentData = await response.json();
     
-    console.log('RupantorPay verification response:', JSON.stringify(paymentData, null, 2));
-    console.log('Response status code:', response.status);
+    //('RupantorPay verification response:', JSON.stringify(paymentData, null, 2));
+    //('Response status code:', response.status);
 
     // According to docs: response is direct object with status field
     if (paymentData.status === 'COMPLETED') {
@@ -65,21 +65,21 @@ export default async function handler(req, res) {
         if (typeof paymentData.metadata === 'string') {
           try {
             metadata = JSON.parse(paymentData.metadata);
-            console.log('✅ Metadata parsed from string');
+            //('✅ Metadata parsed from string');
           } catch (e) {
             console.error('❌ Failed to parse metadata:', e);
             console.error('Raw metadata:', paymentData.metadata);
           }
         } else if (typeof paymentData.metadata === 'object') {
           metadata = paymentData.metadata;
-          console.log('✅ Metadata is already object');
+          //('✅ Metadata is already object');
         }
       }
 
-      console.log('✅ Payment verified successfully!');
-      console.log('Transaction ID:', paymentData.transaction_id);
-      console.log('Amount:', paymentData.amount);
-      console.log('Parsed metadata:', metadata);
+      //('✅ Payment verified successfully!');
+      //('Transaction ID:', paymentData.transaction_id);
+      //('Amount:', paymentData.amount);
+      //('Parsed metadata:', metadata);
 
       return res.status(200).json({
         success: true,

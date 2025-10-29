@@ -25,7 +25,7 @@ export default async function handler(req, res) {
   
   const { fullname, email, amount, metadata } = req.body;
   
-  console.log('📥 Received payment request:', { fullname, email, amount, metadata });
+  
   
   if (!fullname || !email || !amount) {
     return res.status(400).json({
@@ -50,13 +50,7 @@ export default async function handler(req, res) {
       metadata: metadata || {}
     };
     
-    console.log('Creating RupantorPay payment:', {
-      fullname,
-      email,
-      amount: paymentData.amount,
-      baseUrl,
-      metadata: metadata
-    });
+    
     
     const response = await fetch(PAYMENT_API_URL, {
       method: 'POST',
@@ -69,12 +63,12 @@ export default async function handler(req, res) {
     });
     
     const data = await response.json();
-    console.log('RupantorPay create payment response:', JSON.stringify(data, null, 2));
-    console.log('Response status code:', response.status);
+    //('RupantorPay create payment response:', JSON.stringify(data, null, 2));
+    //('Response status code:', response.status);
     
     if ((data.status === 1 || data.status === true) && data.payment_url) {
-      console.log('✅ Payment created successfully');
-      console.log('Payment URL:', data.payment_url);
+      //nt created successfully');
+      //('Payment URL:', data.payment_url);
       
       return res.status(200).json({
         success: true,

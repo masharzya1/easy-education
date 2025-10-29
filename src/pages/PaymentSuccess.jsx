@@ -49,7 +49,7 @@ export default function PaymentSuccess() {
     try {
       setVerifying(true)
 
-      console.log('[PaymentSuccess] Verifying payment with:', { invoiceId, transactionId });
+      //('[PaymentSuccess] Verifying payment with:', { invoiceId, transactionId });
 
       // Send both IDs to the backend, preferring invoiceId but including transactionId for backward compatibility
       const enrollmentResponse = await fetch('/api/process-enrollment', {
@@ -65,7 +65,7 @@ export default function PaymentSuccess() {
       })
 
       const enrollmentData = await enrollmentResponse.json()
-      console.log('[PaymentSuccess] Enrollment response:', enrollmentData);
+      //('[PaymentSuccess] Enrollment response:', enrollmentData);
 
       if (!enrollmentData.success || !enrollmentData.verified) {
         const errorMessage = enrollmentData.error || "Payment verification failed";

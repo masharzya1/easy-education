@@ -38,8 +38,8 @@ export async function uploadImageToImgBB(file) {
   }
   
   try {
-    console.log("[Upload] Starting upload...")
-    console.log("[Upload] File:", file.name, `(${(file.size / 1024).toFixed(2)} KB)`)
+    //("[Upload] Starting upload...")
+    //("[Upload] File:", file.name, `(${(file.size / 1024).toFixed(2)} KB)`)
     
     // File কে Base64 এ রূপান্তর
     const base64 = await fileToBase64(file)
@@ -75,7 +75,7 @@ export async function uploadImageToImgBB(file) {
       throw new Error("Invalid success response from ImgBB")
     }
     
-    console.log("[Upload] Success:", data.url)
+    //("[Upload] Success:", data.url)
     return data.url
     
   } catch (error) {

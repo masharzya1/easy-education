@@ -26,7 +26,7 @@ export default async function handler(req, res) {
   try {
     const webhookData = req.body;
     
-    console.log('RupantorPay webhook received:', {
+    //('RupantorPay webhook received:', {
       transactionId: webhookData.transactionId,
       status: webhookData.status,
       paymentAmount: webhookData.paymentAmount,
@@ -35,7 +35,7 @@ export default async function handler(req, res) {
 
     // Only process completed payments
     if (webhookData.status !== 'COMPLETED') {
-      console.log(`Webhook received with status: ${webhookData.status}, not processing`);
+      //(`Webhook received with status: ${webhookData.status}, not processing`);
       return res.status(200).json({ 
         success: true, 
         message: "Webhook received but payment not completed" 
@@ -65,16 +65,16 @@ export default async function handler(req, res) {
     const paymentData = await verifyResponse.json();
 
     if (paymentData.status !== 'COMPLETED') {
-      console.log('Payment verification failed or not completed:', paymentData.status);
+      //('Payment verification failed or not completed:', paymentData.status);
       return res.status(200).json({ 
         success: true, 
         message: "Webhook received but payment not completed" 
       });
     }
 
-    console.log('✅ Webhook - Payment verified successfully!');
-    console.log('Transaction ID:', paymentData.transaction_id);
-    console.log('Amount:', paymentData.amount);
+    //('✅ Webhook - Payment verified successfully!');
+    //('Transaction ID:', paymentData.transaction_id);
+    //('Amount:', paymentData.amount);
 
     // Parse metadata - may be JSON string or object
     let metadata = {};
@@ -82,18 +82,18 @@ export default async function handler(req, res) {
       if (typeof paymentData.metadata === 'string') {
         try {
           metadata = JSON.parse(paymentData.metadata);
-          console.log('✅ Webhook - Metadata parsed from string');
+          //('✅ Webhook - Metadata parsed from string');
         } catch (e) {
           console.error('❌ Webhook - Failed to parse metadata:', e);
           console.error('Raw metadata:', paymentData.metadata);
         }
       } else if (typeof paymentData.metadata === 'object') {
         metadata = paymentData.metadata;
-        console.log('✅ Webhook - Metadata is already object');
+        //('✅ Webhook - Metadata is already object');
       }
     }
 
-    console.log('Webhook - Parsed metadata:', metadata);
+    //('Webhook - Parsed metadata:', metadata);
 
     const courses = metadata.courses || [];
     const userId = metadata.userId;
@@ -124,7 +124,7 @@ export default async function handler(req, res) {
     });
 
     if (result.success) {
-      console.log('Webhook processed successfully:', result.message);
+      //('Webhook processed successfully:', result.message);
       return res.status(200).json({ 
         success: true, 
         message: result.message,

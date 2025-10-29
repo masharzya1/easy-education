@@ -3,17 +3,17 @@ import { getAuth, GoogleAuthProvider } from "firebase/auth"
 import { getFirestore } from "firebase/firestore"
 import { getMessaging, isSupported } from "firebase/messaging"
 
-console.log(" Initializing Firebase...")
+//(" Initializing Firebase...")
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCeSmrbWCldLLI0D3UUhdY1Qinw3-puIPQ",
-  authDomain: "easy-educat.firebaseapp.com",
-  projectId: "easy-educat",
-  storageBucket: "easy-educat.firebasestorage.app",
-  messagingSenderId: "1047552618209",
-  appId: "1:1047552618209:web:09b31cb8d8fc2ff0dfd1a0",
-  measurementId: "G-7YJX7M1SX3",
-}
+  apiKey: "AIzaSyAWjDmHS4zO_u0tBdVY6beUIrqGD7x6cvs",
+  authDomain: "easy-education-923e5.firebaseapp.com",
+  projectId: "easy-education-923e5",
+  storageBucket: "easy-education-923e5.firebasestorage.app",
+  messagingSenderId: "84493551579",
+  appId: "1:84493551579:web:4240c019dc3614cbd5c9fe",
+  measurementId: "G-DLYDSEPVKG"
+};
 
 let app
 let auth
@@ -34,7 +34,7 @@ try {
   isSupported().then((supported) => {
     if (supported) {
       messaging = getMessaging(app)
-      console.log(" Firebase Messaging initialized successfully")
+      //(" Firebase Messaging initialized successfully")
     } else {
       console.warn(" Firebase Messaging not supported in this browser")
     }
@@ -42,9 +42,9 @@ try {
     console.error(" Firebase Messaging initialization error:", error)
   })
 
-  console.log(" Firebase initialized successfully")
-  console.log(" Project ID:", firebaseConfig.projectId)
-  console.log(" Using imgbb.com for image storage and Firebase Cloud Messaging for notifications")
+  //(" Firebase initialized successfully")
+  //(" Project ID:", firebaseConfig.projectId)
+  //(" Using imgbb.com for image storage and Firebase Cloud Messaging for notifications")
 } catch (error) {
   console.error(" Firebase initialization error:", error)
   throw new Error("Failed to initialize Firebase. Please check your configuration.")

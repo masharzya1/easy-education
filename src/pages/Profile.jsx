@@ -65,21 +65,21 @@ export default function Profile() {
     setMessage("")
 
     try {
-      console.log(" Starting profile update for user:", currentUser.uid)
+      //(" Starting profile update for user:", currentUser.uid)
       let photoURL = userProfile?.photoURL || ""
 
       if (photoFile) {
-        console.log(" Uploading profile photo to imgbb...")
+        //(" Uploading profile photo to imgbb...")
         try {
           photoURL = await uploadImageToImgBB(photoFile)
-          console.log(" Photo uploaded successfully:", photoURL)
+          //(" Photo uploaded successfully:", photoURL)
         } catch (uploadError) {
           console.error(" Photo upload error:", uploadError)
           throw new Error(uploadError.message || "Failed to upload photo. Please try again.")
         }
       }
 
-      console.log(" Updating user document...")
+      //(" Updating user document...")
       const userRef = doc(db, "users", currentUser.uid)
 
       const updateData = {
@@ -97,14 +97,14 @@ export default function Profile() {
         updateData.photoURL = photoURL
       }
 
-      console.log(" Update data:", updateData)
+      //(" Update data:", updateData)
 
       await updateDoc(userRef, updateData)
-      console.log(" User document updated successfully")
+      //(" User document updated successfully")
 
       await new Promise((resolve) => setTimeout(resolve, 500))
       await refreshUserProfile()
-      console.log(" Profile refreshed")
+      //(" Profile refreshed")
 
       setMessage("Profile updated successfully!")
       setPhotoFile(null)

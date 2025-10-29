@@ -20,7 +20,7 @@ export default function Register() {
 
   useEffect(() => {
     if (currentUser && userProfile) {
-      console.log(" User already logged in, redirecting...")
+      //(" User already logged in, redirecting...")
       if (userProfile.role === "admin") {
         navigate("/admin", { replace: true })
       } else {
@@ -51,20 +51,20 @@ export default function Register() {
     setLoading(true)
 
     try {
-      console.log(" Attempting registration...")
+      //(" Attempting registration...")
       const { profile } = await signUp(formData.email, formData.password, {
         name: formData.name,
         institution: formData.institution,
         phone: formData.phone,
       })
-      console.log(" Registration successful, profile:", profile)
+      //(" Registration successful, profile:", profile)
 
       setTimeout(() => {
         if (profile?.role === "admin") {
-          console.log(" Redirecting to admin dashboard")
+          //(" Redirecting to admin dashboard")
           navigate("/admin", { replace: true })
         } else {
-          console.log(" Redirecting to user dashboard")
+          //(" Redirecting to user dashboard")
           navigate("/dashboard", { replace: true })
         }
       }, 200)
@@ -80,16 +80,16 @@ export default function Register() {
     setLoading(true)
 
     try {
-      console.log(" Attempting Google sign in...")
+      //(" Attempting Google sign in...")
       const { profile } = await signInWithGoogle()
-      console.log(" Google sign in successful, profile:", profile)
+      //(" Google sign in successful, profile:", profile)
 
       setTimeout(() => {
         if (profile?.role === "admin") {
-          console.log(" Redirecting to admin dashboard")
+          //(" Redirecting to admin dashboard")
           navigate("/admin", { replace: true })
         } else {
-          console.log(" Redirecting to user dashboard")
+          //(" Redirecting to user dashboard")
           navigate("/dashboard", { replace: true })
         }
       }, 200)

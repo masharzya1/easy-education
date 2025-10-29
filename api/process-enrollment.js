@@ -34,7 +34,7 @@ export default async function handler(req, res) {
   // Handle free enrollment (100% discount coupon)
   if (skipPaymentVerification && finalAmount === 0) {
     try {
-      console.log('Processing free enrollment for userId:', userId);
+      //('Processing free enrollment for userId:', userId);
       
       const result = await processPaymentAndEnrollUser({
         userId,
@@ -100,7 +100,7 @@ export default async function handler(req, res) {
   }
   
   try {
-    console.log('Processing enrollment for transaction_id:', transaction_id, 'userId:', userId);
+    //('Processing enrollment for transaction_id:', transaction_id, 'userId:', userId);
     
     // Verify payment with RupantorPay
     const verifyResponse = await fetch(VERIFY_API_URL, {
@@ -113,7 +113,7 @@ export default async function handler(req, res) {
     });
     
     const paymentData = await verifyResponse.json();
-    console.log('RupantorPay verification response:', JSON.stringify(paymentData, null, 2));
+    //('RupantorPay verification response:', JSON.stringify(paymentData, null, 2));
     
     if (paymentData.status !== 'COMPLETED') {
       return res.status(400).json({
@@ -129,18 +129,18 @@ export default async function handler(req, res) {
       if (typeof paymentData.metadata === 'string') {
         try {
           metadata = JSON.parse(paymentData.metadata);
-          console.log('✅ Metadata parsed from string');
+          //('✅ Metadata parsed from string');
         } catch (e) {
           console.error('❌ Failed to parse metadata:', e);
           console.error('Raw metadata:', paymentData.metadata);
         }
       } else if (typeof paymentData.metadata === 'object') {
         metadata = paymentData.metadata;
-        console.log('✅ Metadata is already object');
+        //('✅ Metadata is already object');
       }
     }
     
-    console.log('Parsed metadata:', metadata);
+    //('Parsed metadata:', metadata);
     
     const courses = metadata.courses || [];
     const metadataUserId = metadata.userId;

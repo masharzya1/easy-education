@@ -111,11 +111,11 @@ export default function ManageUsers() {
 
   const handlePromoteToAdmin = async (userId) => {
     try {
-      console.log(" Promoting user to admin:", userId)
+      //(" Promoting user to admin:", userId)
       await updateDoc(doc(db, "users", userId), { role: "admin" })
       setUsers(users.map((u) => (u.id === userId ? { ...u, role: "admin" } : u)))
       showSuccess("User promoted to admin successfully!")
-      console.log(" User promoted successfully")
+      //(" User promoted successfully")
     } catch (error) {
       console.error(" Error promoting user:", error)
       toast({
@@ -128,11 +128,11 @@ export default function ManageUsers() {
 
   const handleDemoteToUser = async (userId) => {
     try {
-      console.log(" Demoting user to regular user:", userId)
+      //(" Demoting user to regular user:", userId)
       await updateDoc(doc(db, "users", userId), { role: "user" })
       setUsers(users.map((u) => (u.id === userId ? { ...u, role: "user" } : u)))
       showSuccess("User demoted to regular user successfully!")
-      console.log(" User demoted successfully")
+      //(" User demoted successfully")
     } catch (error) {
       console.error(" Error demoting user:", error)
       toast({
@@ -145,11 +145,11 @@ export default function ManageUsers() {
 
   const handleBanUser = async (userId, currentBanStatus) => {
     try {
-      console.log(" Toggling ban status for user:", userId, "Current status:", currentBanStatus)
+      //(" Toggling ban status for user:", userId, "Current status:", currentBanStatus)
       await updateDoc(doc(db, "users", userId), { banned: !currentBanStatus })
       setUsers(users.map((u) => (u.id === userId ? { ...u, banned: !currentBanStatus } : u)))
       showSuccess(!currentBanStatus ? "User banned successfully!" : "User unbanned successfully!")
-      console.log(" Ban status updated successfully")
+      //(" Ban status updated successfully")
     } catch (error) {
       console.error(" Error banning user:", error)
       toast({
@@ -168,11 +168,11 @@ export default function ManageUsers() {
       variant: "destructive",
       onConfirm: async () => {
         try {
-          console.log(" Deleting user:", userId)
+          //(" Deleting user:", userId)
           await deleteDoc(doc(db, "users", userId))
           setUsers(users.filter((u) => u.id !== userId))
           showSuccess("User deleted successfully!")
-          console.log(" User deleted successfully")
+          //(" User deleted successfully")
         } catch (error) {
           console.error(" Error deleting user:", error)
           toast({
@@ -202,7 +202,7 @@ export default function ManageUsers() {
       variant: "destructive",
       onConfirm: async () => {
         try {
-          console.log("[v0] Removing user from course:", selectedUser.id, courseId)
+          //(" Removing user from course:", selectedUser.id, courseId)
 
           const paymentsQuery = query(
             collection(db, "payments"),
@@ -228,7 +228,7 @@ export default function ManageUsers() {
             setSelectedUser(null)
           }
         } catch (error) {
-          console.error("[v0] Error removing student from course:", error)
+          console.error(" Error removing student from course:", error)
           toast({
             variant: "error",
             title: "Removal Failed",

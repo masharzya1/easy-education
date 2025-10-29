@@ -14,7 +14,7 @@ export default function Rankings() {
 
   const fetchRankings = async () => {
     try {
-      console.log(" Fetching rankings data...")
+      //(" Fetching rankings data...")
 
       const classesSnapshot = await getDocs(collection(db, "classes"))
       const classesData = classesSnapshot.docs.map((doc) => ({
@@ -22,7 +22,7 @@ export default function Rankings() {
         ...doc.data(),
       }))
 
-      console.log(" Classes fetched:", classesData.length)
+      //(" Classes fetched:", classesData.length)
 
       const teacherVotes = {}
 
@@ -57,11 +57,11 @@ export default function Rankings() {
         }
       })
 
-      console.log(" Teachers aggregated:", Object.keys(teacherVotes).length)
+      //(" Teachers aggregated:", Object.keys(teacherVotes).length)
 
       const rankingsArray = Object.values(teacherVotes).sort((a, b) => b.netScore - a.netScore)
 
-      console.log(" Rankings sorted:", rankingsArray)
+      //(" Rankings sorted:", rankingsArray)
       setRankings(rankingsArray)
     } catch (error) {
       console.error(" Error fetching rankings:", error)

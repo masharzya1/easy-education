@@ -13,7 +13,7 @@ async function makeAdmin(userId) {
       isAdmin: true,
       role: "admin",
     })
-    console.log(" Successfully made user admin:", userId)
+    //(" Successfully made user admin:", userId)
     alert("Admin status granted! Please refresh the page.")
   } catch (error) {
     console.error(" Error making admin:", error)

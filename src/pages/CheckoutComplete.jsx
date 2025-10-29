@@ -16,7 +16,7 @@ export default function CheckoutComplete() {
   
   useEffect(() => {
     if (!currentUser) {
-      console.log("[CheckoutComplete] No user found, redirecting to login")
+      //("[CheckoutComplete] No user found, redirecting to login")
       navigate("/login", { replace: true })
       return
     }
@@ -35,15 +35,15 @@ export default function CheckoutComplete() {
       processEnrollment(transactionId)
     }
     
-    console.log("[CheckoutComplete] Loaded with state:", location.state)
-    console.log("[CheckoutComplete] Transaction ID from URL:", transactionId)
+    //("[CheckoutComplete] Loaded with state:", location.state)
+    //("[CheckoutComplete] Transaction ID from URL:", transactionId)
   }, [currentUser, navigate, location])
   
   const processEnrollment = async (transactionId) => {
     setIsProcessing(true)
     
     try {
-      console.log("[CheckoutComplete] Processing enrollment for transaction:", transactionId)
+      //("[CheckoutComplete] Processing enrollment for transaction:", transactionId)
       
       const response = await fetch('/api/process-enrollment', {
         method: 'POST',
@@ -57,13 +57,13 @@ export default function CheckoutComplete() {
       })
       
       const data = await response.json()
-      console.log("[CheckoutComplete] Enrollment response:", data)
+      //("[CheckoutComplete] Enrollment response:", data)
       
       if (data.success) {
         if (data.payment?.metadata?.courses) {
           setPurchasedCourses(data.payment.metadata.courses)
         }
-        console.log("[CheckoutComplete] Enrollment processed successfully")
+        //("[CheckoutComplete] Enrollment processed successfully")
       } else {
         console.error("[CheckoutComplete] Enrollment failed:", data.error)
       }

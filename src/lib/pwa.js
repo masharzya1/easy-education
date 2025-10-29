@@ -4,19 +4,19 @@ export function registerServiceWorker() {
       navigator.serviceWorker
         .register('/service-worker.js')
         .then((registration) => {
-          console.log('Service Worker registered successfully:', registration.scope);
+          //('Service Worker registered successfully:', registration.scope);
         })
         .catch((error) => {
-          console.log('Service Worker registration failed:', error);
+          //('Service Worker registration failed:', error);
         });
       
       navigator.serviceWorker
         .register('/firebase-messaging-sw.js')
         .then((registration) => {
-          console.log('Firebase Messaging Service Worker registered successfully:', registration.scope);
+          //('Firebase Messaging Service Worker registered successfully:', registration.scope);
         })
         .catch((error) => {
-          console.log('Firebase Messaging Service Worker registration failed:', error);
+          //('Firebase Messaging Service Worker registration failed:', error);
         });
     });
   }
@@ -41,7 +41,7 @@ export async function getFCMToken() {
       vapidKey: 'BEl62iUYgUiv'
     })
 
-    console.log('FCM Token received:', token)
+    //('FCM Token received:', token)
     return token
   } catch (error) {
     console.error('Error getting FCM token:', error)
@@ -60,7 +60,7 @@ export async function subscribeFCM(onMessageCallback) {
     }
 
     const unsubscribe = onMessage(messaging, (payload) => {
-      console.log('Foreground message received:', payload)
+      //('Foreground message received:', payload)
       
       if (onMessageCallback) {
         onMessageCallback(payload)
@@ -85,7 +85,7 @@ export async function subscribeFCM(onMessageCallback) {
 
 export async function requestNotificationPermission() {
   if (!('Notification' in window)) {
-    console.log('This browser does not support notifications');
+    //('This browser does not support notifications');
     return false;
   }
 
@@ -103,7 +103,7 @@ export async function requestNotificationPermission() {
 
 export async function subscribeUserToPush() {
   if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-    console.log('Push notifications not supported');
+    //('Push notifications not supported');
     return null;
   }
 
@@ -112,7 +112,7 @@ export async function subscribeUserToPush() {
     const hasPermission = await requestNotificationPermission();
     
     if (!hasPermission) {
-      console.log('Notification permission denied');
+      //('Notification permission denied');
       return null;
     }
 
@@ -132,12 +132,12 @@ export async function subscribeUserToPush() {
 
 export async function sendLocalNotification(title, options = {}) {
   if (!('Notification' in window)) {
-    console.log('This browser does not support notifications');
+    //('This browser does not support notifications');
     return;
   }
 
   if (!('serviceWorker' in navigator)) {
-    console.log('Service Worker not supported');
+    //('Service Worker not supported');
     return;
   }
 

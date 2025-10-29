@@ -6,19 +6,19 @@ export async function saveAdminFCMToken(userId) {
   try {
     const userDoc = await getDoc(doc(db, 'users', userId))
     if (!userDoc.exists()) {
-      console.log('User not found')
+      //('User not found')
       return null
     }
 
     const userData = userDoc.data()
     if (userData.role !== 'admin') {
-      console.log('User is not an admin, FCM token not saved')
+      //('User is not an admin, FCM token not saved')
       return null
     }
 
     const token = await getFCMToken()
     if (!token) {
-      console.log('No FCM token available')
+      //('No FCM token available')
       return null
     }
 
@@ -33,7 +33,7 @@ export async function saveAdminFCMToken(userId) {
       { merge: true }
     )
 
-    console.log('Admin FCM token saved successfully')
+    //('Admin FCM token saved successfully')
     return token
   } catch (error) {
     console.error('Error saving admin FCM token:', error)
@@ -48,14 +48,14 @@ export async function notifyAdminsOfCheckout(paymentData) {
     )
     
     if (adminTokensSnapshot.empty) {
-      console.log('No admin tokens found')
+      //('No admin tokens found')
       return
     }
 
     const tokens = adminTokensSnapshot.docs.map(doc => doc.data().token).filter(Boolean)
     
     if (tokens.length === 0) {
-      console.log('No valid admin tokens')
+      //('No valid admin tokens')
       return
     }
 
@@ -89,10 +89,10 @@ export async function notifyAdminsOfCheckout(paymentData) {
         notification,
       }),
     }).catch(err => {
-      console.log('API endpoint not available, notifications will work via FCM service worker')
+      //('API endpoint not available, notifications will work via FCM service worker')
     })
 
-    console.log('Admin notification sent successfully to', tokens.length, 'admin(s)')
+    //('Admin notification sent successfully to', tokens.length, 'admin(s)')
   } catch (error) {
     console.error('Error notifying admins:', error)
   }
@@ -105,14 +105,14 @@ export async function notifyAdminsOfEnrollment(enrollmentData) {
     )
     
     if (adminTokensSnapshot.empty) {
-      console.log('No admin tokens found')
+      //('No admin tokens found')
       return
     }
 
     const tokens = adminTokensSnapshot.docs.map(doc => doc.data().token).filter(Boolean)
     
     if (tokens.length === 0) {
-      console.log('No valid admin tokens')
+      //('No valid admin tokens')
       return
     }
 
@@ -148,10 +148,10 @@ export async function notifyAdminsOfEnrollment(enrollmentData) {
         notification,
       }),
     }).catch(err => {
-      console.log('API endpoint not available, notifications will work via FCM service worker')
+      //('API endpoint not available, notifications will work via FCM service worker')
     })
 
-    console.log('Admin enrollment notification sent successfully to', tokens.length, 'admin(s)')
+    //('Admin enrollment notification sent successfully to', tokens.length, 'admin(s)')
   } catch (error) {
     console.error('Error notifying admins of enrollment:', error)
   }
@@ -169,7 +169,7 @@ export async function sendEmailNotification(to, subject, body) {
       throw new Error('Failed to send email')
     }
 
-    console.log('Email notification sent successfully')
+    //('Email notification sent successfully')
     return true
   } catch (error) {
     console.error('Error sending email notification:', error)

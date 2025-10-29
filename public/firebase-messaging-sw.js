@@ -14,7 +14,7 @@ firebase.initializeApp({
 const messaging = firebase.messaging();
 
 messaging.onBackgroundMessage((payload) => {
-  console.log('[firebase-messaging-sw.js] Received background message:', payload);
+  //('[firebase-messaging-sw.js] Received background message:', payload);
 
   const notificationTitle = payload.notification?.title || 'New Notification';
   const notificationOptions = {
@@ -30,7 +30,7 @@ messaging.onBackgroundMessage((payload) => {
 });
 
 self.addEventListener('notificationclick', (event) => {
-  console.log('[firebase-messaging-sw.js] Notification clicked:', event);
+  //('[firebase-messaging-sw.js] Notification clicked:', event);
   event.notification.close();
   
   const url = event.notification.data?.url || '/';
